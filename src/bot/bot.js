@@ -1,4 +1,3 @@
-import tmi from 'tmi.js';
 import { renderTemplate, broadcastUpdate } from '../overlays/overlays.js';
 import logger from '../utils/logger.js';
 import twitchClient from './twitchClient.js';
@@ -13,11 +12,6 @@ import {
   processSongQueue,
   commandList,
 } from './commands/index.js';
-
-// Format the OAuth token correctly (do this once at startup)
-const authToken = process.env.TWITCH_OAUTH_TOKEN.startsWith('oauth:')
-  ? process.env.TWITCH_OAUTH_TOKEN.substring(6)
-  : process.env.TWITCH_OAUTH_TOKEN;
 
 // Setup message handler
 function setupMessageHandler() {
@@ -44,7 +38,7 @@ function setupMessageHandler() {
 
         switch (command) {
           case '!ping':
-            response = handlePing(twitchClient, channel);
+            response = handlePing();
             break;
 
           case '!commands':
@@ -72,17 +66,17 @@ function setupMessageHandler() {
             break;
 
           case '!queue':
-            response = handleListQueue(twitchClient, channel);
+            response = handleListQueue();
             break;
 
           case '!queueclear':
-            response = handleClearQueue(twitchClient, channel, tags.username);
+            response = handleClearQueue(tags.username);
             break;
 
           case '!queueremove':
             if (args.length > 0) {
               const index = parseInt(args[0], 10);
-              response = handleRemoveFromQueue(twitchClient, channel, tags.username, index);
+              response = handleRemoveFromQueue(tags.username, index);
             } else {
               response = {
                 success: false,
@@ -118,7 +112,7 @@ function setupMessageHandler() {
 setupMessageHandler();
 setInterval(() => {
   if (twitchClient.client) {
-    processSongQueue(process.env.TWITCH_CHANNEL, twitchClient);
+    processSongQueue();
   }
 }, 30000);
 

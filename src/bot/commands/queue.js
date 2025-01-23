@@ -7,7 +7,7 @@ import spotify from '../../spotify/spotify.js';
 const songQueue = [];
 
 // Helper function for retrying operations
-function retryOperation(operation, maxAttempts = 5, baseDelay = 2000) {
+function retryOperation(operation, maxAttempts = 3, baseDelay = 1000) {
   const attempt = async (attemptNumber) => {
     try {
       return await operation();
@@ -64,7 +64,7 @@ function saveSongQueue() {
 }
 
 // Queue command handlers
-export function handleListQueue(twitchClient, channel) {
+export function handleListQueue() {
   if (songQueue.length === 0) {
     return {
       success: true,
@@ -82,7 +82,7 @@ export function handleListQueue(twitchClient, channel) {
   };
 }
 
-export function handleClearQueue(twitchClient, channel, username) {
+export function handleClearQueue(username) {
   songQueue.length = 0;
   saveSongQueue();
   return {
@@ -91,7 +91,7 @@ export function handleClearQueue(twitchClient, channel, username) {
   };
 }
 
-export function handleRemoveFromQueue(twitchClient, channel, username, index) {
+export function handleRemoveFromQueue(username, index) {
   if (!index || isNaN(index)) {
     return {
       success: false,
@@ -158,19 +158,35 @@ export async function handleSongRequest(username, songName, twitchClient) {
     saveSongQueue();
 
     // Process queue immediately after adding a song
-    const processResult = await processSongQueue(process.env.TWITCH_CHANNEL, twitchClient);
-    if (processResult && !processResult.success) {
-      return {
-        success: false,
-        message: processResult.message,
-      };
-    }
-
-    return {
+    // Send immediate feedback
+    const initialResponse = {
       success: true,
-      message: `🔥🐷 Added "${cleanSongName}" to the queue for ${username}!`,
+      message: `🔥🐷 Checking song "${cleanSongName}" for ${username}... please wait!`,
       queueData: songQueue,
     };
+
+    // Process queue asynchronously
+    // Use the configured channel
+    const channel = `#${process.env.TWITCH_CHANNEL}`;
+    processSongQueue()
+      .then((processResult) => {
+        if (processResult && !processResult.success) {
+          twitchClient.client.say(
+            channel,
+            `❌ Sorry, couldn't add "${cleanSongName}": ${processResult.message}`
+          );
+        } else {
+          twitchClient.client.say(
+            channel,
+            `✅ Successfully added "${cleanSongName}" to the queue!`
+          );
+        }
+      })
+      .catch((error) => {
+        logger.error('Error in song queue processing:', error);
+      });
+
+    return initialResponse;
   } catch (error) {
     logger.error('Error handling song request:', error);
     return {
@@ -180,7 +196,7 @@ export async function handleSongRequest(username, songName, twitchClient) {
   }
 }
 
-export async function processSongQueue(channel, twitchClient) {
+export async function processSongQueue() {
   if (songQueue.length === 0) {
     logger.debug('Song queue is empty - nothing to process');
     return;
@@ -219,7 +235,7 @@ export async function processSongQueue(channel, twitchClient) {
         if (firstDevice) {
           await spotify.api.transferMyPlayback([firstDevice.id], { play: false });
           logger.info(`Transferred playback to device: ${firstDevice.name}`);
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
         }
       }
 

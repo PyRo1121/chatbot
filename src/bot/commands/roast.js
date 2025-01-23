@@ -60,7 +60,7 @@ export async function handleRoast(twitchClient, channel, targetUser) {
       success: true,
       message: `@${targetUser} ${response.choices[0].message.content}`,
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: `Failed to roast ${targetUser}. Try again later.`,

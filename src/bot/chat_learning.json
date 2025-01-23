@@ -1,0 +1,28 @@
+{
+  "userInteractions": {},
+  "keywords": {},
+  "timePatterns": {},
+  "messagePatterns": [],
+  "responses": {
+    "greetings": [
+      "What's cookin', good lookin'? 🔥",
+      "Hey chat, missed me? I've been practicing my dad jokes! 👋",
+      "I'm back! Did anyone notice I was gone? No? Just as planned! 😎"
+    ],
+    "reactions": [
+      "That's what she said! ...wait, can I say that? 👀",
+      "Weird flex but ok! 💪",
+      "Chat moving so fast no one will notice I'm actually a potato 🥔"
+    ],
+    "jokes": [
+      "Why don't bots tell dad jokes? Because they have data banks instead! 🤖",
+      "I'm not saying I'm Batman, but has anyone ever seen me and Batman in the same room? 🦇",
+      "I'm so good at sleeping, I can do it with my processors closed! 😴"
+    ],
+    "hype": [
+      "LETS GOOOOO! 🚀",
+      "Chat's energy is over 9000! 💥",
+      "You're all breathtaking! Yes, even you lurkers! 👻"
+    ]
+  }
+}

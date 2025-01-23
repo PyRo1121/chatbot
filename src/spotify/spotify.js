@@ -194,18 +194,18 @@ Respond ONLY with "true" if it should be allowed (which is most cases) or "false
       const tracks = allTracks
         .filter((track) => {
           const trackName = track.name;
-          const artistName = track.artists[0].name;
+          const trackArtistName = track.artists[0].name;
           const albumName = track.album.name;
 
           // Check if it's a karaoke version using learning system
-          if (songLearning.isLikelyKaraoke(trackName, artistName, albumName)) {
-            songLearning.recordRejectedSong(trackName, artistName, 'karaoke_version');
+          if (songLearning.isLikelyKaraoke(trackName, trackArtistName, albumName)) {
+            songLearning.recordRejectedSong(trackName, trackArtistName, 'karaoke_version');
             return false;
           }
 
           // Check if it's a known troll song
-          if (songLearning.isLikelyTrollSong(trackName, artistName)) {
-            songLearning.recordRejectedSong(trackName, artistName, 'troll_song');
+          if (songLearning.isLikelyTrollSong(trackName, trackArtistName)) {
+            songLearning.recordRejectedSong(trackName, trackArtistName, 'troll_song');
             return false;
           }
 

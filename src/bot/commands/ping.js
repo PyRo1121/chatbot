@@ -1,4 +1,4 @@
-export function handlePing(twitchClient, channel) {
+export function handlePing() {
   return {
     success: true,
     message: 'Pong! 🔥🐷',
