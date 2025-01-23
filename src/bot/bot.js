@@ -8,6 +8,13 @@ import customCommands, {
   handleAddCommand,
   handleRemoveCommand,
 } from './commands/customCommands.js';
+import chatGames, {
+  handleStartTrivia,
+  handleStartWordChain,
+  handleStartMiniGame,
+  handleAnswer,
+} from './commands/games.js';
+import { handleStreamInsights } from './commands/streamInsights.js';
 import {
   handlePing,
   handleRoast,
@@ -27,8 +34,16 @@ function setupMessageHandler() {
     }
 
     try {
-      // Check for witty response opportunity if not a command
+      // Check for game answers or witty responses if not a command
       if (!message.startsWith('!')) {
+        // Check for game answers first
+        const gameResponse = handleAnswer(tags.username, message);
+        if (gameResponse) {
+          twitchClient.client.say(channel, gameResponse.message);
+          return;
+        }
+
+        // Then check for witty responses
         const wittyResponse = await chatInteraction.getWittyResponse(message, tags.username);
         if (wittyResponse) {
           twitchClient.client.say(channel, wittyResponse);
@@ -152,6 +167,27 @@ function setupMessageHandler() {
               };
             }
             break;
+
+          case '!trivia':
+            response = await handleStartTrivia(tags.username, args, tags.mod ? 'mod' : 'user');
+            break;
+
+          case '!wordchain':
+            response = await handleStartWordChain(tags.username, args, tags.mod ? 'mod' : 'user');
+            break;
+
+          case '!minigame':
+            response = await handleStartMiniGame(tags.username, args, tags.mod ? 'mod' : 'user');
+            break;
+
+          case '!insights':
+            response = await handleStreamInsights(
+              tags.username,
+              args,
+              'broadcaster',
+              twitchClient.twitchApi
+            );
+            break;
         }
 
         if (response) {
@@ -164,12 +200,14 @@ function setupMessageHandler() {
         }
       }
 
-      // Track analytics for the message
+      // Track analytics and game stats
       if (command) {
         analytics.trackViewer(tags.username, 'command');
         analytics.trackCommand(command);
+        chatGames.trackActivity(tags.username, 'command');
       } else {
         analytics.trackViewer(tags.username, 'chat');
+        chatGames.trackActivity(tags.username, 'chat');
       }
     } catch (error) {
       logger.error('Error in message handler:', error);

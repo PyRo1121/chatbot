@@ -1,6 +1,6 @@
 {
-  "totalStreams": 3,
-  "totalHours": 0.04035805555555556,
+  "totalStreams": 5,
+  "totalHours": 0.18937194444444444,
   "peakViewers": 0,
   "averageViewers": 0,
   "topChatters": [],
@@ -9,7 +9,7 @@
     "!besttime": 1
   },
   "viewerRetention": {
-    "new": 1,
+    "new": 0,
     "returning": 0,
     "regular": 0
   },
@@ -38,6 +38,24 @@
       "commands": {},
       "endTime": "2025-01-23T16:49:30.412Z",
       "duration": 89290
+    },
+    {
+      "startTime": "2025-01-23T17:13:12.907Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-01-23T17:22:02.351Z",
+      "duration": 529444
+    },
+    {
+      "startTime": "2025-01-23T17:22:07.419Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-01-23T17:22:14.425Z",
+      "duration": 7006
     }
   ],
   "lastUpdated": "2025-01-23T16:45:04.782Z"

@@ -21,4 +21,4 @@ export {
 };
 
 export const commandList =
-  '!ping, !songrequest, !queue, !queueclear, !queueremove, !spotify, !so, !roast';
+  '!ping, !songrequest, !queue, !queueclear, !queueremove, !roast, !trivia, !wordchain, !minigame [scramble|riddle], !insights (broadcaster only)';

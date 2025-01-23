@@ -3,6 +3,7 @@ import { ApiClient } from '@twurple/api';
 import { RefreshingAuthProvider } from '@twurple/auth';
 import logger from '../utils/logger.js';
 import { OpenAI } from 'openai';
+import tokenManager from '../auth/tokenManager.js';
 
 class TwitchClient {
   // Stream analytics data
@@ -25,11 +26,28 @@ class TwitchClient {
         clientId: process.env.TWITCH_BOT_CLIENT_ID,
         clientSecret: process.env.TWITCH_BOT_CLIENT_SECRET,
         onRefresh: async (newTokenData) => {
-          // Store new token data and wait for storage to complete
-          await new Promise((resolve) => setTimeout(resolve, 100)); // Ensure async operation
-          process.env.TWITCH_BOT_ACCESS_TOKEN = newTokenData.accessToken;
-          process.env.TWITCH_BOT_REFRESH_TOKEN = newTokenData.refreshToken;
-          logger.info('Twitch token refreshed successfully');
+          try {
+            // Update tokens using tokenManager
+            await tokenManager.updateEnvFile({
+              TWITCH_BOT_ACCESS_TOKEN: newTokenData.accessToken,
+              TWITCH_OAUTH_TOKEN: `oauth:${newTokenData.accessToken}`,
+              ...(newTokenData.refreshToken && {
+                TWITCH_BOT_REFRESH_TOKEN: newTokenData.refreshToken,
+              }),
+            });
+
+            // Update environment variables in memory
+            process.env.TWITCH_BOT_ACCESS_TOKEN = newTokenData.accessToken;
+            process.env.TWITCH_OAUTH_TOKEN = `oauth:${newTokenData.accessToken}`;
+            if (newTokenData.refreshToken) {
+              process.env.TWITCH_BOT_REFRESH_TOKEN = newTokenData.refreshToken;
+            }
+
+            logger.info('Twitch token refreshed successfully via auth provider');
+          } catch (error) {
+            logger.error('Error in auth provider refresh:', error);
+            throw error;
+          }
         },
       },
       {
@@ -60,11 +78,12 @@ class TwitchClient {
   }
 
   setupEventHandlers() {
-    this.client.on('message', this.onMessageHandler.bind(this));
-    this.client.on('subscription', this.onSubscription.bind(this));
-    this.client.on('resub', this.onResub.bind(this));
-    this.client.on('raid', this.onRaid.bind(this));
-    this.client.on('follow', this.onFollow.bind(this));
+    this.client.on('message', this.handleError(this.onMessageHandler.bind(this)));
+    this.client.on('subscription', this.handleError(this.onSubscription.bind(this)));
+    this.client.on('resub', this.handleError(this.onResub.bind(this)));
+    this.client.on('raid', this.handleError(this.onRaid.bind(this)));
+    this.client.on('follow', this.handleError(this.onFollow.bind(this)));
+    this.client.on('error', this.handleTwitchError.bind(this));
   }
 
   async generateResponse(prompt) {
@@ -85,6 +104,31 @@ class TwitchClient {
       logger.error('OpenAI error:', error);
       return 'Thanks for the support!';
     }
+  }
+
+  handleError(handler) {
+    return async (...args) => {
+      try {
+        await handler(...args);
+      } catch (error) {
+        const wasRefreshed = await tokenManager.handleTokenError(error);
+        if (wasRefreshed) {
+          // Retry the operation with new token
+          try {
+            await handler(...args);
+          } catch (retryError) {
+            logger.error('Error after token refresh:', retryError);
+          }
+        } else {
+          logger.error('Error in event handler:', error);
+        }
+      }
+    };
+  }
+
+  async handleTwitchError(error) {
+    logger.error('Twitch client error:', error);
+    await tokenManager.handleTokenError(error);
   }
 
   async onMessageHandler(channel, tags, message, self) {
