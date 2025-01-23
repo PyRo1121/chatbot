@@ -118,14 +118,15 @@ class ChatInteraction {
 
     try {
       // Analyze message for interaction opportunity
-      const prompt = `Analyze this chat message and determine if it's a good opportunity for a witty bot response. Consider:
-1. Is it engaging/interesting?
-2. Would a witty response add to the conversation?
-3. Is it appropriate for a fun response?
+      const prompt = `Analyze this chat message and determine how to respond. Consider:
+1. Is it a question that needs a helpful answer?
+2. Is it an opportunity for a witty response?
+3. Is it appropriate for interaction?
 
 Message: "${message}"
 
-Respond ONLY with a category if we should respond, or "none" if we should skip:
+Respond ONLY with a category:
+- question (for questions needing answers)
 - greeting (for welcomes/hellos)
 - reaction (for reacting to statements/events)
 - joke (for opportunities to be funny)
@@ -135,13 +136,26 @@ Respond ONLY with a category if we should respond, or "none" if we should skip:
       const category = await generateResponse(prompt);
       const cleanCategory = category.toLowerCase().trim();
 
-      if (cleanCategory === 'none' || !this.data.responses[cleanCategory]) {
+      if (cleanCategory === 'none') {
         return null;
       }
 
-      // Get responses for the category
-      const responses = this.data.responses[cleanCategory];
-      const response = responses[Math.floor(Math.random() * responses.length)];
+      let response;
+      if (cleanCategory === 'question') {
+        // Generate a helpful answer for questions
+        const answerPrompt = `Answer this Twitch chat question in a friendly and concise way: "${message}"
+Keep the answer short and entertaining while being helpful.`;
+        response = await generateResponse(
+          answerPrompt,
+          'You are a knowledgeable and fun Twitch bot. Keep answers short and entertaining while being accurate and helpful.'
+        );
+      } else if (this.data.responses[cleanCategory]) {
+        // Get witty responses for other categories
+        const responses = this.data.responses[cleanCategory];
+        response = responses[Math.floor(Math.random() * responses.length)];
+      } else {
+        return null;
+      }
 
       // Update interaction time
       this.lastInteraction = now;

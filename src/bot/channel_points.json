@@ -1,0 +1,26 @@
+{
+  "Highlight My Message": {
+    "enabled": true,
+    "cost": 500,
+    "userCooldown": 300,
+    "handler": "highlightMessage"
+  },
+  "Create Stream Marker": {
+    "enabled": true,
+    "cost": 1000,
+    "userCooldown": 60,
+    "handler": "createMarker"
+  },
+  "Create Clip": {
+    "enabled": true,
+    "cost": 1500,
+    "userCooldown": 120,
+    "handler": "createClip"
+  },
+  "Custom AI Response": {
+    "enabled": true,
+    "cost": 2000,
+    "userCooldown": 300,
+    "handler": "generateAIResponse"
+  }
+}

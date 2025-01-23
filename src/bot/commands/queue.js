@@ -114,7 +114,7 @@ export function handleRemoveFromQueue(username, index) {
   };
 }
 
-export async function handleSongRequest(username, songName, twitchClient) {
+export function handleSongRequest(username, songName, twitchClient) {
   if (!songName || songName.trim().length === 0) {
     return {
       success: false,

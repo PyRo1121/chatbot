@@ -2,6 +2,12 @@ import { renderTemplate, broadcastUpdate } from '../overlays/overlays.js';
 import logger from '../utils/logger.js';
 import twitchClient from './twitchClient.js';
 import chatInteraction from './chatInteraction.js';
+import channelPoints from './channelPoints.js';
+import analytics from './analytics.js';
+import customCommands, {
+  handleAddCommand,
+  handleRemoveCommand,
+} from './commands/customCommands.js';
 import {
   handlePing,
   handleRoast,
@@ -30,11 +36,18 @@ function setupMessageHandler() {
         }
       }
 
-      if (message.startsWith('!')) {
-        const command = message.split(' ')[0].toLowerCase();
-        const args = message.split(' ').slice(1);
+      let response = null;
+      let command = null;
+      let args = [];
 
-        let response = null;
+      if (message.startsWith('!')) {
+        command = message.split(' ')[0].toLowerCase();
+        args = message.split(' ').slice(1);
+
+        // Get stats data outside switch to avoid lexical declarations in case blocks
+        const stats = analytics.getEngagementStats();
+        const topChatters = stats.topChatters.slice(0, 3);
+        const bestTimes = analytics.getBestStreamingTimes();
 
         switch (command) {
           case '!ping':
@@ -44,7 +57,50 @@ function setupMessageHandler() {
           case '!commands':
             response = {
               success: true,
-              message: `Available commands: ${commandList}`,
+              message: `Available commands: ${commandList} | Custom commands: ${customCommands.listCommands().join(', ')}`,
+            };
+            break;
+
+          case '!addcom':
+            if (args.length >= 2) {
+              response = await handleAddCommand(tags.username, args, tags.mod ? 'mod' : 'user');
+            } else {
+              response = {
+                success: false,
+                message: 'Usage: !addcom [command] [response]',
+              };
+            }
+            break;
+
+          case '!delcom':
+            if (args.length >= 1) {
+              response = await handleRemoveCommand(tags.username, args, tags.mod ? 'mod' : 'user');
+            } else {
+              response = {
+                success: false,
+                message: 'Usage: !delcom [command]',
+              };
+            }
+            break;
+
+          case '!stats':
+            response = {
+              success: true,
+              message: `Stream Stats 📊 | Viewers: ${stats.currentViewers} | Peak: ${stats.peakViewers} | Active Chatters: ${stats.activeLastHour} | Top Command: ${stats.popularCommands[0]?.[0] || 'None'}`,
+            };
+            break;
+
+          case '!topchatter':
+            response = {
+              success: true,
+              message: `Top Chatters 🏆 | ${topChatters.map((c, i) => `${i + 1}. ${c.username} (${c.messages} msgs)`).join(' | ')}`,
+            };
+            break;
+
+          case '!besttime':
+            response = {
+              success: true,
+              message: `Best Stream Times 🕒 | ${bestTimes.map((t) => `${t.time} (${t.averageViewers} avg viewers)`).join(' | ')}`,
             };
             break;
 
@@ -101,19 +157,69 @@ function setupMessageHandler() {
         if (response) {
           twitchClient.client.say(channel, response.message);
         }
+        // Handle custom commands
+        const customResponse = customCommands.handleCommand(command, tags.mod ? 'mod' : 'user');
+        if (customResponse) {
+          response = customResponse;
+        }
+      }
+
+      // Track analytics for the message
+      if (command) {
+        analytics.trackViewer(tags.username, 'command');
+        analytics.trackCommand(command);
+      } else {
+        analytics.trackViewer(tags.username, 'chat');
       }
     } catch (error) {
       logger.error('Error in message handler:', error);
+    }
+  });
+
+  // Handle channel point redemptions
+  twitchClient.client.on('redeem', async (channel, username, rewardType, tags, message) => {
+    try {
+      const result = await channelPoints.handleRedemption(
+        rewardType,
+        username,
+        message,
+        twitchClient.twitchApi
+      );
+
+      if (result.success) {
+        twitchClient.client.say(channel, result.message);
+      }
+    } catch (error) {
+      logger.error('Error handling channel point redemption:', error);
     }
   });
 }
 
 // Setup handlers and process queue
 setupMessageHandler();
+
+// Start analytics tracking
+analytics.startStream();
+
+// Setup intervals
 setInterval(() => {
   if (twitchClient.client) {
     processSongQueue();
   }
 }, 30000);
+
+// Clean up analytics data periodically
+setInterval(
+  () => {
+    analytics.cleanup();
+  },
+  24 * 60 * 60 * 1000
+); // Once per day
+
+// Handle stream end
+process.on('SIGINT', () => {
+  analytics.endStream();
+  process.exit();
+});
 
 export { twitchClient };
