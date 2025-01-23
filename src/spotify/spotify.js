@@ -1,6 +1,7 @@
 import SpotifyWebApi from 'spotify-web-api-node';
 import logger from '../utils/logger.js';
 import { generateResponse, analyzeAudioFromUrl } from '../utils/openai.js';
+import songLearning from './songLearning.js';
 
 // Helper function for retrying operations
 function retryOperation(operation, maxAttempts = 5, baseDelay = 2000) {
@@ -141,9 +142,11 @@ Respond ONLY with "true" if it should be allowed (which is most cases) or "false
     try {
       // Check if query is appropriate
       if (!(await this.isContentAppropriate(query))) {
+        songLearning.recordRejectedSong(query, '', 'inappropriate_content');
         return {
           error: true,
           message: this.getRandomRejection(),
+          reason: 'inappropriate_content',
         };
       }
 
@@ -187,21 +190,26 @@ Respond ONLY with "true" if it should be allowed (which is most cases) or "false
         return null;
       }
 
-      // Filter and score tracks based on match quality
+      // Filter and score tracks based on match quality and learning data
       const tracks = allTracks
         .filter((track) => {
-          const trackArtistName = track.artists[0].name.toLowerCase();
-          const trackName = track.name.toLowerCase();
-          return (
-            !trackArtistName.includes('karaoke') &&
-            !trackArtistName.includes('tribute') &&
-            !trackArtistName.includes('made popular') &&
-            !trackArtistName.includes('backing') &&
-            !trackName.includes('karaoke') &&
-            !trackName.includes('tribute') &&
-            !trackName.includes('backing') &&
-            !trackName.includes('instrumental')
-          );
+          const trackName = track.name;
+          const artistName = track.artists[0].name;
+          const albumName = track.album.name;
+
+          // Check if it's a karaoke version using learning system
+          if (songLearning.isLikelyKaraoke(trackName, artistName, albumName)) {
+            songLearning.recordRejectedSong(trackName, artistName, 'karaoke_version');
+            return false;
+          }
+
+          // Check if it's a known troll song
+          if (songLearning.isLikelyTrollSong(trackName, artistName)) {
+            songLearning.recordRejectedSong(trackName, artistName, 'troll_song');
+            return false;
+          }
+
+          return true;
         })
         .map((track) => {
           let score = 0;
@@ -233,6 +241,10 @@ Respond ONLY with "true" if it should be allowed (which is most cases) or "false
             }
           });
 
+          // Add bonus points based on song history
+          const status = songLearning.getSongStatus(track.name, track.artists[0].name);
+          score += status.approvalCount * 5; // Bonus points for previously approved songs
+
           return { track, score };
         })
         .sort((a, b) => b.score - a.score);
@@ -243,9 +255,15 @@ Respond ONLY with "true" if it should be allowed (which is most cases) or "false
       const trackText = `${originalTrack.name} ${originalTrack.artists.map((a) => a.name).join(' ')}`;
 
       if (!(await this.isContentAppropriate(trackText))) {
+        songLearning.recordRejectedSong(
+          originalTrack.name,
+          originalTrack.artists[0].name,
+          'inappropriate_content'
+        );
         return {
           error: true,
           message: this.getRandomRejection(),
+          reason: 'inappropriate_content',
         };
       }
 
@@ -257,9 +275,15 @@ Respond ONLY with "true" if it should be allowed (which is most cases) or "false
             logger.error('Audio analysis error:', audioAnalysis.message);
           } else if (!audioAnalysis.isAppropriate) {
             logger.info('Audio analysis found inappropriate content:', audioAnalysis.analysis);
+            songLearning.recordRejectedSong(
+              originalTrack.name,
+              originalTrack.artists[0].name,
+              'audio_check_failed'
+            );
             return {
               error: true,
               message: "That doesn't sound like the real song. Nice try! 🎵🚫",
+              reason: 'audio_check_failed',
             };
           }
           logger.info('Audio analysis passed:', {
@@ -272,6 +296,8 @@ Respond ONLY with "true" if it should be allowed (which is most cases) or "false
         }
       }
 
+      // Record this as an approved song
+      songLearning.recordApprovedSong(originalTrack.name, originalTrack.artists[0].name);
       return originalTrack;
     } catch (error) {
       logger.error('Error searching track:', error);

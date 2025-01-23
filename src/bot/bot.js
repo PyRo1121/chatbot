@@ -2,6 +2,7 @@ import tmi from 'tmi.js';
 import { renderTemplate, broadcastUpdate } from '../overlays/overlays.js';
 import logger from '../utils/logger.js';
 import twitchClient from './twitchClient.js';
+import chatInteraction from './chatInteraction.js';
 import {
   handlePing,
   handleRoast,
@@ -11,7 +12,6 @@ import {
   handleSongRequest,
   processSongQueue,
   commandList,
-  songQueue,
 } from './commands/index.js';
 
 // Format the OAuth token correctly (do this once at startup)
@@ -27,6 +27,15 @@ function setupMessageHandler() {
     }
 
     try {
+      // Check for witty response opportunity if not a command
+      if (!message.startsWith('!')) {
+        const wittyResponse = await chatInteraction.getWittyResponse(message, tags.username);
+        if (wittyResponse) {
+          twitchClient.client.say(channel, wittyResponse);
+          return;
+        }
+      }
+
       if (message.startsWith('!')) {
         const command = message.split(' ')[0].toLowerCase();
         const args = message.split(' ').slice(1);
@@ -48,9 +57,9 @@ function setupMessageHandler() {
           case '!songrequest':
             if (args.length > 0) {
               response = await handleSongRequest(tags.username, args.join(' '), twitchClient);
-              if (response.success && response.queueData) {
+              if (response.success) {
                 const queueContent = renderTemplate('queue', {
-                  songs: JSON.stringify(response.queueData),
+                  songs: JSON.stringify(response.song),
                 });
                 broadcastUpdate(queueContent);
               }
