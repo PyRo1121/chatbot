@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.2] - 2025-01-23
+### Fixed
+- Fixed auth provider initialization in competitor analysis
+  * Added proper RefreshingAuthProvider implementation
+  * Improved token refresh handling
+  * Enhanced error recovery for API calls
+- Removed duplicate client connection calls
+  * Eliminated redundant connect() call in index.js
+  * Improved connection reliability
+  * Better error handling during initialization
+
 ## [1.4.1] - 2025-01-23
 ### Fixed
 - Improved async/await implementation across all commands

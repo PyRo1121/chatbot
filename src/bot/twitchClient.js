@@ -54,7 +54,7 @@ class TwitchClient {
     const botTokens = await tokenManager.getBotTokens();
     const broadcasterTokens = await tokenManager.getBroadcasterTokens();
 
-    // Initialize bot auth provider
+    // Initialize bot auth provider with initial data
     const botAuthProvider = new RefreshingAuthProvider({
       clientId: botTokens.clientId,
       clientSecret: botTokens.clientSecret,
@@ -69,17 +69,22 @@ class TwitchClient {
       },
     });
 
-    // Add bot credentials to auth provider
-    await botAuthProvider.addUserForToken(
-      {
-        accessToken: botTokens.accessToken,
-        refreshToken: botTokens.refreshToken,
-        expiresIn: 0,
-        obtainmentTimestamp: 0,
-        scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
-      },
-      ['chat']
-    );
+    // Create temporary API client to get bot user ID
+    const tempBotApi = new ApiClient({ authProvider: botAuthProvider });
+    const botUser = await tempBotApi.users.getUserByName(botTokens.username);
+    if (!botUser) {
+      throw new Error('Could not find bot user');
+    }
+
+    // Add bot credentials to auth provider with required scopes
+    await botAuthProvider.addUserForToken({
+      accessToken: botTokens.accessToken,
+      refreshToken: botTokens.refreshToken,
+      expiresIn: 14400, // 4 hours in seconds
+      obtainmentTimestamp: Date.now(),
+      userId: botUser.id,
+      scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
+    });
 
     // Initialize broadcaster auth provider
     const broadcasterAuthProvider = new RefreshingAuthProvider({
@@ -96,56 +101,89 @@ class TwitchClient {
       },
     });
 
-    // Create temporary API client to get user ID
-    const tempApi = new ApiClient({ authProvider: broadcasterAuthProvider });
-    const broadcaster = await tempApi.users.getUserByName(
+    // Add broadcaster credentials to auth provider
+    await broadcasterAuthProvider.addUserForToken({
+      accessToken: broadcasterTokens.accessToken,
+      refreshToken: broadcasterTokens.refreshToken,
+      expiresIn: 14400,
+      obtainmentTimestamp: Date.now(),
+      scope: [
+        'channel:read:subscriptions',
+        'channel:read:redemptions',
+        'channel:manage:redemptions',
+        'channel:read:vips',
+        'channel:manage:vips',
+        'channel:moderate',
+        'channel:read:followers',
+        'moderator:read:followers',
+        'channel:read:stream_key',
+        'channel:read:subscriptions',
+        'channel:read:vips',
+        'moderator:read:chatters',
+        'user:read:follows',
+        'user:read:subscriptions',
+        'user:read:email',
+        'user:read:broadcast',
+        'whispers:read',
+        'whispers:edit',
+        'channel:read:follows',
+        'channel:read:goals',
+        'channel:read:polls',
+        'channel:read:predictions',
+      ],
+    });
+
+    // Create temporary API client to get broadcaster ID
+    const tempBroadcasterApi = new ApiClient({ authProvider: broadcasterAuthProvider });
+    const broadcaster = await tempBroadcasterApi.users.getUserByName(
       broadcasterTokens.channel.replace('#', '')
     );
     if (!broadcaster) {
       throw new Error('Could not find broadcaster user');
     }
 
-    // Add broadcaster credentials to auth provider with user ID
-    await broadcasterAuthProvider.addUserForToken(
-      {
-        accessToken: broadcasterTokens.accessToken,
-        refreshToken: broadcasterTokens.refreshToken,
-        expiresIn: 14400, // 4 hours in seconds
-        obtainmentTimestamp: Date.now(),
-        userId: broadcaster.id,
-        scope: [
-          'channel:read:subscriptions',
-          'channel:read:redemptions',
-          'channel:manage:redemptions',
-          'channel:read:vips',
-          'channel:manage:vips',
-          'channel:moderate',
-          'channel:read:followers',
-          'moderator:read:followers',
-          'channel:read:stream_key',
-          'channel:read:subscriptions',
-          'channel:read:vips',
-          'moderator:read:chatters',
-          'user:read:follows',
-          'user:read:subscriptions',
-          'user:read:email',
-          'user:read:broadcast',
-          'whispers:read',
-          'whispers:edit',
-          'channel:read:follows',
-          'channel:read:goals',
-          'channel:read:polls',
-          'channel:read:predictions',
-        ],
-      },
-      ['chat']
-    );
+    // Update broadcaster token data with user ID
+    await broadcasterAuthProvider.addUserForToken({
+      accessToken: broadcasterTokens.accessToken,
+      refreshToken: broadcasterTokens.refreshToken,
+      expiresIn: 14400,
+      obtainmentTimestamp: Date.now(),
+      userId: broadcaster.id,
+      scope: [
+        'channel:read:subscriptions',
+        'channel:read:redemptions',
+        'channel:manage:redemptions',
+        'channel:read:vips',
+        'channel:manage:vips',
+        'channel:moderate',
+        'channel:read:followers',
+        'moderator:read:followers',
+        'channel:read:stream_key',
+        'channel:read:subscriptions',
+        'channel:read:vips',
+        'moderator:read:chatters',
+        'user:read:follows',
+        'user:read:subscriptions',
+        'user:read:email',
+        'user:read:broadcast',
+        'whispers:read',
+        'whispers:edit',
+        'channel:read:follows',
+        'channel:read:goals',
+        'channel:read:polls',
+        'channel:read:predictions',
+      ],
+    });
 
     // Initialize API clients with authenticated user
-    this.twitchApi = new ApiClient({ authProvider: botAuthProvider });
+    this.twitchApi = new ApiClient({
+      authProvider: botAuthProvider,
+      authId: botUser.id,
+    });
+
     this.broadcasterApi = new ApiClient({
       authProvider: broadcasterAuthProvider,
-      authId: broadcaster.id, // Set authenticated user ID
+      authId: broadcaster.id,
     });
 
     // Initialize chat client with robust connection options
@@ -176,12 +214,18 @@ class TwitchClient {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
+    // Set up event handlers
     await this.setupEventHandlers(
       botTokens,
       broadcasterTokens,
       broadcaster,
       broadcasterAuthProvider
     );
+
+    // Connect to Twitch chat
+    await this.client.connect();
+    logger.info('Successfully connected to Twitch chat');
+
     return this;
   }
 

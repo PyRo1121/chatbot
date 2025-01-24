@@ -1,6 +1,7 @@
 import getClient from './twitchClient.js';
 import analytics from './analytics.js';
 import chatInteraction from './chatInteraction.js';
+import CompetitorAnalysis from './competitorAnalysis.js';
 import {
   processSongQueue,
   handleChatActivity,
@@ -44,11 +45,15 @@ import {
   handleWarn,
   moderateMessage,
   assessRaid,
+  competitorCommands,
 } from './commands/index.js';
 import { detectHighlight } from './streamManager.js';
 
 async function initBot() {
   const twitchClient = await getClient();
+
+  // Initialize competitor analysis
+  const competitorAnalysis = new CompetitorAnalysis();
 
   // Start analytics tracking
   analytics.startStream();
@@ -343,6 +348,43 @@ async function initBot() {
         twitchClient.client.say(channel, analysisResponse);
         break;
       }
+
+      // Competitor analysis commands
+      case '!track': {
+        if (isBroadcaster) {
+          const commands = competitorCommands(twitchClient.client, competitorAnalysis);
+          await commands.trackChannel.execute(channel, user, message, args.split(' '));
+        }
+        break;
+      }
+      case '!untrack': {
+        if (isBroadcaster) {
+          const commands = competitorCommands(twitchClient.client, competitorAnalysis);
+          await commands.untrackChannel.execute(channel, user, message, args.split(' '));
+        }
+        break;
+      }
+      case '!insights': {
+        if (isBroadcaster) {
+          const commands = competitorCommands(twitchClient.client, competitorAnalysis);
+          await commands.insights.execute(channel, user, message, args.split(' '));
+        }
+        break;
+      }
+      case '!suggestions': {
+        if (isBroadcaster) {
+          const commands = competitorCommands(twitchClient.client, competitorAnalysis);
+          await commands.suggestions.execute(channel, user, message, args.split(' '));
+        }
+        break;
+      }
+      case '!tracked': {
+        if (isBroadcaster) {
+          const commands = competitorCommands(twitchClient.client, competitorAnalysis);
+          await commands.tracked.execute(channel, user, message, args.split(' '));
+        }
+        break;
+      }
     }
   });
 
@@ -377,6 +419,14 @@ async function initBot() {
     },
     24 * 60 * 60 * 1000
   ); // Once per day
+
+  // Update competitor analysis periodically
+  setInterval(
+    () => {
+      competitorAnalysis.updateAllChannels();
+    },
+    60 * 60 * 1000
+  ); // Once per hour
 
   // Handle stream end
   process.on('SIGINT', async () => {

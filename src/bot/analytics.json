@@ -1,11 +1,11 @@
 {
-  "totalStreams": 210,
-  "totalHours": 6.056497222222221,
+  "totalStreams": 224,
+  "totalHours": 6.361693055555555,
   "peakViewers": 1,
   "averageViewers": 0,
   "topChatters": [],
   "popularCommands": {
-    "!roast": 37,
+    "!roast": 38,
     "!besttime": 1,
     "!insight": 2,
     "!rosat": 1,
@@ -19,7 +19,7 @@
     "!suspicious": 1
   },
   "viewerRetention": {
-    "new": 1,
+    "new": 0,
     "returning": 0,
     "regular": 0
   },
@@ -1713,6 +1713,108 @@
       "commands": {},
       "endTime": "2025-01-24T03:31:21.524Z",
       "duration": 15563
+    },
+    {
+      "startTime": "2025-01-24T04:04:30.831Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:09:52.292Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:12:16.041Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:13:37.227Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:16:28.531Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:18:31.694Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:19:55.788Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:24:43.392Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:26:12.733Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:32:17.642Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:39:16.248Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:41:00.745Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-24T04:43:31.100Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-01-24T04:48:05.505Z",
+      "duration": 274405
+    },
+    {
+      "startTime": "2025-01-24T04:48:12.617Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-01-24T04:48:17.434Z",
+      "duration": 4817
     }
   ],
   "lastUpdated": "2025-01-23T16:45:04.782Z"

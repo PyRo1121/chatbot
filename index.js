@@ -7,9 +7,7 @@ logger.info('Starting Twitch chat bot...');
 
 (async () => {
   try {
-    const twitchClient = await initBot();
-    await twitchClient.client.connect();
-    logger.info('Successfully connected to Twitch');
+    await initBot();
   } catch (error) {
     logger.error('Failed to connect to Twitch:', error);
     process.exit(1);

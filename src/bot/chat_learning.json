@@ -21,8 +21,8 @@
       "!recommendations": 2,
       "!followprotection": 3,
       "!suspicious": 1,
-      "!roast": 1,
-      "@pokemoncommunitygame": 1,
+      "!roast": 2,
+      "@pokemoncommunitygame": 2,
       "!insights": 1
     },
     "engagement": {},

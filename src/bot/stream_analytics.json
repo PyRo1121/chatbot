@@ -27,11 +27,42 @@
           "low viewership and engagement metrics"
         ]
       }
+    },
+    {
+      "startTime": "2025-01-24T04:43:31.202Z",
+      "endTime": "2025-01-24T04:48:04.463Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": [
+          "low viewership and engagement metrics"
+        ]
+      }
+    },
+    {
+      "startTime": "2025-01-24T04:48:12.723Z",
+      "endTime": "2025-01-24T04:48:17.435Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+      }
     }
   ],
   "categoryStats": {},
   "timeStats": {
     "21": {
+      "averageViewers": 0,
+      "peakViewers": 0,
+      "streams": 2
+    },
+    "22": {
       "averageViewers": 0,
       "peakViewers": 0,
       "streams": 2
