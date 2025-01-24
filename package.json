@@ -1,8 +1,9 @@
 {
   "type": "module",
-  "name": "twitch-chat-bot",
+  "name": "FirePigBot",
   "version": "1.0.0",
   "description": "",
+  "author": "PyRo1121",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -49,6 +50,8 @@
   "dependencies": {
     "@twurple/api": "^7.2.1",
     "@twurple/auth": "^7.2.1",
+    "@twurple/eventsub-http": "^7.2.1",
+    "@twurple/eventsub-ws": "^7.2.1",
     "axios": "^1.6.7",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

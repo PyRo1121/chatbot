@@ -2,6 +2,7 @@ import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import logger from '../../utils/logger.js';
 import spotify from '../../spotify/spotify.js';
+import tokenManager from '../../auth/tokenManager.js';
 
 // Initialize song queue
 const songQueue = [];
@@ -114,7 +115,7 @@ export function handleRemoveFromQueue(username, index) {
   };
 }
 
-export function handleSongRequest(username, songName, twitchClient) {
+export async function handleSongRequest(username, songName, twitchClient) {
   if (!songName || songName.trim().length === 0) {
     return {
       success: false,
@@ -166,8 +167,8 @@ export function handleSongRequest(username, songName, twitchClient) {
     };
 
     // Process queue asynchronously
-    // Use the configured channel
-    const channel = `#${process.env.TWITCH_CHANNEL}`;
+    // Get channel from tokenManager
+    const channel = `#${(await tokenManager.getBroadcasterTokens()).channel}`;
     processSongQueue()
       .then((processResult) => {
         if (processResult && !processResult.success) {

@@ -233,13 +233,120 @@ The bot includes comprehensive error handling:
 
 MIT License - See LICENSE file for details
 
+## Configuration Details
+
+### Environment Variables
+```env
+# Required
+TWITCH_BOT_USERNAME     # Your bot's Twitch username
+TWITCH_BOT_CLIENT_ID    # From Twitch Developer Console
+TWITCH_BOT_CLIENT_SECRET # From Twitch Developer Console
+TWITCH_CHANNEL         # Your channel name (without #)
+OPENAI_API_KEY         # From OpenAI dashboard
+
+# Auto-managed (don't set manually)
+TWITCH_BOT_ACCESS_TOKEN  # Managed by token system
+TWITCH_BOT_REFRESH_TOKEN # Managed by token system
+TWITCH_OAUTH_TOKEN      # Managed by token system
+```
+
+### Chat Game Settings
+You can customize game settings in `src/bot/commands/games.js`:
+```javascript
+// Trivia settings
+TRIVIA_TIME_LIMIT = 30000;  // 30 seconds
+TRIVIA_CATEGORIES = ['Gaming', 'Movies', ...];
+
+// Word Chain settings
+WORD_CHAIN_MIN_LENGTH = 3;  // Minimum word length
+WORD_CHAIN_MAX_TIME = 300000;  // 5 minutes
+WORD_CHAIN_MAX_WORDS = 30;  // Maximum chain length
+```
+
+### Analytics Settings
+Customize analytics in `src/bot/analytics.js`:
+```javascript
+UPDATE_INTERVAL = 5 * 60 * 1000;  // Data update frequency
+RETENTION_THRESHOLD = 0.1;  // Viewer retention goal
+SCHEDULE_CONSISTENCY_GOAL = 0.7;  // Schedule consistency target
+```
+
+## Common Issues & Solutions
+
+### Token Refresh Issues
+If you encounter token problems:
+1. Check your Twitch Developer Console credentials
+2. Ensure your bot account has proper permissions
+3. The bot will automatically attempt to refresh invalid tokens
+4. Check logs for specific error messages
+
+### Connection Problems
+If the bot disconnects:
+1. It will automatically attempt to reconnect
+2. Check your internet connection
+3. Verify Twitch API status
+4. Check rate limits in logs
+
+### Game Issues
+If games aren't working:
+1. Verify moderator permissions
+2. Check OpenAI API key for AI-generated content
+3. Ensure proper command syntax
+4. Check cooldown periods
+
+## Performance Optimization
+
+### Memory Usage
+- The bot uses caching for analytics
+- Old data is automatically cleaned up
+- Stream history is limited to 30 days
+- Inactive user data is pruned
+
+### API Rate Limits
+- Built-in cooldown system
+- Request queuing
+- Batch processing for analytics
+- Cache system for frequent requests
+
+## Security Considerations
+
+1. Token Security
+   - Never share your .env file
+   - Tokens are automatically managed
+   - Access tokens are regularly rotated
+   - Refresh tokens are securely stored
+
+2. API Keys
+   - Keep OpenAI key secure
+   - Use appropriate rate limits
+   - Monitor API usage
+   - Rotate keys periodically
+
+3. Bot Permissions
+   - Use minimal required scopes
+   - Regular security audits
+   - Monitor bot activity
+   - Log suspicious behavior
+
 ## Support
 
-For issues and feature requests, please use the GitHub issue tracker.
+For issues and feature requests:
+1. Check the Common Issues section above
+2. Search existing GitHub issues
+3. Create a new issue with:
+   - Detailed description
+   - Steps to reproduce
+   - Relevant logs
+   - Environment details
 
 ## Acknowledgments
 
-- Twitch API
-- OpenAI GPT-3.5
-- TMI.js
-- Twurple
+- [Twitch API](https://dev.twitch.tv/docs)
+- [OpenAI GPT-3.5](https://openai.com/gpt-3)
+- [TMI.js](https://github.com/tmijs/tmi.js)
+- [Twurple](https://twurple.js.org)
+- All contributors and users
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and updates.

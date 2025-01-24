@@ -1,73 +1,143 @@
 import logger from '../../utils/logger.js';
+import getClient from '../twitchClient.js';
+import tokenManager from '../../auth/tokenManager.js';
 
+// Posts stats in chat every 30 minutes when stream is live
 class StreamInsights {
-  constructor(twitchApi) {
-    this.twitchApi = twitchApi;
-    this.cachedInsights = null;
-    this.lastUpdate = 0;
-    this.UPDATE_INTERVAL = 30 * 60 * 1000; // 30 minutes
+  constructor() {
+    this.api = null;
+    this.sessionStats = {
+      viewerSamples: [],
+      peakViewers: 0,
+      startTime: null,
+      lastUpdate: 0,
+    };
+    this.UPDATE_INTERVAL = 30 * 60 * 1000; // 30 minutes between auto-posts
   }
 
-  async getGrowthInsights(channelName) {
+  async init() {
+    const client = await getClient();
+    this.api = client.broadcasterApi; // Use broadcaster API for all endpoints since we need user context
+    return this;
+  }
+
+  async getStreamInsights(channelName, forceUpdate = false) {
     try {
-      // Check cache first
-      if (this.cachedInsights && Date.now() - this.lastUpdate < this.UPDATE_INTERVAL) {
-        return this.cachedInsights;
+      // Rate limit updates to every minute unless forced
+      if (!forceUpdate && Date.now() - this.sessionStats.lastUpdate < 60000) {
+        return null; // Skip update if too soon
       }
 
-      // Get channel info
-      const channel = await this.twitchApi.users.getUserByName(channelName);
-      if (!channel) {
-        throw new Error('Channel not found');
+      // Get broadcaster tokens to get the ID
+      const tokens = await tokenManager.getBroadcasterTokens();
+
+      // Get stream info using broadcaster API
+      const stream = await this.api.streams.getStreamByUserId(tokens.userId);
+
+      // Get stats using broadcaster API with retries
+      let followers = 0;
+      let subscriptions = 0;
+      try {
+        // Get followers and subscribers data with proper pagination and retries
+        const [followersData, subsData] = await Promise.all([
+          this.getFollowersWithRetry(tokens.userId),
+          this.getSubscribersWithRetry(tokens.userId),
+        ]);
+
+        followers = followersData;
+        subscriptions = subsData;
+      } catch (error) {
+        logger.error('Error getting channel stats:', error);
+        // Use default values on error
+        followers = 0;
+        subscriptions = 0;
       }
 
-      // Get recent streams
-      const streams = await this.twitchApi.streams.getStreamsByUserPaginated(channel.id).getAll();
+      // Get game info using broadcaster API with retry
+      let game = null;
+      if (stream?.gameId) {
+        try {
+          game = await this.getGameWithRetry(stream.gameId);
+        } catch (error) {
+          logger.error('Error getting game info:', error);
+          // Continue with null game info
+        }
+      }
 
-      // Get stream schedule and follower count for retention analysis
-      const [schedule, followers] = await Promise.all([
-        this.twitchApi.schedule.getSchedule(channel.id),
-        this.twitchApi.users.getFollows({ followedUser: channel.id }),
-      ]);
+      // Track viewer stats for this stream session
+      if (stream) {
+        const currentViewers = stream.viewerCount || 0;
 
-      // Analyze best streaming times
-      const timeStats = this.analyzeBestTimes(streams);
+        // Reset session if this is a new stream
+        if (!this.sessionStats.startTime || stream.startDate !== this.sessionStats.startTime) {
+          this.sessionStats = {
+            viewerSamples: [],
+            peakViewers: currentViewers,
+            startTime: stream.startDate,
+            lastUpdate: Date.now(),
+          };
+        }
 
-      // Analyze game performance
-      const gameStats = this.analyzeGames(streams);
+        // Update session stats
+        this.sessionStats.viewerSamples.push(currentViewers);
+        this.sessionStats.peakViewers = Math.max(this.sessionStats.peakViewers, currentViewers);
+        this.sessionStats.lastUpdate = Date.now();
+      }
 
-      // Get similar channels for comparison
-      const similarChannels = await this.findSimilarChannels(channel.id, streams[0]?.gameName);
-
-      // Get category recommendations
-      const recommendations = await this.getGameRecommendations(gameStats, similarChannels);
-
-      // Calculate schedule consistency
-      const scheduleConsistency = this.calculateScheduleConsistency(schedule, streams);
-
-      // Calculate follower retention
-      const retention = this.calculateRetention(streams, followers);
-
-      const insights = {
-        bestTimes: timeStats.bestTimes,
-        worstTimes: timeStats.worstTimes,
-        topGames: gameStats.slice(0, 3),
-        recommendedGames: recommendations.slice(0, 5),
-        scheduleConsistency,
-        retention,
-        growthOpportunities: this.findGrowthOpportunities(
-          streams,
-          gameStats,
-          similarChannels,
-          scheduleConsistency,
-          retention
-        ),
-        competitorInsights: await this.analyzeCompetitors(similarChannels),
+      // Calculate basic stats
+      const stats = {
+        currentViewers: stream?.viewerCount || 0,
+        averageViewers:
+          this.sessionStats.viewerSamples.length > 0
+            ? Math.round(
+                this.sessionStats.viewerSamples.reduce((a, b) => a + b, 0) /
+                  this.sessionStats.viewerSamples.length
+              )
+            : 0,
+        peakViewers: this.sessionStats.peakViewers,
+        currentGame: game?.name || 'Not Live',
+        startTime: stream?.startDate ? new Date(stream.startDate) : null,
+        uptime: stream?.uptime ? Math.round(stream.uptime / (60 * 60)) : 0,
+        followers: followers || 0,
+        subscribers: subscriptions || 0,
       };
 
-      // Cache the results
-      this.cachedInsights = insights;
-      this.lastUpdate = Date.now();
+      // Get similar channels in current category if streaming using direct API
+      let similarChannels = [];
+      if (stream?.gameId && stream.gameId !== '') {
+        // Get similar channels using broadcaster API with proper filters and retry
+        const streams = await this.getStreamsWithRetry({
+          gameId: stream.gameId,
+          type: 'live',
+          language: stream.language,
+          limit: 10,
+          // Only get actual broadcaster streams (affiliates and partners), not reruns or premieres
+          userTypes: ['affiliate', 'partner'],
+        });
+        similarChannels = streams.data
+          .filter(
+            (s) =>
+              s.userId !== tokens.userId &&
+              s.viewerCount > 0 &&
+              s.viewerCount < (stream.viewerCount * 2 || 100)
+          )
+          .slice(0, 3)
+          .map((s) => s.userDisplayName);
+      }
+
+      // Generate insights
+      const insights = {
+        currentStats: {
+          viewers: stats.currentViewers,
+          avgViewers: stats.averageViewers,
+          peakViewers: stats.peakViewers,
+          game: stats.currentGame,
+          uptime: stats.uptime,
+          followers: stats.followers,
+          subscribers: stats.subscribers,
+        },
+        recommendations: this.generateRecommendations(stats, similarChannels),
+      };
 
       return insights;
     } catch (error) {
@@ -76,317 +146,130 @@ class StreamInsights {
     }
   }
 
-  calculateScheduleConsistency(schedule, streams) {
-    if (!schedule?.segments) {
-      return { score: 0, message: 'No schedule set' };
-    }
+  // Generic retry function
+  async retryOperation(operation, defaultValue, maxRetries = 3) {
+    const delays = Array.from({ length: maxRetries }, (_, i) => 1000 * (i + 1));
+    let lastError = null;
 
-    const scheduledTimes = schedule.segments.map((s) => new Date(s.startTime).getHours());
-    const actualTimes = streams.map((s) => new Date(s.startDate).getHours());
-
-    // Calculate how many streams matched scheduled times
-    const matchedStreams = actualTimes.filter((time) => scheduledTimes.includes(time));
-    const consistencyScore = matchedStreams.length / actualTimes.length;
-
-    return {
-      score: consistencyScore,
-      message: `${Math.round(consistencyScore * 100)}% schedule consistency`,
-      scheduledTimes,
-      actualTimes,
-    };
-  }
-
-  calculateRetention(streams, followers) {
-    const totalFollowers = followers.total;
-    const averageViewers =
-      streams.reduce((sum, s) => sum + (s.averageViewerCount || 0), 0) / streams.length;
-    const retentionRate = averageViewers / totalFollowers;
-
-    return {
-      rate: retentionRate,
-      followers: totalFollowers,
-      averageViewers,
-      message: `${Math.round(retentionRate * 100)}% viewer retention rate`,
-    };
-  }
-
-  analyzeBestTimes(streams) {
-    const timeSlots = Array(24)
-      .fill()
-      .map(() => ({
-        viewers: 0,
-        streams: 0,
-        engagement: 0,
-      }));
-
-    streams.forEach((stream) => {
-      const hour = new Date(stream.startDate).getHours();
-      timeSlots[hour].viewers += stream.averageViewerCount || 0;
-      timeSlots[hour].streams++;
-      timeSlots[hour].engagement +=
-        (stream.averageViewerCount || 0) / (stream.peakViewerCount || 1);
-    });
-
-    // Calculate average viewers per time slot
-    timeSlots.forEach((slot) => {
-      if (slot.streams > 0) {
-        slot.avgViewers = slot.viewers / slot.streams;
-        slot.avgEngagement = slot.engagement / slot.streams;
-      }
-    });
-
-    // Sort by average viewers and engagement
-    const sortedSlots = timeSlots
-      .map((slot, hour) => ({ hour, ...slot }))
-      .filter((slot) => slot.streams > 0)
-      .sort((a, b) => b.avgViewers * b.avgEngagement - a.avgViewers * a.avgEngagement);
-
-    return {
-      bestTimes: sortedSlots.slice(0, 3),
-      worstTimes: sortedSlots.slice(-3).reverse(),
-    };
-  }
-
-  analyzeGames(streams) {
-    const gameStats = new Map();
-
-    for (const stream of streams) {
-      if (!stream.gameName) {
-        continue;
-      }
-
-      if (!gameStats.has(stream.gameName)) {
-        gameStats.set(stream.gameName, {
-          name: stream.gameName,
-          totalViewers: 0,
-          peakViewers: 0,
-          streams: 0,
-          averageViewers: 0,
-          averageEngagement: 0,
-          followersGained: 0,
-        });
-      }
-
-      const stats = gameStats.get(stream.gameName);
-      stats.totalViewers += stream.averageViewerCount || 0;
-      stats.peakViewers = Math.max(stats.peakViewers, stream.peakViewerCount || 0);
-      stats.streams++;
-      stats.followersGained += stream.followersGained || 0;
-    }
-
-    // Calculate averages and sort by performance
-    return Array.from(gameStats.values())
-      .map((stats) => ({
-        ...stats,
-        averageViewers: stats.totalViewers / stats.streams,
-        averageEngagement: stats.followersGained / stats.streams,
-      }))
-      .sort(
-        (a, b) => b.averageViewers * b.averageEngagement - a.averageViewers * a.averageEngagement
-      );
-  }
-
-  async findSimilarChannels(channelId, currentGame, limit = 5) {
-    try {
-      // Get streams in same category
-      const streams = await this.twitchApi.streams.getStreams({
-        game: currentGame,
-        first: 100,
-      });
-
-      // Filter to find channels close to your size
-      const targetChannel = streams.data.find((s) => s.userId === channelId);
-      const targetViewers = targetChannel?.viewerCount || 5;
-
-      return streams.data
-        .filter(
-          (stream) =>
-            stream.userId !== channelId &&
-            stream.viewerCount > targetViewers * 0.5 &&
-            stream.viewerCount < targetViewers * 2
-        )
-        .sort(
-          (a, b) =>
-            Math.abs(a.viewerCount - targetViewers) - Math.abs(b.viewerCount - targetViewers)
-        )
-        .slice(0, limit);
-    } catch (error) {
-      logger.error('Error finding similar channels:', error);
-      return [];
-    }
-  }
-
-  async getGameRecommendations(gameStats, similarChannels) {
-    try {
-      const recommendations = new Map();
-      const processedStreams = new Map();
-
-      // Get all streams from similar channels at once
-      const channelStreams = await Promise.all(
-        similarChannels.map((channel) =>
-          this.twitchApi.streams.getStreamsByUserPaginated(channel.userId).getAll()
-        )
-      );
-
-      // Process all streams
-      channelStreams.flat().forEach((stream) => {
-        if (!stream.gameName || processedStreams.has(stream.id)) {
-          return;
-        }
-        processedStreams.set(stream.id, true);
-
-        if (!recommendations.has(stream.gameName)) {
-          recommendations.set(stream.gameName, {
-            name: stream.gameName,
-            score: 0,
-            averageViewers: 0,
-            channels: 0,
-            growth: 0,
-          });
-        }
-
-        const rec = recommendations.get(stream.gameName);
-        rec.averageViewers += stream.averageViewerCount || 0;
-        rec.channels++;
-        rec.growth += stream.followersGained || 0;
-      });
-
-      // Calculate scores based on viewer counts and growth potential
-      return Array.from(recommendations.values())
-        .map((rec) => ({
-          ...rec,
-          averageViewers: rec.averageViewers / rec.channels,
-          growthRate: rec.growth / rec.channels,
-          score: (rec.averageViewers * rec.growth) / (rec.channels * rec.channels),
-        }))
-        .sort((a, b) => b.score - a.score);
-    } catch (error) {
-      logger.error('Error getting game recommendations:', error);
-      return [];
-    }
-  }
-
-  findGrowthOpportunities(streams, gameStats, similarChannels, scheduleConsistency, retention) {
-    const opportunities = [];
-
-    // Analyze stream timing
-    const timeStats = this.analyzeBestTimes(streams);
-    if (timeStats.bestTimes[0]?.avgViewers > timeStats.worstTimes[0]?.avgViewers * 1.5) {
-      opportunities.push({
-        type: 'timing',
-        message: `Consider streaming more during ${timeStats.bestTimes[0].hour}:00, which shows ${Math.round(timeStats.bestTimes[0].avgViewers)} average viewers vs ${Math.round(timeStats.worstTimes[0].avgViewers)} during ${timeStats.worstTimes[0].hour}:00`,
-      });
-    }
-
-    // Analyze game variety
-    if (gameStats.length < 3) {
-      opportunities.push({
-        type: 'variety',
-        message: 'Consider trying more game varieties to find your best performing content',
-      });
-    }
-
-    // Analyze schedule consistency
-    if (scheduleConsistency.score < 0.7) {
-      opportunities.push({
-        type: 'schedule',
-        message: 'More consistent streaming schedule could improve viewer retention',
-      });
-    }
-
-    // Analyze viewer retention
-    if (retention.rate < 0.1) {
-      opportunities.push({
-        type: 'engagement',
-        message: 'Focus on viewer engagement to improve follower-to-viewer conversion',
-      });
-    }
-
-    // Analyze stream duration
-    const avgDuration = streams.reduce((sum, s) => sum + (s.duration || 0), 0) / streams.length;
-    if (avgDuration < 180) {
-      // 3 hours
-      opportunities.push({
-        type: 'duration',
-        message: 'Longer streams (4+ hours) often lead to better discovery and viewer retention',
-      });
-    }
-
-    // Analyze successful similar channels
-    const successfulPeers = similarChannels.filter(
-      (c) => c.viewerCount > streams[0]?.viewerCount * 1.5
-    );
-    if (successfulPeers.length > 0) {
-      opportunities.push({
-        type: 'networking',
-        message: `Consider networking with similar channels like ${successfulPeers.map((c) => c.userName).join(', ')}`,
-      });
-    }
-
-    return opportunities;
-  }
-
-  async analyzeCompetitors(similarChannels) {
-    const analysis = [];
-    const processedStreams = new Map();
-
-    // Get all streams and schedules at once
-    const [allStreams, allSchedules] = await Promise.all([
-      Promise.all(
-        similarChannels.map((channel) =>
-          this.twitchApi.streams.getStreamsByUserPaginated(channel.userId).getAll()
-        )
-      ),
-      Promise.all(
-        similarChannels.map((channel) => this.twitchApi.schedule.getSchedule(channel.userId))
-      ),
-    ]);
-
-    // Process each channel's data
-    similarChannels.forEach((channel, index) => {
+    const attempts = delays.map(async (delay, index) => {
       try {
-        const streams = allStreams[index].filter((s) => !processedStreams.has(s.id));
-        streams.forEach((s) => processedStreams.set(s.id, true));
-
-        const schedule = allSchedules[index];
-        const avgViewers =
-          streams.reduce((sum, s) => sum + (s.averageViewerCount || 0), 0) / streams.length;
-        const avgDuration = streams.reduce((sum, s) => sum + (s.duration || 0), 0) / streams.length;
-        const commonGames = this.findCommonGames(streams);
-
-        analysis.push({
-          channelName: channel.userName,
-          averageViewers: Math.round(avgViewers),
-          averageStreamLength: Math.round(avgDuration / 60), // in minutes
-          topGames: commonGames.slice(0, 3),
-          scheduledDays:
-            schedule?.segments?.map((s) => new Date(s.startTime).toLocaleDateString()) || [],
-        });
+        return await operation();
       } catch (error) {
-        logger.error(`Error analyzing competitor ${channel.userName}:`, error);
+        lastError = error;
+        if (index === delays.length - 1) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return null;
       }
     });
 
-    return analysis;
+    try {
+      const results = await Promise.all(attempts);
+      // Find the first successful result
+      const result = results.find((r) => r !== null);
+      return result ?? defaultValue;
+    } catch {
+      logger.error('Operation failed after retries:', lastError);
+      return defaultValue;
+    }
   }
 
-  findCommonGames(streams) {
-    const games = new Map();
-    streams.forEach((stream) => {
-      if (!stream.gameName) {
-        return;
+  // Helper methods using retry logic
+  // Helper methods using retry logic
+  getFollowersWithRetry(userId, maxRetries = 3) {
+    return this.retryOperation(
+      () => this.api.channels.getChannelFollowerCount(userId),
+      0,
+      maxRetries
+    );
+  }
+
+  async getSubscribersWithRetry(userId, maxRetries = 3) {
+    return this.retryOperation(
+      async () => {
+        try {
+          // Get broadcaster's subscribers using paginated endpoint
+          const subscribers = await this.api.subscriptions
+            .getSubscriptionsPaginated(userId)
+            .getAll();
+          return subscribers.length || 0;
+        } catch (error) {
+          logger.error('Error getting subscribers:', error);
+          throw error;
+        }
+      },
+      0,
+      maxRetries
+    );
+  }
+
+  getGameWithRetry(gameId, maxRetries = 3) {
+    return this.retryOperation(() => this.api.games.getGameById(gameId), null, maxRetries);
+  }
+
+  getStreamsWithRetry(params, maxRetries = 3) {
+    return this.retryOperation(() => this.api.streams.getStreams(params), { data: [] }, maxRetries);
+  }
+
+  generateRecommendations(stats, similarChannels) {
+    const recommendations = [];
+
+    // Network recommendations
+    if (similarChannels.length > 0) {
+      recommendations.push(`🎯 Similar channels in category: ${similarChannels.join(', ')}`);
+    }
+
+    // Stream status
+    if (stats.currentViewers > 0) {
+      recommendations.push(`👥 Current viewers: ${stats.currentViewers}`);
+      recommendations.push(`📈 Average viewers: ${stats.averageViewers}`);
+      recommendations.push(`⚡ Peak viewers: ${stats.peakViewers}`);
+      recommendations.push(`💫 Followers: ${stats.followers}`);
+      recommendations.push(`💜 Subscribers: ${stats.subscribers}`);
+      if (stats.uptime > 0) {
+        recommendations.push(`⏱️ Stream uptime: ${stats.uptime} hours`);
       }
-      games.set(stream.gameName, (games.get(stream.gameName) || 0) + 1);
-    });
-    return Array.from(games.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([name]) => name);
+    } else {
+      recommendations.push('📊 Channel is currently offline');
+    }
+
+    return recommendations;
+  }
+
+  formatMessage(data) {
+    // Format insights message
+    const stats = [
+      `👥 Current: ${data.currentStats.viewers}`,
+      `📈 Avg: ${data.currentStats.avgViewers}`,
+      `⚡ Peak: ${data.currentStats.peakViewers}`,
+      `💫 Followers: ${data.currentStats.followers}`,
+      `💜 Subs: ${data.currentStats.subscribers}`,
+      `⏱️ Uptime: ${data.currentStats.uptime}h`,
+    ].join(' | ');
+
+    return `📊 Stream Analytics\n${stats}`;
+  }
+
+  formatDetailedMessage(data) {
+    return `${this.formatMessage(data)}\n\n📋 Insights:\n${data.recommendations.join('\n')}`;
   }
 }
 
-export default StreamInsights;
+// Create singleton instance
+let insights = null;
 
-export async function handleStreamInsights(username, args, userLevel, twitchApi) {
+// Initialize insights instance
+async function getInsights() {
+  if (!insights) {
+    insights = await new StreamInsights().init();
+  }
+  return insights;
+}
+
+// Command handler - shows detailed stats
+export async function handleStreamInsights(username, args, userLevel) {
+  const insights = await getInsights();
   if (userLevel !== 'broadcaster') {
     return {
       success: false,
@@ -395,30 +278,56 @@ export async function handleStreamInsights(username, args, userLevel, twitchApi)
   }
 
   try {
-    const insights = new StreamInsights(twitchApi);
-    const data = await insights.getGrowthInsights(username);
+    const data = await insights.getStreamInsights(username, true); // Force update for command
 
-    // Format best times
-    const bestTimes = data.bestTimes
-      .map((t) => `${t.hour}:00 (${Math.round(t.avgViewers)} avg viewers)`)
-      .join(', ');
-
-    // Format game recommendations
-    const recommendedGames = data.recommendedGames.map((g) => g.name).join(', ');
-
-    // Format growth opportunities
-    const opportunities = data.growthOpportunities.map((o) => o.message).join(' | ');
+    if (!data) {
+      return {
+        success: false,
+        message: 'Please wait a moment before requesting new insights.',
+      };
+    }
 
     return {
       success: true,
-      message: `📊 Stream Insights | Best Times: ${bestTimes} | Recommended Games: ${recommendedGames} | Growth Tips: ${opportunities}`,
-      fullData: data, // For potential overlay display
+      message: insights.formatDetailedMessage(data),
+      fullData: data,
     };
   } catch (error) {
     logger.error('Error getting stream insights:', error);
+    // Use Twurple's error types for better error handling
+    const isNoDataError =
+      error.name === 'HelixResourceNotFoundError' ||
+      error.name === 'HelixEndpointNotFoundError' ||
+      error.response?.status === 404;
+
     return {
       success: false,
-      message: 'Failed to get stream insights. Please try again later.',
+      message: isNoDataError
+        ? 'No stream data available yet. Start streaming consistently and check back in a few days for personalized insights!'
+        : 'Failed to get stream insights. Please try again later.',
     };
   }
 }
+
+// For periodic updates - shows brief stats every 30 minutes
+export async function getPeriodicUpdate(username) {
+  const insights = await getInsights();
+  try {
+    const data = await insights.getStreamInsights(username);
+
+    if (!data) {
+      return null; // Skip if too soon
+    }
+
+    return {
+      success: true,
+      message: insights.formatMessage(data),
+      fullData: data,
+    };
+  } catch (error) {
+    logger.error('Error getting periodic stream insights:', error);
+    return null; // Skip on error
+  }
+}
+
+export default StreamInsights;

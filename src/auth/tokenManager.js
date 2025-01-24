@@ -10,7 +10,7 @@ class TokenManager {
     this.REFRESH_COOLDOWN = 60 * 1000; // 1 minute cooldown between refresh attempts
   }
 
-  async refreshToken() {
+  async refreshToken(type = 'bot') {
     // Prevent multiple rapid refresh attempts
     if (Date.now() - this.lastRefresh < this.REFRESH_COOLDOWN) {
       logger.debug('Token refresh attempted too soon after previous attempt');
@@ -18,7 +18,24 @@ class TokenManager {
     }
 
     this.lastRefresh = Date.now();
-    logger.info('Refreshing Twitch token...');
+    logger.info(`Refreshing ${type} Twitch token...`);
+
+    const config =
+      type === 'broadcaster'
+        ? {
+            clientId: process.env.TWITCH_CLIENT_ID,
+            clientSecret: process.env.TWITCH_CLIENT_SECRET,
+            refreshToken: process.env.TWITCH_REFRESH_TOKEN,
+            accessTokenEnvKey: 'TWITCH_ACCESS_TOKEN',
+            refreshTokenEnvKey: 'TWITCH_REFRESH_TOKEN',
+          }
+        : {
+            clientId: process.env.TWITCH_BOT_CLIENT_ID,
+            clientSecret: process.env.TWITCH_BOT_CLIENT_SECRET,
+            refreshToken: process.env.TWITCH_BOT_REFRESH_TOKEN,
+            accessTokenEnvKey: 'TWITCH_BOT_ACCESS_TOKEN',
+            refreshTokenEnvKey: 'TWITCH_BOT_REFRESH_TOKEN',
+          };
 
     try {
       const response = await fetch('https://id.twitch.tv/oauth2/token', {
@@ -27,10 +44,10 @@ class TokenManager {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          client_id: process.env.TWITCH_BOT_CLIENT_ID,
-          client_secret: process.env.TWITCH_BOT_CLIENT_SECRET,
+          client_id: config.clientId,
+          client_secret: config.clientSecret,
           grant_type: 'refresh_token',
-          refresh_token: process.env.TWITCH_BOT_REFRESH_TOKEN,
+          refresh_token: config.refreshToken,
         }),
       });
 
@@ -41,20 +58,23 @@ class TokenManager {
       }
 
       // Update environment variables in memory
-      process.env.TWITCH_BOT_ACCESS_TOKEN = data.access_token;
-      process.env.TWITCH_OAUTH_TOKEN = `oauth:${data.access_token}`;
+      process.env[config.accessTokenEnvKey] = data.access_token;
+      if (type === 'bot') {
+        process.env.TWITCH_OAUTH_TOKEN = `oauth:${data.access_token}`;
+      }
       if (data.refresh_token) {
-        process.env.TWITCH_BOT_REFRESH_TOKEN = data.refresh_token;
+        process.env[config.refreshTokenEnvKey] = data.refresh_token;
       }
 
       // Update .env file
-      await this.updateEnvFile({
-        TWITCH_BOT_ACCESS_TOKEN: data.access_token,
-        TWITCH_OAUTH_TOKEN: `oauth:${data.access_token}`,
-        ...(data.refresh_token && { TWITCH_BOT_REFRESH_TOKEN: data.refresh_token }),
-      });
+      const updates = {
+        [config.accessTokenEnvKey]: data.access_token,
+        ...(type === 'bot' && { TWITCH_OAUTH_TOKEN: `oauth:${data.access_token}` }),
+        ...(data.refresh_token && { [config.refreshTokenEnvKey]: data.refresh_token }),
+      };
+      await this.updateEnvFile(updates);
 
-      logger.info('Successfully refreshed Twitch token');
+      logger.info(`Successfully refreshed ${type} Twitch token`);
       return true;
     } catch (error) {
       logger.error('Error refreshing token:', error);
@@ -86,6 +106,67 @@ class TokenManager {
     }
   }
 
+  getBotTokens() {
+    return {
+      clientId: process.env.TWITCH_BOT_CLIENT_ID,
+      clientSecret: process.env.TWITCH_BOT_CLIENT_SECRET,
+      accessToken: process.env.TWITCH_BOT_ACCESS_TOKEN,
+      refreshToken: process.env.TWITCH_BOT_REFRESH_TOKEN,
+      username: process.env.TWITCH_BOT_USERNAME,
+    };
+  }
+
+  getBroadcasterTokens() {
+    return {
+      clientId: process.env.TWITCH_CLIENT_ID,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET,
+      accessToken: process.env.TWITCH_ACCESS_TOKEN,
+      refreshToken: process.env.TWITCH_REFRESH_TOKEN,
+      userId: process.env.TWITCH_USER_ID,
+      channel: process.env.TWITCH_CHANNEL,
+    };
+  }
+
+  async updateBotTokens(newTokenData) {
+    const updates = {
+      TWITCH_BOT_ACCESS_TOKEN: newTokenData.accessToken,
+      TWITCH_OAUTH_TOKEN: `oauth:${newTokenData.accessToken}`,
+      ...(newTokenData.refreshToken && {
+        TWITCH_BOT_REFRESH_TOKEN: newTokenData.refreshToken,
+      }),
+    };
+
+    // Update environment variables in memory
+    process.env.TWITCH_BOT_ACCESS_TOKEN = newTokenData.accessToken;
+    process.env.TWITCH_OAUTH_TOKEN = `oauth:${newTokenData.accessToken}`;
+    if (newTokenData.refreshToken) {
+      process.env.TWITCH_BOT_REFRESH_TOKEN = newTokenData.refreshToken;
+    }
+
+    // Update .env file
+    await this.updateEnvFile(updates);
+    logger.info('Bot tokens updated successfully');
+  }
+
+  async updateBroadcasterTokens(newTokenData) {
+    const updates = {
+      TWITCH_ACCESS_TOKEN: newTokenData.accessToken,
+      ...(newTokenData.refreshToken && {
+        TWITCH_REFRESH_TOKEN: newTokenData.refreshToken,
+      }),
+    };
+
+    // Update environment variables in memory
+    process.env.TWITCH_ACCESS_TOKEN = newTokenData.accessToken;
+    if (newTokenData.refreshToken) {
+      process.env.TWITCH_REFRESH_TOKEN = newTokenData.refreshToken;
+    }
+
+    // Update .env file
+    await this.updateEnvFile(updates);
+    logger.info('Broadcaster tokens updated successfully');
+  }
+
   handleTokenError(error) {
     // Check if error is due to invalid token
     const isAuthError =
@@ -95,8 +176,16 @@ class TokenManager {
       error.status === 401;
 
     if (isAuthError) {
-      logger.info('Token appears to be invalid, attempting refresh...');
-      return this.refreshToken();
+      // Determine if it's a broadcaster token error
+      const isBroadcasterError =
+        error.message?.includes('broadcaster') ||
+        error.message?.includes('channel:read:subscriptions') ||
+        error.message?.includes('moderator:read:followers');
+
+      logger.info(
+        `${isBroadcasterError ? 'Broadcaster' : 'Bot'} token appears to be invalid, attempting refresh...`
+      );
+      return this.refreshToken(isBroadcasterError ? 'broadcaster' : 'bot');
     }
 
     return false;

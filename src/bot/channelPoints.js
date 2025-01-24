@@ -2,6 +2,9 @@ import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
 import { generateResponse } from '../utils/openai.js';
+import { ApiClient } from '@twurple/api';
+import { RefreshingAuthProvider } from '@twurple/auth';
+import tokenManager from '../auth/tokenManager.js';
 
 class ChannelPointsHandler {
   constructor() {
@@ -58,7 +61,7 @@ class ChannelPointsHandler {
     }
   }
 
-  async handleRedemption(redemptionName, username, input, twitchApi) {
+  async handleRedemption(redemptionName, username, input) {
     const redemption = this.redemptions[redemptionName];
     if (!redemption || !redemption.enabled) {
       return {
@@ -72,9 +75,9 @@ class ChannelPointsHandler {
         case 'highlightMessage':
           return this.handleHighlightMessage(input, username);
         case 'createMarker':
-          return await this.handleCreateMarker(input, username, twitchApi);
+          return await this.handleCreateMarker(input, username);
         case 'createClip':
-          return await this.handleCreateClip(input, username, twitchApi);
+          return await this.handleCreateClip(input, username);
         case 'generateAIResponse':
           return await this.handleAIResponse(input, username);
         default:
@@ -100,9 +103,41 @@ class ChannelPointsHandler {
     };
   }
 
-  async handleCreateMarker(description, username, twitchApi) {
+  async getApiClient() {
+    const broadcasterTokens = await tokenManager.getBroadcasterTokens();
+    const authProvider = new RefreshingAuthProvider(
+      {
+        clientId: broadcasterTokens.clientId,
+        clientSecret: broadcasterTokens.clientSecret,
+        onRefresh: async (newTokenData) => {
+          try {
+            await tokenManager.updateBroadcasterTokens(newTokenData);
+            logger.info('Auth provider token refreshed');
+          } catch (error) {
+            logger.error('Error in auth provider refresh:', error);
+            throw error;
+          }
+        },
+      },
+      {
+        accessToken: broadcasterTokens.accessToken,
+        refreshToken: broadcasterTokens.refreshToken,
+        expiresIn: 14400, // 4 hours in seconds
+        obtainmentTimestamp: Date.now(),
+        scope: ['channel:manage:broadcast', 'clips:edit'],
+      }
+    );
+
+    return new ApiClient({
+      authProvider,
+      userId: broadcasterTokens.userId,
+    });
+  }
+
+  async handleCreateMarker(description, username) {
     try {
-      const marker = await twitchApi.streams.createStreamMarker({
+      const api = await this.getApiClient();
+      const marker = await api.streams.createStreamMarker({
         description: description || `Marker created by ${username}`,
       });
 
@@ -120,10 +155,11 @@ class ChannelPointsHandler {
     }
   }
 
-  async handleCreateClip(title, username, twitchApi) {
+  async handleCreateClip(title, username) {
     try {
-      const clip = await twitchApi.clips.createClip({
-        channel: process.env.TWITCH_CHANNEL,
+      const api = await this.getApiClient();
+      const clip = await api.clips.createClip({
+        channel: (await tokenManager.getBroadcasterTokens()).channel,
       });
 
       // Wait for clip to be processed

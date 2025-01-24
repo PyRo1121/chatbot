@@ -1,5 +1,6 @@
 import { handleRoast } from './roast.js';
 import { handlePing } from './ping.js';
+import { handleStreamInsights } from './streamInsights.js';
 import {
   handleListQueue,
   handleClearQueue,
@@ -18,6 +19,7 @@ export {
   handleSongRequest,
   processSongQueue,
   songQueue,
+  handleStreamInsights,
 };
 
 export const commandList =
