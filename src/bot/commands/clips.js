@@ -76,7 +76,7 @@ async function createClip(client, channel, title = '') {
 }
 
 // Track chat activity for auto-clips
-function trackChatActivity(message) {
+function trackChatActivity() {
   const now = Date.now();
   chatActivity.push(now);
 
@@ -138,7 +138,7 @@ export const clipCommands = {
 // Initialize clips storage on module load
 initClipsStorage();
 
-export const handleChatActivity = async (client, channel, user) => {
+export const handleChatActivity = async (client, channel) => {
   if (trackChatActivity()) {
     try {
       await createClip(client, channel, 'Auto-clip from high chat activity');

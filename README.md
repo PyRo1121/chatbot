@@ -30,11 +30,23 @@ A comprehensive Twitch bot designed for small streamers (3-5 viewers) to enhance
    - 60-second time limit
    - No points system needed
 
-### Chat Interaction
-- **AI-Powered Responses**: Witty and contextual chat interactions
-- **Custom Commands**: Moderators can create custom commands
-- **Event Responses**: Special messages for follows, subs, raids
-- **Question Detection**: Automatically identifies and answers questions
+### Chat Interaction & Learning
+- **Advanced ML/LLM Features**:
+  - Chat pattern learning and analysis
+  - User communication style tracking
+  - Sentiment analysis and mood tracking
+  - Context-aware memory system
+  - Personalized responses based on user history
+- **Smart Interactions**:
+  - Contextual and witty responses
+  - Automatic question detection and answering
+  - Dynamic cooldown based on chat activity
+  - Event-based special messages
+- **Chat Analytics**:
+  - Real-time mood and energy tracking
+  - Topic analysis and trending subjects
+  - User interaction patterns
+  - Engagement metrics
 
 ### Follow Bot Protection
 - **Suspicious Follow Detection**: Identifies potential bot followers
@@ -129,6 +141,8 @@ pnpm start
 
 ### Broadcaster Commands
 - `!insights` - Get stream analytics and growth recommendations
+- `!chatinsights` - View real-time chat analytics and patterns
+- `!recommendations` - Get AI-powered stream optimization suggestions
 - `!stats` - View current stream statistics
 - `!besttime` - See optimal streaming times
 - `!history` - View stream history and performance
@@ -294,12 +308,19 @@ maxFollowsPerMinute: 5,      // Follow rate limit
 silentModeDuration: 5,       // Silent mode duration in minutes
 ```
 
-### Analytics Settings
-Customize analytics in `src/bot/analytics.js`:
+### Analytics & Learning Settings
+Customize analytics and learning in `src/bot/analytics.js` and `src/bot/chatInteraction.js`:
 ```javascript
+// Analytics settings
 UPDATE_INTERVAL = 5 * 60 * 1000;  // Data update frequency
 RETENTION_THRESHOLD = 0.1;  // Viewer retention goal
 SCHEDULE_CONSISTENCY_GOAL = 0.7;  // Schedule consistency target
+
+// Chat learning settings
+MEMORY_RETENTION = 30 * 60 * 1000;  // 30 minutes context memory
+INTERACTION_CHANCE = 0.3;  // 30% chance to interact when cooldown is up
+COOLDOWN = 15000;  // 15 seconds minimum between interactions
+MAX_COOLDOWN = 30000;  // 30 seconds maximum cooldown
 ```
 
 ## Common Issues & Solutions

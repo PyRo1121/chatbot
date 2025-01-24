@@ -11,7 +11,7 @@ export const followProtectionCommands = {
       };
     }
 
-    const followers = await followProtection.getSuspiciousFollowers();
+    const followers = followProtection.getSuspiciousFollowers();
     if (followers.length === 0) {
       return {
         success: true,
@@ -37,7 +37,7 @@ export const followProtectionCommands = {
   },
 
   // Clear suspicious followers list
-  async clear(client, channel, user, message, isBroadcaster) {
+  clear(client, channel, user, message, isBroadcaster) {
     if (!isBroadcaster) {
       return {
         success: false,
@@ -54,7 +54,7 @@ export const followProtectionCommands = {
   },
 
   // View follow protection settings
-  async settings(client, channel, user, message, isBroadcaster) {
+  settings(client, channel, user, message, isBroadcaster) {
     if (!isBroadcaster) {
       return {
         success: false,

@@ -37,6 +37,7 @@ export const handleTitle = streamCommands.title;
 export const handleCategory = streamCommands.category;
 export const handleUptime = streamCommands.uptime;
 export const handleMilestone = streamCommands.milestone;
+export const handleRecommendations = streamCommands.recommendations;
 
 // Export follow protection commands
 export const handleSuspiciousFollowers = followProtectionCommands.suspicious;
@@ -44,4 +45,4 @@ export const handleClearSuspicious = followProtectionCommands.clear;
 export const handleFollowSettings = followProtectionCommands.settings;
 
 export const commandList =
-  '!ping, !songrequest, !queue, !queueclear, !queueremove, !roast, !trivia, !wordchain, !minigame [scramble|riddle], !insights (broadcaster only), !clip [title], !highlights [days], !title [new title], !category [game], !uptime, !milestone [description], !followprotection (mods only), !suspicious (broadcaster only), !clearsuspicious (broadcaster only), !followsettings (broadcaster only)';
+  '!ping, !songrequest, !queue, !queueclear, !queueremove, !roast, !trivia, !wordchain, !minigame [scramble|riddle], !insights (broadcaster only), !clip [title], !highlights [days], !title [new title], !category [game], !uptime, !milestone [description], !recommendations, !chatinsights, !followprotection (mods only), !suspicious (broadcaster only), !clearsuspicious (broadcaster only), !followsettings (broadcaster only)';

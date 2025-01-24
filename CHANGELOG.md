@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-01-23
+
+### Added
+- Advanced ML/LLM capabilities
+  - Chat pattern learning and analysis
+  - User communication style tracking
+  - Sentiment analysis and mood tracking
+  - Context-aware responses
+  - Short-term memory system
+- Stream content recommendations
+  - AI-powered title suggestions
+  - Category recommendations
+  - Content optimization insights
+- Enhanced analytics
+  - Chat mood and energy tracking
+  - Topic analysis
+  - Engagement patterns
+  - Automatic highlight detection
+- New commands
+  - !chatinsights - View real-time chat analytics
+  - !recommendations - Get AI-generated stream recommendations
+
+### Changed
+- Improved chat interaction system with personalized responses
+- Enhanced stream analytics with ML-powered insights
+- Optimized code structure and async/await patterns
+- Updated command handlers for better performance
+
 ## [1.0.1] - 2025-01-23
 
 ### Changed

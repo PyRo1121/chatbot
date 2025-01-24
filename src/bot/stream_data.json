@@ -13,6 +13,59 @@
       "endTime": "2025-01-24T01:52:52.078Z",
       "duration": "0h 17m",
       "milestones": []
+    },
+    {
+      "startTime": "2025-01-24T02:25:03.228Z",
+      "endTime": "2025-01-24T02:32:07.469Z",
+      "duration": "0h 7m",
+      "milestones": [],
+      "analytics": {
+        "totalInteractions": 1,
+        "topTopics": [
+          {
+            "topic": "!followprotection",
+            "count": 3
+          },
+          {
+            "topic": "!recommendations",
+            "count": 2
+          },
+          {
+            "topic": "!suspicious",
+            "count": 1
+          }
+        ],
+        "chatMood": {
+          "current": {
+            "sentiment": "Negative",
+            "energy": "Medium"
+          },
+          "distribution": [
+            {
+              "mood": "Positive",
+              "count": 1
+            },
+            {
+              "mood": "Negative",
+              "count": 1
+            }
+          ]
+        },
+        "highlights": []
+      }
     }
-  ]
+  ],
+  "viewerEngagement": {
+    "20": {
+      "averageViewers": 0,
+      "chatActivity": 1,
+      "samples": 1
+    }
+  },
+  "contentAnalytics": {
+    "successfulTitles": [],
+    "popularCategories": [],
+    "peakTimes": {},
+    "highlights": []
+  }
 }

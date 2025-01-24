@@ -1,5 +1,6 @@
 import getClient from './twitchClient.js';
 import analytics from './analytics.js';
+import chatInteraction from './chatInteraction.js';
 import {
   processSongQueue,
   handleChatActivity,
@@ -13,7 +14,9 @@ import {
   handleSuspiciousFollowers,
   handleClearSuspicious,
   handleFollowSettings,
+  handleRecommendations,
 } from './commands/index.js';
+import { detectHighlight } from './streamManager.js';
 
 async function initBot() {
   const twitchClient = await getClient();
@@ -30,6 +33,23 @@ async function initBot() {
       return;
     }
 
+    // Store and analyze message
+    chatInteraction.storeMessage(user.username, message);
+
+    // Get witty response if appropriate
+    const response = await chatInteraction.getWittyResponse(message, user.username);
+    if (response) {
+      twitchClient.client.say(channel, response);
+    }
+
+    // Check for potential highlight moment
+    const chatStats = chatInteraction.getStats();
+    const viewerCount = 0; // This should be fetched from Twitch API
+    const isHighlight = await detectHighlight(message, viewerCount, chatStats.totalInteractions);
+    if (isHighlight) {
+      twitchClient.client.say(channel, '📸 This moment has been marked as a stream highlight!');
+    }
+
     // Handle chat activity for auto-clips
     await handleChatActivity(twitchClient.client, channel, user, message);
 
@@ -39,6 +59,10 @@ async function initBot() {
 
     // Response variables for follow protection commands
     let suspiciousResponse, clearResponse, settingsResponse;
+
+    // Check broadcaster status (both by badge and username)
+    const isBroadcaster =
+      user.badges?.broadcaster === '1' || user.username === channel.replace('#', '');
 
     switch (command) {
       case '!clip':
@@ -71,7 +95,7 @@ async function initBot() {
           channel,
           user,
           args,
-          user.isBroadcaster
+          isBroadcaster
         );
         if (suspiciousResponse) {
           twitchClient.client.say(channel, suspiciousResponse.message);
@@ -83,7 +107,7 @@ async function initBot() {
           channel,
           user,
           args,
-          user.isBroadcaster
+          isBroadcaster
         );
         if (clearResponse) {
           twitchClient.client.say(channel, clearResponse.message);
@@ -95,12 +119,20 @@ async function initBot() {
           channel,
           user,
           args,
-          user.isBroadcaster
+          isBroadcaster
         );
         if (settingsResponse) {
           twitchClient.client.say(channel, settingsResponse.message);
         }
         break;
+      case '!chatinsights':
+        handleChatInsights(twitchClient.client, channel);
+        break;
+      case '!recommendations': {
+        const recResponse = await handleRecommendations();
+        twitchClient.client.say(channel, recResponse);
+        break;
+      }
     }
   });
 
@@ -127,6 +159,23 @@ async function initBot() {
   });
 
   return twitchClient;
+}
+
+function handleChatInsights(client, channel) {
+  const stats = chatInteraction.getStats();
+  const insights = [
+    `Chat Mood: ${stats.chatMood.current.sentiment} (Energy: ${stats.chatMood.current.energy})`,
+    `Top Topics: ${stats.topTopics
+      .slice(0, 3)
+      .map((t) => `${t.topic}(${t.count})`)
+      .join(', ')}`,
+    `Most Active Hour: ${stats.activeHours[0]?.hour}:00`,
+    `Total Interactions: ${stats.totalInteractions}`,
+    `Chat Styles: ${Object.entries(stats.userStyles)
+      .map(([style, count]) => `${style}(${count})`)
+      .join(', ')}`,
+  ].join(' | ');
+  client.say(channel, `📊 ${insights}`);
 }
 
 export { initBot };

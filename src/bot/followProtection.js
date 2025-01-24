@@ -191,7 +191,7 @@ class FollowProtection {
     return 'Unknown';
   }
 
-  async getSuspiciousFollowers() {
+  getSuspiciousFollowers() {
     const followers = Array.from(this.suspiciousFollowers.entries()).map(([userId, data]) => ({
       userId,
       ...data,

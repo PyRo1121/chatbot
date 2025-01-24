@@ -1,8 +1,34 @@
 {
-  "userInteractions": {},
-  "keywords": {},
-  "timePatterns": {},
+  "userInteractions": {
+    "pyro1121": {
+      "successCount": 1,
+      "categories": {
+        "question": 1
+      }
+    }
+  },
+  "keywords": {
+    "!recommendations": 1
+  },
+  "timePatterns": {
+    "20": 1
+  },
   "messagePatterns": [],
+  "chatPatterns": {
+    "topics": {
+      "!recommendations": 2,
+      "!followprotection": 3,
+      "!suspicious": 1
+    },
+    "engagement": {},
+    "sentiment": {
+      "Positive": 1,
+      "Negative": 1
+    },
+    "userStyles": {
+      "pyro1121": "informative"
+    }
+  },
   "responses": {
     "greetings": [
       "What's cookin', good lookin'? 🔥",
