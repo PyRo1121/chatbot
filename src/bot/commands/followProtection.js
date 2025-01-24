@@ -4,6 +4,8 @@ import logger from '../../utils/logger.js';
 export const followProtectionCommands = {
   // View suspicious followers
   async suspicious(client, channel, user, message, isBroadcaster) {
+    // Wait for suspicious followers data to be loaded
+    await new Promise((resolve) => setTimeout(resolve, 100));
     if (!isBroadcaster) {
       return {
         success: false,
@@ -37,7 +39,9 @@ export const followProtectionCommands = {
   },
 
   // Clear suspicious followers list
-  clear(client, channel, user, message, isBroadcaster) {
+  async clear(client, channel, user, message, isBroadcaster) {
+    // Wait for clear operation to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
     if (!isBroadcaster) {
       return {
         success: false,
@@ -54,7 +58,9 @@ export const followProtectionCommands = {
   },
 
   // View follow protection settings
-  settings(client, channel, user, message, isBroadcaster) {
+  async settings(client, channel, user, message, isBroadcaster) {
+    // Wait for settings to be loaded
+    await new Promise((resolve) => setTimeout(resolve, 100));
     if (!isBroadcaster) {
       return {
         success: false,

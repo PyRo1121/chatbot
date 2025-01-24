@@ -1,29 +1,35 @@
 {
   "userInteractions": {
     "pyro1121": {
-      "successCount": 1,
+      "successCount": 2,
       "categories": {
-        "question": 1
+        "question": 2
       }
     }
   },
   "keywords": {
-    "!recommendations": 1
+    "!recommendations": 1,
+    "!insights": 1
   },
   "timePatterns": {
-    "20": 1
+    "20": 1,
+    "21": 1
   },
   "messagePatterns": [],
   "chatPatterns": {
     "topics": {
       "!recommendations": 2,
       "!followprotection": 3,
-      "!suspicious": 1
+      "!suspicious": 1,
+      "!roast": 1,
+      "@pokemoncommunitygame": 1,
+      "!insights": 1
     },
     "engagement": {},
     "sentiment": {
       "Positive": 1,
-      "Negative": 1
+      "Negative": 1,
+      "Neutral": 1
     },
     "userStyles": {
       "pyro1121": "informative"

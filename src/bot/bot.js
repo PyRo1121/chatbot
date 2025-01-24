@@ -15,6 +15,35 @@ import {
   handleClearSuspicious,
   handleFollowSettings,
   handleRecommendations,
+  handleViewerStats,
+  handleLoyalty,
+  handleTopViewers,
+  handleRaids,
+  handleRaid,
+  trackViewer,
+  handleHealth,
+  handleStreamPerformance,
+  handleBestTimes,
+  handleTopCategories,
+  initializeAnalytics,
+  endAnalytics,
+  handleCreateClip,
+  handleClipsByCategory,
+  handleClipsByTag,
+  handleRecentClips,
+  handleTopClips,
+  handleClipStats,
+  handleSuggestCompilation,
+  handleAnalyzeClip,
+  handleModStats,
+  handleUserHistory,
+  handleTrust,
+  handleUntrust,
+  handleRaidHistory,
+  handleAnalyzeChat,
+  handleWarn,
+  moderateMessage,
+  assessRaid,
 } from './commands/index.js';
 import { detectHighlight } from './streamManager.js';
 
@@ -23,6 +52,7 @@ async function initBot() {
 
   // Start analytics tracking
   analytics.startStream();
+  initializeAnalytics();
 
   // Register stream event handlers
   streamEventHandlers.onStreamStart();
@@ -33,8 +63,29 @@ async function initBot() {
       return;
     }
 
-    // Store and analyze message
+    // Store and analyze message, track viewer, and moderate
     chatInteraction.storeMessage(user.username, message);
+    const milestone = trackViewer(user.username);
+    if (milestone) {
+      twitchClient.client.say(channel, milestone);
+    }
+
+    // Moderate message
+    const modAction = await moderateMessage(message, user.username, user.mod ? 'mod' : 'user');
+    if (modAction) {
+      switch (modAction.action) {
+        case 'warning':
+          twitchClient.client.say(channel, `⚠️ @${user.username}, ${modAction.reason}`);
+          break;
+        case 'timeout':
+          twitchClient.client.timeout(channel, user.username, modAction.duration, modAction.reason);
+          break;
+        case 'ban':
+          twitchClient.client.ban(channel, user.username, modAction.reason);
+          break;
+      }
+      return;
+    }
 
     // Get witty response if appropriate
     const response = await chatInteraction.getWittyResponse(message, user.username);
@@ -133,7 +184,183 @@ async function initBot() {
         twitchClient.client.say(channel, recResponse);
         break;
       }
+      case '!health': {
+        const healthResponse = await handleHealth();
+        twitchClient.client.say(channel, healthResponse);
+        break;
+      }
+      case '!performance': {
+        const perfResponse = await handleStreamPerformance();
+        twitchClient.client.say(channel, perfResponse);
+        break;
+      }
+      case '!besttimes': {
+        const timesResponse = await handleBestTimes();
+        twitchClient.client.say(channel, timesResponse);
+        break;
+      }
+      case '!topcategories': {
+        const catResponse = await handleTopCategories();
+        twitchClient.client.say(channel, catResponse);
+        break;
+      }
+      case '!viewerstats': {
+        const statsResponse = await handleViewerStats();
+        twitchClient.client.say(channel, statsResponse);
+        break;
+      }
+      case '!loyalty': {
+        const loyaltyResponse = await handleLoyalty();
+        twitchClient.client.say(channel, loyaltyResponse);
+        break;
+      }
+      case '!topviewers': {
+        const topResponse = await handleTopViewers();
+        twitchClient.client.say(channel, topResponse);
+        break;
+      }
+      case '!raids': {
+        const raidsResponse = await handleRaids();
+        twitchClient.client.say(channel, raidsResponse);
+        break;
+      }
+      case '!modstats': {
+        if (user.mod || isBroadcaster) {
+          const statsResponse = await handleModStats();
+          twitchClient.client.say(channel, statsResponse);
+        }
+        break;
+      }
+      case '!userhistory': {
+        if (user.mod || isBroadcaster) {
+          if (!args) {
+            twitchClient.client.say(channel, 'Please specify a username');
+            break;
+          }
+          const historyResponse = await handleUserHistory(args);
+          twitchClient.client.say(channel, historyResponse);
+        }
+        break;
+      }
+      case '!trust': {
+        if (user.mod || isBroadcaster) {
+          if (!args) {
+            twitchClient.client.say(channel, 'Please specify a username');
+            break;
+          }
+          const trustResponse = await handleTrust(args);
+          twitchClient.client.say(channel, trustResponse);
+        }
+        break;
+      }
+      case '!untrust': {
+        if (user.mod || isBroadcaster) {
+          if (!args) {
+            twitchClient.client.say(channel, 'Please specify a username');
+            break;
+          }
+          const untrustResponse = await handleUntrust(args);
+          twitchClient.client.say(channel, untrustResponse);
+        }
+        break;
+      }
+      case '!raidhistory': {
+        if (user.mod || isBroadcaster) {
+          const raidHistoryResponse = await handleRaidHistory();
+          twitchClient.client.say(channel, raidHistoryResponse);
+        }
+        break;
+      }
+      case '!analyzechat': {
+        if (user.mod || isBroadcaster) {
+          const analysisResponse = await handleAnalyzeChat();
+          twitchClient.client.say(channel, analysisResponse);
+        }
+        break;
+      }
+      case '!warn': {
+        if (user.mod || isBroadcaster) {
+          const [warnUser, ...reasonParts] = args.split(' ');
+          if (!warnUser || reasonParts.length === 0) {
+            twitchClient.client.say(channel, 'Please specify a username and reason');
+            break;
+          }
+          const warnResponse = await handleWarn(warnUser, reasonParts.join(' '));
+          twitchClient.client.say(channel, warnResponse);
+        }
+        break;
+      }
+      case '!createclip': {
+        const clipResponse = await handleCreateClip(twitchClient.client, channel, user, args);
+        twitchClient.client.say(channel, clipResponse);
+        break;
+      }
+      case '!clipsbycategory': {
+        if (!args) {
+          twitchClient.client.say(channel, 'Please specify a category');
+          break;
+        }
+        const categoryResponse = await handleClipsByCategory(args);
+        twitchClient.client.say(channel, categoryResponse);
+        break;
+      }
+      case '!clipsbytag': {
+        if (!args) {
+          twitchClient.client.say(channel, 'Please specify a tag');
+          break;
+        }
+        const tagResponse = await handleClipsByTag(args);
+        twitchClient.client.say(channel, tagResponse);
+        break;
+      }
+      case '!recentclips': {
+        const days = args ? parseInt(args) : 7;
+        const recentResponse = await handleRecentClips(days);
+        twitchClient.client.say(channel, recentResponse);
+        break;
+      }
+      case '!topclips': {
+        const topResponse = await handleTopClips();
+        twitchClient.client.say(channel, topResponse);
+        break;
+      }
+      case '!clipstats': {
+        const statsResponse = await handleClipStats();
+        twitchClient.client.say(channel, statsResponse);
+        break;
+      }
+      case '!suggestcompilation': {
+        const compilationResponse = await handleSuggestCompilation();
+        twitchClient.client.say(channel, compilationResponse);
+        break;
+      }
+      case '!analyzeclip': {
+        if (!args) {
+          twitchClient.client.say(channel, 'Please specify a clip ID');
+          break;
+        }
+        const analysisResponse = await handleAnalyzeClip(args);
+        twitchClient.client.say(channel, analysisResponse);
+        break;
+      }
     }
+  });
+
+  // Handle raids
+  twitchClient.client.on('raided', async (channel, username, viewers) => {
+    // Assess raid quality
+    const assessment = await assessRaid(username, viewers);
+    if (assessment && assessment.action === 'block') {
+      twitchClient.client.say(
+        channel,
+        `⚠️ Suspicious raid detected from ${username}. Risk level: ${assessment.risk}. ${assessment.reason}`
+      );
+      return;
+    }
+
+    // Welcome raiders if raid is safe
+    const welcomeMessage = await handleRaid(username, viewers);
+    twitchClient.client.say(channel, welcomeMessage);
   });
 
   // Setup intervals
@@ -155,6 +382,17 @@ async function initBot() {
   process.on('SIGINT', async () => {
     await streamEventHandlers.onStreamEnd();
     analytics.endStream();
+    const finalAnalysis = await endAnalytics();
+    if (finalAnalysis && twitchClient.client) {
+      const channelName = process.env.TWITCH_CHANNEL;
+      twitchClient.client.say(
+        `#${channelName}`,
+        'Stream ended! Check !insights for the final stream analysis. Key metrics:\n' +
+          `• Health: ${finalAnalysis.health.status}\n` +
+          `• Best Category: ${finalAnalysis.performance.bestCategory}\n` +
+          `• Viewer Retention: ${finalAnalysis.performance.viewerRetention}%`
+      );
+    }
     process.exit();
   });
 

@@ -1,0 +1,14 @@
+{
+  "spamPatterns": [],
+  "bannedWords": [],
+  "userWarnings": {},
+  "raidHistory": [],
+  "moderationActions": [],
+  "trustedUsers": [],
+  "spamStats": {
+    "detectedSpam": 0,
+    "falsePositives": 0,
+    "successfulRaids": 0,
+    "blockedRaids": 0
+  }
+}

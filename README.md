@@ -11,6 +11,23 @@ A comprehensive Twitch bot designed for small streamers (3-5 viewers) to enhance
 - **Competitor Analysis**: Studies similar channels for growth opportunities
 - **Schedule Optimization**: Suggests best streaming schedules
 
+### Viewer Management & Recognition
+- **Loyalty System**:
+  - Automatic viewer tracking and milestone celebrations
+  - Five loyalty levels: New Friend → Regular → Loyal Viewer → Dedicated Fan → Stream Veteran
+  - Personalized milestone messages
+  - Viewer retention analytics
+- **Raid Management**:
+  - Personalized welcome messages for raiders
+  - Raid history tracking
+  - Automatic raid detection and response
+  - Raid impact analysis
+- **Community Stats**:
+  - Viewer retention metrics
+  - Loyalty distribution tracking
+  - Top viewer recognition
+  - Returning viewer analysis
+
 ### Chat Games
 1. **Trivia (!trivia)**
    - AI-generated questions about gaming/streaming
@@ -139,28 +156,42 @@ pnpm start
 
 ## Commands
 
-### Broadcaster Commands
+### Broadcaster/Moderator Commands
+- `!title [new title]` - Update stream title
+- `!category [new category]` - Update stream category/game
+- `!milestone [description]` - Add a stream milestone
 - `!insights` - Get stream analytics and growth recommendations
 - `!chatinsights` - View real-time chat analytics and patterns
 - `!recommendations` - Get AI-powered stream optimization suggestions
 - `!stats` - View current stream statistics
 - `!besttime` - See optimal streaming times
 - `!history` - View stream history and performance
-- `!suspicious` - View list of suspicious followers (potential bots)
-- `!clearsuspicious` - Clear the list of tracked suspicious followers
-- `!followsettings` - View current follow protection settings
-
-### Moderator Commands
 - `!trivia [category]` - Start a trivia game
 - `!wordchain` - Start a word chain game
 - `!minigame [scramble|riddle]` - Start a mini game
 - `!addcom [command] [response]` - Create custom command
 - `!delcom [command]` - Remove custom command
 
+### Broadcaster-Only Commands
+- `!suspicious` - View list of suspicious followers (potential bots)
+- `!clearsuspicious` - Clear the list of tracked suspicious followers
+- `!followsettings` - View/modify follow protection settings
+
 ### User Commands
+- `!clip` - Create a clip of the stream
+- `!highlights` - View stream highlights
+- `!uptime` - Check how long the stream has been live
 - `!songrequest [song]` - Request a song
 - `!queue` - View song queue
+- `!queueclear` - Clear the song queue (broadcaster/mods only)
+- `!queueremove [position]` - Remove a song from the queue (broadcaster/mods only)
+- `!roast @username` - Generate a playful roast for a user
 - `!commands` - List available commands
+- `!ping` - Check if the bot is responsive
+- `!viewerstats` - Show viewer statistics and engagement metrics
+- `!loyalty` - Display community loyalty distribution
+- `!topviewers` - List top viewers and their loyalty levels
+- `!raids` - Show recent raid history
 
 ## Architecture
 
@@ -235,9 +266,30 @@ async handleNewReward(input, username) {
 }
 ```
 
-## Error Handling
+## Performance & Error Handling
 
-The bot includes comprehensive error handling:
+The bot includes comprehensive performance optimizations and error handling:
+
+### Performance Optimizations
+1. **Async Operations**
+   - Optimized async/await patterns
+   - Smart data loading with delays
+   - Efficient command processing
+   - Reduced unnecessary operations
+
+2. **Data Management**
+   - Intelligent caching system
+   - Optimized data structures
+   - Efficient memory usage
+   - Smart cleanup routines
+
+3. **Command Processing**
+   - Enhanced response timing
+   - Improved data loading
+   - Better resource utilization
+   - Optimized async flows
+
+### Error Handling
 
 1. **Token Management**
    - Twurple's RefreshingAuthProvider for automatic token refresh
@@ -323,7 +375,36 @@ COOLDOWN = 15000;  // 15 seconds minimum between interactions
 MAX_COOLDOWN = 30000;  // 30 seconds maximum cooldown
 ```
 
+## Command Reliability
+
+### Command Processing
+1. **Data Loading**
+   - Reliable data fetching
+   - Smart retry mechanisms
+   - Progress indicators
+   - Fallback options
+
+2. **Response Handling**
+   - Consistent timing
+   - Error recovery
+   - User feedback
+   - Status updates
+
+3. **Performance Monitoring**
+   - Command timing tracking
+   - Resource usage monitoring
+   - Performance metrics
+   - Optimization suggestions
+
 ## Common Issues & Solutions
+
+### Command Response Times
+If commands seem slow:
+1. Check your internet connection
+2. Verify API rate limits
+3. Monitor system resources
+4. Check for background processes
+5. Consider command cooldowns
 
 ### Follow Bot Protection
 If you encounter follow botting:
@@ -355,6 +436,12 @@ If games aren't working:
 4. Check cooldown periods
 
 ## Performance Optimization
+
+### Command Optimization
+- Smart command processing
+- Efficient data handling
+- Resource management
+- Performance tracking
 
 ### Memory Usage
 - The bot uses caching for analytics

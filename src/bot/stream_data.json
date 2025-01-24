@@ -53,6 +53,146 @@
         },
         "highlights": []
       }
+    },
+    {
+      "startTime": "2025-01-24T03:28:00.740Z",
+      "endTime": "2025-01-24T03:28:18.933Z",
+      "duration": "0h 0m",
+      "milestones": [],
+      "analytics": {
+        "totalInteractions": 1,
+        "topTopics": [
+          {
+            "topic": "!followprotection",
+            "count": 3
+          },
+          {
+            "topic": "!recommendations",
+            "count": 2
+          },
+          {
+            "topic": "!suspicious",
+            "count": 1
+          },
+          {
+            "topic": "!roast",
+            "count": 1
+          },
+          {
+            "topic": "@pokemoncommunitygame",
+            "count": 1
+          }
+        ],
+        "chatMood": {
+          "current": {
+            "sentiment": "Neutral",
+            "energy": "Medium"
+          },
+          "distribution": [
+            {
+              "mood": "Positive",
+              "count": 1
+            },
+            {
+              "mood": "Negative",
+              "count": 1
+            }
+          ]
+        },
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 0,
+          "loyalty": {
+            "New Friend": 1,
+            "Regular": 0,
+            "Loyal Viewer": 0,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 1,
+              "level": "New Friend"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "startTime": "2025-01-24T03:31:05.962Z",
+      "endTime": "2025-01-24T03:31:21.522Z",
+      "duration": "0h 0m",
+      "milestones": [],
+      "analytics": {
+        "totalInteractions": 2,
+        "topTopics": [
+          {
+            "topic": "!followprotection",
+            "count": 3
+          },
+          {
+            "topic": "!recommendations",
+            "count": 2
+          },
+          {
+            "topic": "!suspicious",
+            "count": 1
+          },
+          {
+            "topic": "!roast",
+            "count": 1
+          },
+          {
+            "topic": "@pokemoncommunitygame",
+            "count": 1
+          },
+          {
+            "topic": "!insights",
+            "count": 1
+          }
+        ],
+        "chatMood": {
+          "current": {
+            "sentiment": "Neutral",
+            "energy": "Medium"
+          },
+          "distribution": [
+            {
+              "mood": "Positive",
+              "count": 1
+            },
+            {
+              "mood": "Negative",
+              "count": 1
+            },
+            {
+              "mood": "Neutral",
+              "count": 1
+            }
+          ]
+        },
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 100,
+          "loyalty": {
+            "New Friend": 1,
+            "Regular": 0,
+            "Loyal Viewer": 0,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 2,
+              "level": "New Friend"
+            }
+          ]
+        }
+      }
     }
   ],
   "viewerEngagement": {

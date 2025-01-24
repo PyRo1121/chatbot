@@ -1,9 +1,136 @@
 # Changelog
 
+## [1.4.1] - 2025-01-23
+### Fixed
+- Improved async/await implementation across all commands
+  * Added proper async operations for data loading
+  * Implemented delays for data processing
+  * Enhanced error handling in async operations
+  * Fixed ESLint warnings for async functions
+- Enhanced command reliability
+  * Added data loading checks
+  * Improved response timing
+  * Better error handling
+  * More consistent command behavior
+- Optimized performance
+  * Better async operation handling
+  * Reduced unnecessary data loading
+  * Improved command response time
+  * Enhanced data processing efficiency
+
+## [1.4.0] - 2025-01-23
+### Added
+- Smart Moderation System
+  * AI-powered spam detection
+  * Context-aware message analysis
+  * Pattern-based spam detection
+  * Automatic action handling
+  * User trust system
+- Enhanced Raid Protection
+  * AI-powered raid quality assessment
+  * Suspicious raid detection
+  * Raid history tracking
+  * Risk level analysis
+- New Moderation Commands
+  * !modstats - View moderation statistics
+  * !userhistory [username] - Check user history
+  * !trust [username] - Add trusted user
+  * !untrust [username] - Remove trusted user
+  * !raidhistory - View raid assessments
+  * !analyzechat - Detect spam patterns
+  * !warn [username] [reason] - Issue warning
+- Automated Features
+  * Message pattern analysis
+  * Spam confidence scoring
+  * User behavior tracking
+  * Warning system
+  * Action logging
+
+## [1.3.0] - 2025-01-23
+### Added
+- Advanced Clip Management System
+  * AI-powered clip categorization and tagging
+  * Automatic clip organization
+  * Performance analytics for clips
+  * Compilation suggestions
+  * Clip retention management
+- New Clip Commands
+  * !createclip [title] - Create and auto-categorize clips
+  * !clipsbycategory [category] - Browse clips by category
+  * !clipsbytag [tag] - Find clips by tag
+  * !recentclips [days] - View recent clips
+  * !topclips - See most popular clips
+  * !clipstats - Get clip statistics
+  * !suggestcompilation - Get AI-powered compilation suggestions
+  * !analyzeclip [clipId] - Get clip performance analysis
+- Enhanced Clip Features
+  * Smart tagging system
+  * Category-based organization
+  * Performance tracking
+  * Automatic cleanup of old clips
+  * Compilation recommendations
+
+## [1.2.0] - 2025-01-23
+### Added
+- Enhanced Stream Analytics System
+  * Real-time stream health monitoring
+  * Technical performance tracking (bitrate, dropped frames)
+  * Category performance analysis
+  * Viewer engagement metrics
+  * AI-powered performance insights
+- New Analytics Commands
+  * !health - Show current stream health and technical metrics
+  * !performance - Get detailed stream performance analysis
+  * !besttimes - View optimal streaming hours based on historical data
+  * !topcategories - See best performing stream categories
+- Automated End-of-Stream Analysis
+  * Comprehensive stream performance summary
+  * Technical health review
+  * Content optimization suggestions
+  * Growth recommendations
+
+## [1.1.0] - 2025-01-23
+### Added
+- Raid Welcome System
+  * Personalized welcome messages for raiders
+  * Raid history tracking
+  * Automatic raid detection and response
+- Viewer Recognition System
+  * Loyalty levels (New Friend, Regular, Loyal Viewer, Dedicated Fan, Stream Veteran)
+  * Viewer milestone celebrations
+  * Automatic viewer tracking
+- New Commands
+  * !viewerstats - Show viewer statistics and engagement metrics
+  * !loyalty - Display community loyalty distribution
+  * !topviewers - List top viewers and their loyalty levels
+  * !raids - Show recent raid history
+- Enhanced Analytics
+  * Viewer retention tracking
+  * Returning viewer rate calculation
+  * Loyalty distribution metrics
+  * Raid impact analysis
+
+# Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.1.1] - 2025-01-23
+
+### Added
+- Comprehensive command documentation in README
+  - Complete list of all available commands
+  - Clear categorization (Broadcaster/Moderator, Broadcaster-Only, User)
+  - Usage descriptions and restrictions
+
+### Fixed
+- Improved broadcaster detection to work when offline
+  - Now checks both broadcaster badge and username
+  - Fixed !suspicious command accessibility
+  - Fixed !clearsuspicious command accessibility
+  - Fixed !followsettings command accessibility
 
 ## [1.1.0] - 2025-01-23
 

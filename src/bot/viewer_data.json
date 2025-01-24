@@ -1,0 +1,24 @@
+{
+  "viewers": {
+    "pyro1121": {
+      "firstSeen": "2025-01-24T03:28:14.035Z",
+      "visits": 2,
+      "lastSeen": "2025-01-24T03:31:07.982Z",
+      "watchtime": 0,
+      "milestones": []
+    }
+  },
+  "raids": [],
+  "milestones": [],
+  "viewerStats": {
+    "totalUnique": 1,
+    "returningRate": 1,
+    "loyaltyDistribution": {
+      "New Friend": 1,
+      "Regular": 0,
+      "Loyal Viewer": 0,
+      "Dedicated Fan": 0,
+      "Stream Veteran": 0
+    }
+  }
+}

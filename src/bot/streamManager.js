@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { generateResponse } from '../utils/openai.js';
 import chatInteraction from './chatInteraction.js';
+import viewerManager from './viewerManager.js';
 
 const STREAM_DATA_FILE = path.join(process.cwd(), 'src/bot/stream_data.json');
 let streamStartTime = null;
@@ -292,6 +293,7 @@ export const streamEventHandlers = {
     if (streamStartTime) {
       const streamData = await loadStreamData();
       const chatStats = chatInteraction.getStats();
+      const viewerStats = viewerManager.getViewerStats();
 
       // Enhanced stream history
       streamData.streamHistory.push({
@@ -304,6 +306,12 @@ export const streamEventHandlers = {
           topTopics: chatStats.topTopics,
           chatMood: chatStats.chatMood,
           highlights: streamData.contentAnalytics.highlights,
+          viewerStats: {
+            unique: viewerStats.totalUnique,
+            returning: viewerStats.returningRate,
+            loyalty: viewerStats.loyaltyDistribution,
+            topViewers: viewerStats.topViewers,
+          },
         },
       });
 
