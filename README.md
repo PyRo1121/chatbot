@@ -36,11 +36,21 @@ A comprehensive Twitch bot designed for small streamers (3-5 viewers) to enhance
 - **Event Responses**: Special messages for follows, subs, raids
 - **Question Detection**: Automatically identifies and answers questions
 
+### Follow Bot Protection
+- **Suspicious Follow Detection**: Identifies potential bot followers
+- **Account Age Checking**: Flags accounts younger than 24 hours
+- **Rate Limiting**: Detects rapid follow patterns
+- **Silent Mode**: Automatically suppresses announcements during bot attacks
+- **Pattern Recognition**: Identifies suspicious username patterns
+- **Tracking System**: Maintains list of suspicious followers for review
+
 ### Automatic Token Management
+- Integrated with Twurple's RefreshingAuthProvider
 - Self-healing token refresh system
 - No manual token updates needed
 - Automatic .env file updates
 - Error recovery and retry mechanism
+- Separate bot and broadcaster token management
 
 ## Setup
 
@@ -54,7 +64,7 @@ A comprehensive Twitch bot designed for small streamers (3-5 viewers) to enhance
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone [https://github.com/PyRo1121/chatbot]
 cd chatbot
 ```
 
@@ -122,6 +132,9 @@ pnpm start
 - `!stats` - View current stream statistics
 - `!besttime` - See optimal streaming times
 - `!history` - View stream history and performance
+- `!suspicious` - View list of suspicious followers (potential bots)
+- `!clearsuspicious` - Clear the list of tracked suspicious followers
+- `!followsettings` - View current follow protection settings
 
 ### Moderator Commands
 - `!trivia [category]` - Start a trivia game
@@ -140,11 +153,17 @@ pnpm start
 ```
 src/
 ├── auth/           # Authentication handling
+│   ├── tokenManager.js     # Token refresh and management
+│   ├── auth-server.js      # OAuth authentication server
+│   └── get-auth-url.js     # Auth URL generator
 ├── bot/            # Core bot functionality
 │   ├── commands/   # Command implementations
-│   ├── analytics.js    # Viewer tracking
-│   ├── channelPoints.js # Channel point rewards
-│   └── chatInteraction.js # Chat response system
+│   ├── analytics.js        # Viewer tracking
+│   ├── channelPoints.js    # Channel point rewards
+│   ├── chatInteraction.js  # Chat response system
+│   ├── streamManager.js    # Stream info management
+│   ├── followProtection.js # Follow bot protection
+│   └── twitchClient.js     # Twitch API client setup
 ├── events/         # Event handling
 ├── spotify/        # Music integration
 ├── overlays/       # Stream overlay system
@@ -207,9 +226,12 @@ async handleNewReward(input, username) {
 The bot includes comprehensive error handling:
 
 1. **Token Management**
+   - Twurple's RefreshingAuthProvider for automatic token refresh
+   - Separate handling for bot and broadcaster tokens
    - Automatic refresh on expiration
-   - Retry failed operations
+   - Retry failed operations with new tokens
    - Environment variable updates
+   - Token validation and error recovery
 
 2. **API Rate Limiting**
    - Cooldown system
@@ -263,6 +285,15 @@ WORD_CHAIN_MAX_TIME = 300000;  // 5 minutes
 WORD_CHAIN_MAX_WORDS = 30;  // Maximum chain length
 ```
 
+### Follow Protection Settings
+Customize follow protection in `src/bot/followProtection.js`:
+```javascript
+// Protection settings
+minAccountAge: 24,           // Minimum account age in hours
+maxFollowsPerMinute: 5,      // Follow rate limit
+silentModeDuration: 5,       // Silent mode duration in minutes
+```
+
 ### Analytics Settings
 Customize analytics in `src/bot/analytics.js`:
 ```javascript
@@ -272,6 +303,14 @@ SCHEDULE_CONSISTENCY_GOAL = 0.7;  // Schedule consistency target
 ```
 
 ## Common Issues & Solutions
+
+### Follow Bot Protection
+If you encounter follow botting:
+1. Use `!suspicious` to view potential bot followers
+2. Use `!clearsuspicious` to clear the list after reviewing
+3. Adjust protection settings with `!followprotection`
+4. Check logs for follow patterns and triggers
+5. Monitor account age patterns in suspicious follows
 
 ### Token Refresh Issues
 If you encounter token problems:

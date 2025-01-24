@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-01-23
+
+### Changed
+- Migrated from @twitch-api/twitch.js to @twurple/api for improved reliability
+- Enhanced token management using Twurple's RefreshingAuthProvider
+- Updated streamManager.js to use proper Twitch API authentication
+- Improved documentation for token management system
+
+### Fixed
+- Stream information update reliability
+- Token refresh mechanism
+- API authentication issues
+
 ## [1.0.0] - 2025-01-23
 
 ### Added

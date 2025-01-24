@@ -126,7 +126,7 @@ class StreamInsights {
       }
 
       // Generate insights
-      const insights = {
+      const streamInsights = {
         currentStats: {
           viewers: stats.currentViewers,
           avgViewers: stats.averageViewers,
@@ -139,7 +139,7 @@ class StreamInsights {
         recommendations: this.generateRecommendations(stats, similarChannels),
       };
 
-      return insights;
+      return streamInsights;
     } catch (error) {
       logger.error('Error getting stream insights:', error);
       throw error;
@@ -176,7 +176,6 @@ class StreamInsights {
   }
 
   // Helper methods using retry logic
-  // Helper methods using retry logic
   getFollowersWithRetry(userId, maxRetries = 3) {
     return this.retryOperation(
       () => this.api.channels.getChannelFollowerCount(userId),
@@ -185,19 +184,11 @@ class StreamInsights {
     );
   }
 
-  async getSubscribersWithRetry(userId, maxRetries = 3) {
+  getSubscribersWithRetry(userId, maxRetries = 3) {
     return this.retryOperation(
       async () => {
-        try {
-          // Get broadcaster's subscribers using paginated endpoint
-          const subscribers = await this.api.subscriptions
-            .getSubscriptionsPaginated(userId)
-            .getAll();
-          return subscribers.length || 0;
-        } catch (error) {
-          logger.error('Error getting subscribers:', error);
-          throw error;
-        }
+        const subscribers = await this.api.subscriptions.getSubscriptionsPaginated(userId).getAll();
+        return subscribers.length || 0;
       },
       0,
       maxRetries
@@ -257,14 +248,14 @@ class StreamInsights {
 }
 
 // Create singleton instance
-let insights = null;
+const streamInsights = new StreamInsights();
 
 // Initialize insights instance
 async function getInsights() {
-  if (!insights) {
-    insights = await new StreamInsights().init();
+  if (!streamInsights.api) {
+    await streamInsights.init();
   }
-  return insights;
+  return streamInsights;
 }
 
 // Command handler - shows detailed stats

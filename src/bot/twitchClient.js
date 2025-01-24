@@ -1,10 +1,11 @@
 import tmi from 'tmi.js';
 import { ApiClient } from '@twurple/api';
-import { RefreshingAuthProvider, AppTokenAuthProvider } from '@twurple/auth';
+import { RefreshingAuthProvider } from '@twurple/auth';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import logger from '../utils/logger.js';
 import { OpenAI } from 'openai';
 import tokenManager from '../auth/tokenManager.js';
+import followProtection from './followProtection.js';
 import { renderTemplate, broadcastUpdate } from '../overlays/overlays.js';
 import chatInteraction from './chatInteraction.js';
 import analytics from './analytics.js';
@@ -231,13 +232,23 @@ class TwitchClient {
         condition.broadcasterUserId,
         condition.broadcasterUserId,
         async (event) => {
-          const response = await this.generateResponse(
-            `Generate a funny thank you message for a new Twitch follower named ${event.userDisplayName}`
-          );
-          this.client.say(
-            `#${broadcasterTokens.channel}`,
-            `@${event.userDisplayName}, ${response}`
-          );
+          // Check for suspicious follows
+          const isSuspicious = await followProtection.isFollowSuspicious(event);
+
+          // Only announce if not suspicious and not in silent mode
+          if (!isSuspicious && !followProtection.isSilentMode()) {
+            const response = await this.generateResponse(
+              `Generate a funny thank you message for a new Twitch follower named ${event.userDisplayName}`
+            );
+            this.client.say(
+              `#${broadcasterTokens.channel}`,
+              `@${event.userDisplayName}, ${response}`
+            );
+          } else {
+            logger.warn(
+              `Suppressed follow announcement for ${event.userDisplayName} (Suspicious: ${isSuspicious}, Silent Mode: ${followProtection.isSilentMode()})`
+            );
+          }
         }
       );
 
@@ -486,6 +497,43 @@ class TwitchClient {
               args,
               isBroadcaster ? 'broadcaster' : 'user'
             );
+            break;
+
+          case '!followprotection':
+            if (tags.mod || isBroadcaster) {
+              if (args.length === 0) {
+                const config = followProtection.getConfig();
+                response = {
+                  success: true,
+                  message: `Follow Protection Settings | Min Account Age: ${config.minAccountAge}h | Max Follows/Min: ${config.maxFollowsPerMinute} | Silent Mode Duration: ${config.silentModeDuration}m`,
+                };
+              } else if (args.length === 2) {
+                try {
+                  const [setting, value] = args;
+                  followProtection.updateConfig(setting, Number(value));
+                  response = {
+                    success: true,
+                    message: `Updated follow protection setting: ${setting} = ${value}`,
+                  };
+                } catch (error) {
+                  response = {
+                    success: false,
+                    message: `Error updating setting: ${error.message}`,
+                  };
+                }
+              } else {
+                response = {
+                  success: false,
+                  message:
+                    'Usage: !followprotection [setting] [value] - Settings: minAccountAge (hours), maxFollowsPerMinute, silentModeDuration (minutes)',
+                };
+              }
+            } else {
+              response = {
+                success: false,
+                message: 'This command is only available to moderators and the broadcaster',
+              };
+            }
             break;
 
           default:
