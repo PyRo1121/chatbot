@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.3] - 2025-01-24
+### Fixed
+- Fixed competitor analysis follower tracking
+  * Updated to use getChannelFollowerCount instead of getChannelFollowers
+  * Added proper scope for follower data access
+  * Improved error handling for follower count retrieval
+  * Enhanced token validation for competitor tracking
+
 ## [1.4.2] - 2025-01-23
 ### Fixed
 - Fixed auth provider initialization in competitor analysis

@@ -110,7 +110,13 @@ Respond with JSON only:
   "reason": "string (explanation)"
 }`;
 
-      const analysis = JSON.parse(await generateResponse(prompt));
+      const response = await generateResponse(prompt);
+      // Remove any markdown formatting and extract just the JSON
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+      const analysis = JSON.parse(jsonMatch[0]);
 
       // Update spam patterns if high confidence spam detected
       if (analysis.isSpam && analysis.confidence > this.SPAM_THRESHOLD) {
@@ -153,7 +159,12 @@ Respond with JSON only:
   "reason": "string (explanation)"
 }`;
 
-      const assessment = JSON.parse(await generateResponse(prompt));
+      const response = await generateResponse(prompt);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+      const assessment = JSON.parse(jsonMatch[0]);
 
       // Record raid assessment
       this.data.raidHistory.push({
@@ -211,7 +222,12 @@ Respond with JSON only:
   "recommendedAction": "string (none|warn|timeout|ban)"
 }`;
 
-      const analysis = JSON.parse(await generateResponse(prompt));
+      const response = await generateResponse(prompt);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+      const analysis = JSON.parse(jsonMatch[0]);
 
       if (analysis.hasPattern && analysis.confidence > this.SPAM_THRESHOLD) {
         analysis.patterns.forEach((pattern) => this.suspiciousPatterns.add(pattern));

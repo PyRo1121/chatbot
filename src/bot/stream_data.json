@@ -341,12 +341,193 @@
           ]
         }
       }
+    },
+    {
+      "startTime": "2025-01-24T04:50:44.070Z",
+      "endTime": "2025-01-24T04:53:14.774Z",
+      "duration": "0h 2m",
+      "milestones": [],
+      "analytics": {
+        "totalInteractions": 3,
+        "topTopics": [
+          {
+            "topic": "!followprotection",
+            "count": 3
+          },
+          {
+            "topic": "!recommendations",
+            "count": 2
+          },
+          {
+            "topic": "!roast",
+            "count": 2
+          },
+          {
+            "topic": "@pokemoncommunitygame",
+            "count": 2
+          },
+          {
+            "topic": "!track",
+            "count": 2
+          },
+          {
+            "topic": "!suspicious",
+            "count": 1
+          },
+          {
+            "topic": "!insights",
+            "count": 1
+          },
+          {
+            "topic": "@gh0streaper13",
+            "count": 1
+          },
+          {
+            "topic": "gh0streaper13",
+            "count": 1
+          }
+        ],
+        "chatMood": {
+          "current": {
+            "sentiment": "Neutral",
+            "energy": "Medium"
+          },
+          "distribution": [
+            {
+              "mood": "Neutral",
+              "count": 2
+            },
+            {
+              "mood": "Positive",
+              "count": 1
+            },
+            {
+              "mood": "Negative",
+              "count": 1
+            }
+          ]
+        },
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 100,
+          "loyalty": {
+            "New Friend": 0,
+            "Regular": 1,
+            "Loyal Viewer": 0,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 5,
+              "level": "Regular"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "startTime": "2025-01-24T05:00:41.420Z",
+      "endTime": "2025-01-24T05:09:26.707Z",
+      "duration": "0h 8m",
+      "milestones": [],
+      "analytics": {
+        "totalInteractions": 7,
+        "topTopics": [
+          {
+            "topic": "!track",
+            "count": 12
+          },
+          {
+            "topic": "!followprotection",
+            "count": 3
+          },
+          {
+            "topic": "!roast",
+            "count": 3
+          },
+          {
+            "topic": "gh0streaper13",
+            "count": 3
+          },
+          {
+            "topic": "@firepigbot",
+            "count": 3
+          },
+          {
+            "topic": "!recommendations",
+            "count": 2
+          },
+          {
+            "topic": "@pokemoncommunitygame",
+            "count": 2
+          },
+          {
+            "topic": "!suspicious",
+            "count": 1
+          },
+          {
+            "topic": "!insights",
+            "count": 1
+          },
+          {
+            "topic": "@gh0streaper13",
+            "count": 1
+          }
+        ],
+        "chatMood": {
+          "current": {
+            "sentiment": "Positive",
+            "energy": "Medium"
+          },
+          "distribution": [
+            {
+              "mood": "Neutral",
+              "count": 4
+            },
+            {
+              "mood": "Positive",
+              "count": 3
+            },
+            {
+              "mood": "Negative",
+              "count": 1
+            }
+          ]
+        },
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 100,
+          "loyalty": {
+            "New Friend": 0,
+            "Regular": 0,
+            "Loyal Viewer": 1,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 19,
+              "level": "Loyal Viewer"
+            }
+          ]
+        }
+      }
     }
   ],
   "viewerEngagement": {
     "20": {
       "averageViewers": 0,
       "chatActivity": 1,
+      "samples": 1
+    },
+    "23": {
+      "averageViewers": 0,
+      "chatActivity": 7,
       "samples": 1
     }
   },

@@ -46,6 +46,7 @@ class CompetitorAnalysis {
           'channel:read:followers',
           'user:read:follows',
           'user:read:broadcast',
+          'moderator:read:followers',
         ],
       });
 
@@ -223,16 +224,17 @@ class CompetitorAnalysis {
 
       let followers;
       try {
-        followers = await this.apiClient.channels.getChannelFollowers(channelId);
+        // Use getChannelFollowerCount instead of getChannelFollowers
+        followers = await this.apiClient.channels.getChannelFollowerCount(channelId);
       } catch (error) {
-        const retried = await this.handleApiError(error, 'getChannelFollowers');
+        const retried = await this.handleApiError(error, 'getChannelFollowerCount');
         if (retried) {
-          followers = await this.apiClient.channels.getChannelFollowers(channelId);
+          followers = await this.apiClient.channels.getChannelFollowerCount(channelId);
         } else {
           throw error;
         }
       }
-      return followers.total;
+      return followers;
     } catch (error) {
       logger.error('Error getting follower count:', error);
       return 0;

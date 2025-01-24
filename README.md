@@ -8,8 +8,30 @@ A comprehensive Twitch bot designed for small streamers (3-5 viewers) to enhance
 - **Best Time Analysis**: Determines optimal streaming hours based on viewer engagement
 - **Game Performance**: Tracks which games bring in the most viewers
 - **Growth Metrics**: Monitors viewer retention, chat engagement, and follower conversion
-- **Competitor Analysis**: Studies similar channels for growth opportunities
 - **Schedule Optimization**: Suggests best streaming schedules
+
+### Competitor Analysis (!track, !insights, !suggestions)
+- **Channel Tracking**:
+  - Track competitor channels with `!track <channel>`
+  - Monitor follower growth and viewer counts
+  - Analyze game categories and content strategies
+  - Track stream frequency and peak times
+- **Growth Analytics**:
+  - 30-day follower growth trends
+  - Average and peak viewer statistics
+  - Category performance analysis
+  - Historical performance data
+- **Market Insights**:
+  - Top performing categories in your niche
+  - Fastest growing channels analysis
+  - Content strategy recommendations
+  - Viewer engagement patterns
+- **Commands**:
+  - `!track <channel>` - Start tracking a channel
+  - `!untrack <channel>` - Stop tracking a channel
+  - `!insights` - Get competitor insights and trends
+  - `!suggestions` - Get content strategy suggestions
+  - `!tracked` - List all tracked channels and their stats
 
 ### Viewer Management & Recognition
 - **Loyalty System**:
