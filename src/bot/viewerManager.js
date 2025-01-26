@@ -182,7 +182,21 @@ Keep it fun and personal! Message should be one short paragraph.`;
         })),
     };
   }
+
+  addPoints(username, points) {
+    if (!this.data.viewers[username]) {
+      this.trackViewer(username);
+    }
+
+    if (!this.data.viewers[username].points) {
+      this.data.viewers[username].points = 0;
+    }
+
+    this.data.viewers[username].points += points;
+    this.saveData();
+    return this.data.viewers[username].points;
+  }
 }
 
 const viewerManager = new ViewerManager();
-export default viewerManager;
+export { viewerManager as default, viewerManager };

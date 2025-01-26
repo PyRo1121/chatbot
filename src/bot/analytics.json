@@ -1,11 +1,11 @@
 {
-  "totalStreams": 228,
-  "totalHours": 6.5494708333333325,
+  "totalStreams": 232,
+  "totalHours": 6.802761944444444,
   "peakViewers": 1,
   "averageViewers": 0,
   "topChatters": [],
   "popularCommands": {
-    "!roast": 39,
+    "!roast": 40,
     "!besttime": 1,
     "!insight": 2,
     "!rosat": 1,
@@ -17,11 +17,12 @@
     "!recommendations": 3,
     "!followprotection": 3,
     "!suspicious": 1,
-    "!track": 12
+    "!track": 13,
+    "!points": 3
   },
   "viewerRetention": {
-    "new": 0,
-    "returning": 1,
+    "new": 1,
+    "returning": 0,
     "regular": 0
   },
   "streamHistory": [
@@ -1848,6 +1849,40 @@
       "commands": {},
       "endTime": "2025-01-24T05:09:26.710Z",
       "duration": 525291
+    },
+    {
+      "startTime": "2025-01-26T22:29:04.649Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-01-26T22:38:52.588Z",
+      "duration": 587939
+    },
+    {
+      "startTime": "2025-01-26T22:47:19.205Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-01-26T22:49:26.680Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-01-26T22:51:04.428Z",
+      "duration": 97748
+    },
+    {
+      "startTime": "2025-01-26T22:51:10.924Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-01-26T22:54:57.085Z",
+      "duration": 226161
     }
   ],
   "lastUpdated": "2025-01-23T16:45:04.782Z"

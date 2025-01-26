@@ -102,6 +102,17 @@
       "contentTypes": [],
       "addedAt": "2025-01-24T05:02:02.591Z",
       "lastUpdated": "2025-01-24T05:02:02.838Z"
+    },
+    {
+      "id": "430887775",
+      "username": "akirachivt",
+      "displayName": "AkiraChiVt",
+      "category": "Art",
+      "followers": 642,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-26T22:52:22.682Z",
+      "lastUpdated": "2025-01-26T22:52:23.111Z"
     }
   ],
   "marketAnalysis": {
@@ -149,6 +160,12 @@
       {
         "timestamp": "2025-01-24T05:01:21.425Z",
         "followers": 1804
+      }
+    ],
+    "430887775": [
+      {
+        "timestamp": "2025-01-26T22:52:23.111Z",
+        "followers": 642
       }
     ],
     "659591507": [

@@ -68,8 +68,13 @@ async function initBot() {
       return;
     }
 
-    // Store and analyze message, track viewer, and moderate
-    chatInteraction.storeMessage(user.username, message);
+    // Handle chat engagement and points
+    const engagementResponse = await chatInteraction.handleChatMessage(user.username, message);
+    if (engagementResponse) {
+      twitchClient.client.say(channel, engagementResponse);
+    }
+
+    // Track viewer milestones
     const milestone = trackViewer(user.username);
     if (milestone) {
       twitchClient.client.say(channel, milestone);
@@ -90,12 +95,6 @@ async function initBot() {
           break;
       }
       return;
-    }
-
-    // Get witty response if appropriate
-    const response = await chatInteraction.getWittyResponse(message, user.username);
-    if (response) {
-      twitchClient.client.say(channel, response);
     }
 
     // Check for potential highlight moment
@@ -217,6 +216,16 @@ async function initBot() {
       case '!loyalty': {
         const loyaltyResponse = await handleLoyalty();
         twitchClient.client.say(channel, loyaltyResponse);
+        break;
+      }
+      case '!points':
+      case '!lastactive':
+      case '!chatstats': {
+        const commandHandler = chatInteraction.chatCommands[command];
+        if (commandHandler) {
+          const response = await commandHandler(user.username);
+          twitchClient.client.say(channel, response);
+        }
         break;
       }
       case '!topviewers': {

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.4] - 2025-01-26
+### Added
+- Witty response system for chat commands
+  * AI-generated humorous responses for point-related commands
+  * Context-aware witty remarks
+  * Randomized response patterns
+  * Integrated with existing engagement tracking
+
 ## [1.4.3] - 2025-01-24
 ### Fixed
 - Fixed competitor analysis follower tracking

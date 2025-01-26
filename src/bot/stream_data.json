@@ -517,9 +517,158 @@
           ]
         }
       }
+    },
+    {
+      "startTime": "2025-01-26T22:29:04.652Z",
+      "endTime": "2025-01-26T22:38:52.586Z",
+      "duration": "0h 9m",
+      "milestones": [],
+      "analytics": {
+        "totalInteractions": 7,
+        "topTopics": [
+          {
+            "topic": "!track",
+            "count": 12
+          },
+          {
+            "topic": "!roast",
+            "count": 4
+          },
+          {
+            "topic": "!followprotection",
+            "count": 3
+          },
+          {
+            "topic": "gh0streaper13",
+            "count": 3
+          },
+          {
+            "topic": "@firepigbot",
+            "count": 3
+          },
+          {
+            "topic": "!recommendations",
+            "count": 2
+          },
+          {
+            "topic": "@pokemoncommunitygame",
+            "count": 2
+          },
+          {
+            "topic": "!suspicious",
+            "count": 1
+          },
+          {
+            "topic": "!insights",
+            "count": 1
+          },
+          {
+            "topic": "@gh0streaper13",
+            "count": 1
+          }
+        ],
+        "chatMood": {
+          "current": {
+            "sentiment": "Negative",
+            "energy": "Medium"
+          },
+          "distribution": [
+            {
+              "mood": "Neutral",
+              "count": 4
+            },
+            {
+              "mood": "Positive",
+              "count": 3
+            },
+            {
+              "mood": "Negative",
+              "count": 2
+            }
+          ]
+        },
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 100,
+          "loyalty": {
+            "New Friend": 0,
+            "Regular": 0,
+            "Loyal Viewer": 1,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 20,
+              "level": "Loyal Viewer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "startTime": "2025-01-26T22:49:26.681Z",
+      "endTime": "2025-01-26T22:51:04.427Z",
+      "duration": "0h 1m",
+      "milestones": [],
+      "analytics": {
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 100,
+          "loyalty": {
+            "New Friend": 0,
+            "Regular": 0,
+            "Loyal Viewer": 1,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 23,
+              "level": "Loyal Viewer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "startTime": "2025-01-26T22:51:10.925Z",
+      "endTime": "2025-01-26T22:54:57.078Z",
+      "duration": "0h 3m",
+      "milestones": [],
+      "analytics": {
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 100,
+          "loyalty": {
+            "New Friend": 0,
+            "Regular": 0,
+            "Loyal Viewer": 1,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 25,
+              "level": "Loyal Viewer"
+            }
+          ]
+        }
+      }
     }
   ],
   "viewerEngagement": {
+    "16": {
+      "averageViewers": 0,
+      "chatActivity": 7,
+      "samples": 1
+    },
     "20": {
       "averageViewers": 0,
       "chatActivity": 1,

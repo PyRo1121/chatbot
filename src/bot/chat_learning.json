@@ -34,7 +34,7 @@
       "!recommendations": 2,
       "!followprotection": 3,
       "!suspicious": 1,
-      "!roast": 3,
+      "!roast": 4,
       "@pokemoncommunitygame": 2,
       "!insights": 1,
       "!track": 12,
@@ -56,12 +56,13 @@
       "what": 1,
       "does": 1,
       "nice": 1,
-      "shut": 1
+      "shut": 1,
+      "@pokeinfobot": 1
     },
     "engagement": {},
     "sentiment": {
       "Positive": 3,
-      "Negative": 1,
+      "Negative": 2,
       "Neutral": 4
     },
     "userStyles": {

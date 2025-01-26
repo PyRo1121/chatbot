@@ -78,6 +78,9 @@ A comprehensive Twitch bot designed for small streamers (3-5 viewers) to enhance
   - Personalized responses based on user history
 - **Smart Interactions**:
   - Contextual and witty responses
+    * AI-generated humorous responses for point-related commands
+    * Randomized response patterns
+    * Integrated with engagement tracking
   - Automatic question detection and answering
   - Dynamic cooldown based on chat activity
   - Event-based special messages
@@ -208,6 +211,8 @@ pnpm start
 - `!queueclear` - Clear the song queue (broadcaster/mods only)
 - `!queueremove [position]` - Remove a song from the queue (broadcaster/mods only)
 - `!roast @username` - Generate a playful roast for a user
+- `!points` - Check your points with a witty response
+- `!leaderboard` - View the points leaderboard with humorous commentary
 - `!commands` - List available commands
 - `!ping` - Check if the bot is responsive
 - `!viewerstats` - Show viewer statistics and engagement metrics

@@ -79,10 +79,55 @@
         "droppedFrames": 0,
         "issues": []
       }
+    },
+    {
+      "startTime": "2025-01-26T22:29:04.755Z",
+      "endTime": "2025-01-26T22:38:52.589Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": [
+          "low viewership and engagement metrics"
+        ]
+      }
+    },
+    {
+      "startTime": "2025-01-26T22:49:26.781Z",
+      "endTime": "2025-01-26T22:51:04.429Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": [
+          "low viewership and engagement metrics"
+        ]
+      }
+    },
+    {
+      "startTime": "2025-01-26T22:51:11.025Z",
+      "endTime": "2025-01-26T22:54:57.087Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+      }
     }
   ],
   "categoryStats": {},
   "timeStats": {
+    "16": {
+      "averageViewers": 0,
+      "peakViewers": 0,
+      "streams": 3
+    },
     "21": {
       "averageViewers": 0,
       "peakViewers": 0,
