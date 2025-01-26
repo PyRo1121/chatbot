@@ -88,4 +88,27 @@ export async function analyzeAudioFromUrl(url) {
   }
 }
 
+// Analyze message toxicity using OpenAI moderation
+export async function analyzeSentiment(message) {
+  try {
+    const moderation = await openai.moderations.create({
+      input: message,
+    });
+
+    const results = moderation.results[0];
+    return {
+      toxicityScore: results.category_scores.toxicity,
+      flagged: results.flagged,
+      categories: results.categories,
+    };
+  } catch (error) {
+    logger.error('Error analyzing sentiment:', error);
+    return {
+      toxicityScore: 0,
+      flagged: false,
+      categories: {},
+    };
+  }
+}
+
 export default openai;

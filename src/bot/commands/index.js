@@ -1,5 +1,7 @@
 import { handleRoast } from './roast.js';
 import { handlePing } from './ping.js';
+import { handleShoutout } from './shoutout.js';
+import { startTrivia, handleTriviaAnswer, endTrivia } from './trivia.js';
 import { handleStreamInsights } from './streamInsights.js';
 import { viewerCommands, handleRaid, trackViewer } from './viewer.js';
 import { analyticsCommands, initializeAnalytics, endAnalytics } from './analytics.js';
@@ -22,6 +24,10 @@ import setupCompetitorCommands from './competitor.js';
 export {
   handleRoast,
   handlePing,
+  handleShoutout,
+  startTrivia,
+  handleTriviaAnswer,
+  endTrivia,
   handleListQueue,
   handleClearQueue,
   handleRemoveFromQueue,
@@ -87,4 +93,4 @@ export const handleFollowSettings = followProtectionCommands.settings;
 export const competitorCommands = setupCompetitorCommands;
 
 export const commandList =
-  '!ping, !songrequest, !queue, !queueclear, !queueremove, !roast, !trivia, !wordchain, !minigame [scramble|riddle], !insights (broadcaster only), !clip [title], !highlights [days], !title [new title], !category [game], !uptime, !milestone [description], !recommendations, !chatinsights, !followprotection (mods only), !suspicious (broadcaster only), !clearsuspicious (broadcaster only), !followsettings (broadcaster only), !viewerstats, !loyalty, !topviewers, !raids, !health, !performance, !besttimes, !topcategories, !createclip [title], !clipsbycategory [category], !clipsbytag [tag], !recentclips [days], !topclips, !clipstats, !suggestcompilation, !analyzeclip [clipId], !modstats (mods only), !userhistory [username] (mods only), !trust [username] (mods only), !untrust [username] (mods only), !raidhistory (mods only), !analyzechat (mods only), !warn [username] [reason] (mods only), !track [channel] (broadcaster only), !untrack [channel] (broadcaster only), !insights (broadcaster only), !suggestions (broadcaster only), !tracked (broadcaster only)';
+  '!ping, !songrequest, !queue, !queueclear, !queueremove, !roast, !trivia, !wordchain, !minigame [scramble|riddle], !insights (broadcaster only), !clip [title], !highlights [days], !title [new title], !category [game], !uptime, !milestone [description], !recommendations, !chatinsights, !followprotection (mods only), !suspicious (broadcaster only), !clearsuspicious (broadcaster only), !followsettings (broadcaster only), !viewerstats, !loyalty, !topviewers, !raids, !health, !performance, !besttimes, !topcategories, !createclip [title], !clipsbycategory [category], !clipsbytag [tag], !recentclips [days], !topclips, !clipstats, !suggestcompilation, !analyzeclip [clipId], !modstats (mods only), !userhistory [username] (mods only), !trust [username] (mods only), !untrust [username] (mods only), !raidhistory (mods only), !analyzechat (mods only), !warn [username] [reason] (mods only), !track [channel] (broadcaster only), !untrack [channel] (broadcaster only), !insights (broadcaster only), !suggestions (broadcaster only), !tracked (broadcaster only), !shoutout [username], !trivia';

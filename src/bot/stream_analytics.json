@@ -119,6 +119,34 @@
         "droppedFrames": 0,
         "issues": []
       }
+    },
+    {
+      "startTime": "2025-01-26T23:20:27.937Z",
+      "endTime": "2025-01-26T23:24:11.448Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": [
+          "low viewership and engagement metrics"
+        ]
+      }
+    },
+    {
+      "startTime": "2025-01-26T23:43:13.298Z",
+      "endTime": "2025-01-26T23:45:14.301Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": [
+          "low viewership and engagement metrics"
+        ]
+      }
     }
   ],
   "categoryStats": {},
@@ -127,6 +155,11 @@
       "averageViewers": 0,
       "peakViewers": 0,
       "streams": 3
+    },
+    "17": {
+      "averageViewers": 0,
+      "peakViewers": 0,
+      "streams": 2
     },
     "21": {
       "averageViewers": 0,

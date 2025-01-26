@@ -661,6 +661,60 @@
           ]
         }
       }
+    },
+    {
+      "startTime": "2025-01-26T23:20:27.836Z",
+      "endTime": "2025-01-26T23:24:11.440Z",
+      "duration": "0h 3m",
+      "milestones": [],
+      "analytics": {
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 100,
+          "loyalty": {
+            "New Friend": 0,
+            "Regular": 0,
+            "Loyal Viewer": 1,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 26,
+              "level": "Loyal Viewer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "startTime": "2025-01-26T23:43:13.197Z",
+      "endTime": "2025-01-26T23:45:14.294Z",
+      "duration": "0h 2m",
+      "milestones": [],
+      "analytics": {
+        "highlights": [],
+        "viewerStats": {
+          "unique": 1,
+          "returning": 100,
+          "loyalty": {
+            "New Friend": 0,
+            "Regular": 0,
+            "Loyal Viewer": 1,
+            "Dedicated Fan": 0,
+            "Stream Veteran": 0
+          },
+          "topViewers": [
+            {
+              "username": "pyro1121",
+              "visits": 26,
+              "level": "Loyal Viewer"
+            }
+          ]
+        }
+      }
     }
   ],
   "viewerEngagement": {

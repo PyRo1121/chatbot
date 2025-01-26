@@ -2,8 +2,8 @@
   "viewers": {
     "pyro1121": {
       "firstSeen": "2025-01-24T03:28:14.035Z",
-      "visits": 25,
-      "lastSeen": "2025-01-26T22:52:20.644Z",
+      "visits": 26,
+      "lastSeen": "2025-01-26T23:20:36.438Z",
       "watchtime": 0,
       "milestones": [
         {
@@ -17,7 +17,7 @@
           "visits": 15
         }
       ],
-      "points": 5
+      "points": 6
     }
   },
   "raids": [],

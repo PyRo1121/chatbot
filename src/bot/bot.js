@@ -2,6 +2,8 @@ import getClient from './twitchClient.js';
 import analytics from './analytics.js';
 import chatInteraction from './chatInteraction.js';
 import CompetitorAnalysis from './competitorAnalysis.js';
+import AdvancedModeration from './advancedModeration.js';
+import StreamAutomation from './streamAutomation.js';
 import {
   processSongQueue,
   handleChatActivity,
@@ -46,11 +48,22 @@ import {
   moderateMessage,
   assessRaid,
   competitorCommands,
+  handleShoutout,
+  startTrivia,
+  handleTriviaAnswer,
+  endTrivia,
 } from './commands/index.js';
 import { detectHighlight } from './streamManager.js';
 
 async function initBot() {
   const twitchClient = await getClient();
+
+  // Initialize advanced moderation
+  const advancedModeration = new AdvancedModeration();
+
+  // Initialize stream automation
+  const streamAutomation = new StreamAutomation();
+  await streamAutomation.init();
 
   // Initialize competitor analysis
   const competitorAnalysis = new CompetitorAnalysis();
@@ -80,7 +93,32 @@ async function initBot() {
       twitchClient.client.say(channel, milestone);
     }
 
-    // Moderate message
+    // Advanced moderation checks
+    const advancedModAction = await advancedModeration.analyzeMessage(message, user);
+    if (advancedModAction) {
+      switch (advancedModAction.action) {
+        case 'warning':
+          twitchClient.client.say(channel, `⚠️ @${user.username}, ${advancedModAction.reason}`);
+          break;
+        case 'timeout':
+          twitchClient.client.timeout(
+            channel,
+            user.username,
+            advancedModAction.duration,
+            advancedModAction.reason
+          );
+          break;
+        case 'ban':
+          twitchClient.client.ban(channel, user.username, advancedModAction.reason);
+          break;
+        case 'shadowban':
+          advancedModeration.shadowbanUser(user.username);
+          break;
+      }
+      return;
+    }
+
+    // Basic moderation
     const modAction = await moderateMessage(message, user.username, user.mod ? 'mod' : 'user');
     if (modAction) {
       switch (modAction.action) {
@@ -357,6 +395,43 @@ async function initBot() {
         twitchClient.client.say(channel, analysisResponse);
         break;
       }
+      case '!trivia': {
+        if (user.mod || isBroadcaster) {
+          const triviaResponse = await startTrivia(twitchClient.client, channel, user, args);
+          twitchClient.client.say(channel, triviaResponse);
+        }
+        break;
+      }
+      case '!answer': {
+        const answerResponse = await handleTriviaAnswer(twitchClient.client, channel, user, args);
+        if (answerResponse) {
+          twitchClient.client.say(channel, answerResponse);
+        }
+        break;
+      }
+      case '!endtrivia': {
+        if (user.mod || isBroadcaster) {
+          const endResponse = await endTrivia(twitchClient.client, channel, user);
+          twitchClient.client.say(channel, endResponse);
+        }
+        break;
+      }
+      case '!shoutout':
+      case '!so': {
+        if (user.mod || isBroadcaster) {
+          if (!args) {
+            twitchClient.client.say(channel, 'Please specify a username to shoutout');
+            break;
+          }
+          const shoutoutResponse = await handleShoutout(
+            twitchClient.client,
+            channel,
+            args.split(' ')
+          );
+          twitchClient.client.say(channel, shoutoutResponse);
+        }
+        break;
+      }
 
       // Competitor analysis commands
       case '!track': {
@@ -395,6 +470,11 @@ async function initBot() {
         break;
       }
     }
+  });
+
+  // Handle new followers
+  twitchClient.client.on('follow', async (channel, username) => {
+    await streamAutomation.handleNewFollower(username);
   });
 
   // Handle raids

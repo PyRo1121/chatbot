@@ -2,6 +2,7 @@ import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
 import { generateResponse } from '../utils/openai.js';
+import getClient from './twitchClient.js';
 
 class ViewerManager {
   constructor() {
@@ -14,6 +15,7 @@ class ViewerManager {
       DEDICATED: { minVisits: 30, title: 'Dedicated Fan' },
       VETERAN: { minVisits: 50, title: 'Stream Veteran' },
     };
+    this._twitchClient = null;
   }
 
   loadData() {
@@ -195,6 +197,48 @@ Keep it fun and personal! Message should be one short paragraph.`;
     this.data.viewers[username].points += points;
     this.saveData();
     return this.data.viewers[username].points;
+  }
+
+  get twitchClient() {
+    if (!this._twitchClient) {
+      this._twitchClient = getClient();
+    }
+    return this._twitchClient;
+  }
+
+  async generateShoutout(username) {
+    try {
+      // Get user info from Twitch API
+      const user = await this.twitchClient.users.getUserByName(username);
+
+      if (!user) {
+        return `Check out @${username}! They're awesome!`;
+      }
+
+      // Get channel info
+      const channel = await this.twitchClient.channels.getChannelInfo(user);
+
+      // Create personalized message
+      let message = `Check out @${user.displayName} (${user.name})! `;
+      message += `They're a ${user.broadcasterType || 'viewer'} `;
+
+      if (channel?.gameName) {
+        message += `who streams ${channel.gameName} `;
+      }
+
+      if (channel?.title) {
+        message += `with the tagline: "${channel.title}". `;
+      } else {
+        message += 'with great content! ';
+      }
+
+      message += `Give them a follow at https://twitch.tv/${user.name} !`;
+
+      return message;
+    } catch (error) {
+      logger.error('Error generating shoutout:', error);
+      return `Check out @${username}! They're awesome!`;
+    }
   }
 }
 
