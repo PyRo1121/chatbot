@@ -1,0 +1,46 @@
+{
+  "approvedSongs": {
+    "sneaky|21 savage": 3,
+    "numb|linkin park": 1,
+    "locked up|akon": 4,
+    "redrum|21 savage": 1
+  },
+  "rejectedSongs": {
+    "redrum by 21savage|": {
+      "count": 1,
+      "reasons": {
+        "inappropriate_content": 1
+      }
+    }
+  },
+  "karaokePatterns": [
+    "karaoke version",
+    "instrumental version",
+    "backing track",
+    "originally performed by",
+    "in the style of",
+    "tribute to",
+    "cover version",
+    "made famous by",
+    "as made popular by",
+    "remix backing track",
+    "instrumental cover",
+    "sing-along version",
+    "without vocals",
+    "minus one",
+    "backing track",
+    "instrumental only"
+  ],
+  "trollPatterns": [
+    "rick roll",
+    "rick astley never gonna",
+    "baby shark",
+    "nyan cat",
+    "troll song",
+    "meme song",
+    "epic sax guy",
+    "sandstorm darude",
+    "john cena theme",
+    "rickroll"
+  ]
+}

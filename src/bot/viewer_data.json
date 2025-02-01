@@ -1,0 +1,41 @@
+{
+  "viewers": {
+    "pyro1121": {
+      "firstSeen": "2025-01-24T03:28:14.035Z",
+      "visits": 55,
+      "lastSeen": "2025-02-01T02:58:35.530Z",
+      "watchtime": 0,
+      "milestones": [
+        {
+          "level": "Regular",
+          "achievedAt": "2025-01-24T04:51:20.344Z",
+          "visits": 5
+        },
+        {
+          "level": "Loyal Viewer",
+          "achievedAt": "2025-01-24T05:02:01.615Z",
+          "visits": 15
+        },
+        {
+          "level": "Dedicated Fan",
+          "achievedAt": "2025-02-01T00:04:21.496Z",
+          "visits": 30
+        }
+      ],
+      "points": 60
+    }
+  },
+  "raids": [],
+  "milestones": [],
+  "viewerStats": {
+    "totalUnique": 1,
+    "returningRate": 1,
+    "loyaltyDistribution": {
+      "New Friend": 1,
+      "Regular": 0,
+      "Loyal Viewer": 0,
+      "Dedicated Fan": 0,
+      "Stream Veteran": 0
+    }
+  }
+}

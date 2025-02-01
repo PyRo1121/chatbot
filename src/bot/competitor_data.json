@@ -1,0 +1,198 @@
+{
+  "trackedChannels": [
+    {
+      "id": "49750858",
+      "username": "gh0streaper13",
+      "displayName": "gh0streaper13",
+      "category": "Red Dead Redemption 2",
+      "followers": 249,
+      "avgViewers": 0,
+      "peakViewers": 0,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T04:51:21.394Z",
+      "lastUpdated": "2025-01-24T04:55:35.955Z"
+    },
+    {
+      "id": "876521714",
+      "username": "arrowhyphy",
+      "displayName": "ArrowHyphy",
+      "category": "Marvel Rivals",
+      "followers": 384,
+      "avgViewers": 0,
+      "peakViewers": 0,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T04:55:54.340Z",
+      "lastUpdated": "2025-01-24T04:55:54.591Z"
+    },
+    {
+      "id": "705052410",
+      "username": "killianghost_tgk",
+      "displayName": "KillianGhost_TGK",
+      "category": "Star Wars Jedi: Fallen Order",
+      "followers": 1071,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T04:56:08.522Z",
+      "lastUpdated": "2025-01-24T04:56:08.775Z"
+    },
+    {
+      "id": "659591507",
+      "username": "foxtrot_juliet_gaming",
+      "displayName": "Foxtrot_Juliet_Gaming",
+      "category": "Planet Crafter",
+      "followers": 1042,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T05:01:02.183Z",
+      "lastUpdated": "2025-01-24T05:01:02.441Z"
+    },
+    {
+      "id": "424038763",
+      "username": "mudd_cricket",
+      "displayName": "Mudd_Cricket",
+      "category": "Disney Speedstorm",
+      "followers": 1804,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T05:01:21.186Z",
+      "lastUpdated": "2025-01-24T05:01:21.425Z"
+    },
+    {
+      "id": "671395285",
+      "username": "xbonafidekingx",
+      "displayName": "xBonafideKingx",
+      "category": "Call of Duty: Black Ops 6",
+      "followers": 1234,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T05:01:31.499Z",
+      "lastUpdated": "2025-01-24T05:01:31.743Z"
+    },
+    {
+      "id": "98738471",
+      "username": "pinenutz",
+      "displayName": "PineNutz",
+      "category": "Fortnite",
+      "followers": 1466,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T05:01:43.751Z",
+      "lastUpdated": "2025-01-24T05:01:43.992Z"
+    },
+    {
+      "id": "52993565",
+      "username": "voiceid",
+      "displayName": "voiceID",
+      "category": "Grand Theft Auto V",
+      "followers": 61080,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T05:01:53.694Z",
+      "lastUpdated": "2025-01-24T05:01:53.950Z"
+    },
+    {
+      "id": "110426655",
+      "username": "doughslife",
+      "displayName": "DoughsLife",
+      "category": "Pokémon Community Game",
+      "followers": 2446,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-24T05:02:02.591Z",
+      "lastUpdated": "2025-01-24T05:02:02.838Z"
+    },
+    {
+      "id": "430887775",
+      "username": "akirachivt",
+      "displayName": "AkiraChiVt",
+      "category": "Art",
+      "followers": 642,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-01-26T22:52:22.682Z",
+      "lastUpdated": "2025-01-26T22:52:23.111Z"
+    }
+  ],
+  "marketAnalysis": {
+    "categoryTrends": {},
+    "peakTimes": {},
+    "contentTypes": {}
+  },
+  "growthMetrics": {
+    "49750858": [
+      {
+        "timestamp": "2025-01-24T04:51:21.566Z",
+        "followers": 0,
+        "avgViewers": 0
+      },
+      {
+        "timestamp": "2025-01-24T04:54:08.493Z",
+        "followers": 0,
+        "avgViewers": 0
+      },
+      {
+        "timestamp": "2025-01-24T04:55:35.955Z",
+        "followers": 249,
+        "avgViewers": 0
+      }
+    ],
+    "52993565": [
+      {
+        "timestamp": "2025-01-24T05:01:53.950Z",
+        "followers": 61080
+      }
+    ],
+    "98738471": [
+      {
+        "timestamp": "2025-01-24T05:01:43.992Z",
+        "followers": 1466
+      }
+    ],
+    "110426655": [
+      {
+        "timestamp": "2025-01-24T05:02:02.838Z",
+        "followers": 2446
+      }
+    ],
+    "424038763": [
+      {
+        "timestamp": "2025-01-24T05:01:21.425Z",
+        "followers": 1804
+      }
+    ],
+    "430887775": [
+      {
+        "timestamp": "2025-01-26T22:52:23.111Z",
+        "followers": 642
+      }
+    ],
+    "659591507": [
+      {
+        "timestamp": "2025-01-24T05:01:02.441Z",
+        "followers": 1042
+      }
+    ],
+    "671395285": [
+      {
+        "timestamp": "2025-01-24T05:01:31.743Z",
+        "followers": 1234
+      }
+    ],
+    "705052410": [
+      {
+        "timestamp": "2025-01-24T04:56:08.775Z",
+        "followers": 1071
+      }
+    ],
+    "876521714": [
+      {
+        "timestamp": "2025-01-24T04:55:54.591Z",
+        "followers": 384,
+        "avgViewers": 0
+      }
+    ]
+  },
+  "lastUpdated": "2025-01-24T04:04:30.829Z"
+}
