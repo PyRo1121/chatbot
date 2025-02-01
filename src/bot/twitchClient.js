@@ -77,14 +77,17 @@ class TwitchClient {
     }
 
     // Add bot credentials to auth provider with required scopes
-    await botAuthProvider.addUserForToken({
-      accessToken: botTokens.accessToken,
-      refreshToken: botTokens.refreshToken,
-      expiresIn: 14400, // 4 hours in seconds
-      obtainmentTimestamp: Date.now(),
-      userId: botUser.id,
-      scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
-    }, botUser.id);
+    await botAuthProvider.addUserForToken(
+      {
+        accessToken: botTokens.accessToken,
+        refreshToken: botTokens.refreshToken,
+        expiresIn: 14400, // 4 hours in seconds
+        obtainmentTimestamp: Date.now(),
+        userId: botUser.id,
+        scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
+      },
+      botUser.id
+    );
 
     // Add error handler for token issues
     botAuthProvider.onRefreshFailure(async (userId) => {
@@ -92,14 +95,17 @@ class TwitchClient {
       const success = await tokenManager.refreshToken('bot');
       if (success) {
         const newTokens = tokenManager.getBotTokens();
-        await botAuthProvider.addUserForToken({
-          accessToken: newTokens.accessToken,
-          refreshToken: newTokens.refreshToken,
-          expiresIn: 14400,
-          obtainmentTimestamp: Date.now(),
-          userId: botUser.id,
-          scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
-        }, botUser.id);
+        await botAuthProvider.addUserForToken(
+          {
+            accessToken: newTokens.accessToken,
+            refreshToken: newTokens.refreshToken,
+            expiresIn: 14400,
+            obtainmentTimestamp: Date.now(),
+            userId: botUser.id,
+            scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
+          },
+          botUser.id
+        );
       }
     });
 
@@ -160,37 +166,40 @@ class TwitchClient {
     }
 
     // Update broadcaster token data with user ID
-    await broadcasterAuthProvider.addUserForToken({
-      accessToken: broadcasterTokens.accessToken,
-      refreshToken: broadcasterTokens.refreshToken,
-      expiresIn: 14400,
-      obtainmentTimestamp: Date.now(),
-      userId: broadcaster.id,
-      scope: [
-        'channel:read:subscriptions',
-        'channel:read:redemptions',
-        'channel:manage:redemptions',
-        'channel:read:vips',
-        'channel:manage:vips',
-        'channel:moderate',
-        'channel:read:followers',
-        'moderator:read:followers',
-        'channel:read:stream_key',
-        'channel:read:subscriptions',
-        'channel:read:vips',
-        'moderator:read:chatters',
-        'user:read:follows',
-        'user:read:subscriptions',
-        'user:read:email',
-        'user:read:broadcast',
-        'whispers:read',
-        'whispers:edit',
-        'channel:read:follows',
-        'channel:read:goals',
-        'channel:read:polls',
-        'channel:read:predictions',
-      ],
-    }, broadcaster.id);
+    await broadcasterAuthProvider.addUserForToken(
+      {
+        accessToken: broadcasterTokens.accessToken,
+        refreshToken: broadcasterTokens.refreshToken,
+        expiresIn: 14400,
+        obtainmentTimestamp: Date.now(),
+        userId: broadcaster.id,
+        scope: [
+          'channel:read:subscriptions',
+          'channel:read:redemptions',
+          'channel:manage:redemptions',
+          'channel:read:vips',
+          'channel:manage:vips',
+          'channel:moderate',
+          'channel:read:followers',
+          'moderator:read:followers',
+          'channel:read:stream_key',
+          'channel:read:subscriptions',
+          'channel:read:vips',
+          'moderator:read:chatters',
+          'user:read:follows',
+          'user:read:subscriptions',
+          'user:read:email',
+          'user:read:broadcast',
+          'whispers:read',
+          'whispers:edit',
+          'channel:read:follows',
+          'channel:read:goals',
+          'channel:read:polls',
+          'channel:read:predictions',
+        ],
+      },
+      broadcaster.id
+    );
 
     // Add error handler for broadcaster token issues
     broadcasterAuthProvider.onRefreshFailure(async (userId) => {
@@ -198,37 +207,40 @@ class TwitchClient {
       const success = await tokenManager.refreshToken('broadcaster');
       if (success) {
         const newTokens = tokenManager.getBroadcasterTokens();
-        await broadcasterAuthProvider.addUserForToken({
-          accessToken: newTokens.accessToken,
-          refreshToken: newTokens.refreshToken,
-          expiresIn: 14400,
-          obtainmentTimestamp: Date.now(),
-          userId: broadcaster.id,
-          scope: [
-            'channel:read:subscriptions',
-            'channel:read:redemptions',
-            'channel:manage:redemptions',
-            'channel:read:vips',
-            'channel:manage:vips',
-            'channel:moderate',
-            'channel:read:followers',
-            'moderator:read:followers',
-            'channel:read:stream_key',
-            'channel:read:subscriptions',
-            'channel:read:vips',
-            'moderator:read:chatters',
-            'user:read:follows',
-            'user:read:subscriptions',
-            'user:read:email',
-            'user:read:broadcast',
-            'whispers:read',
-            'whispers:edit',
-            'channel:read:follows',
-            'channel:read:goals',
-            'channel:read:polls',
-            'channel:read:predictions',
-          ],
-        }, broadcaster.id);
+        await broadcasterAuthProvider.addUserForToken(
+          {
+            accessToken: newTokens.accessToken,
+            refreshToken: newTokens.refreshToken,
+            expiresIn: 14400,
+            obtainmentTimestamp: Date.now(),
+            userId: broadcaster.id,
+            scope: [
+              'channel:read:subscriptions',
+              'channel:read:redemptions',
+              'channel:manage:redemptions',
+              'channel:read:vips',
+              'channel:manage:vips',
+              'channel:moderate',
+              'channel:read:followers',
+              'moderator:read:followers',
+              'channel:read:stream_key',
+              'channel:read:subscriptions',
+              'channel:read:vips',
+              'moderator:read:chatters',
+              'user:read:follows',
+              'user:read:subscriptions',
+              'user:read:email',
+              'user:read:broadcast',
+              'whispers:read',
+              'whispers:edit',
+              'channel:read:follows',
+              'channel:read:goals',
+              'channel:read:polls',
+              'channel:read:predictions',
+            ],
+          },
+          broadcaster.id
+        );
       }
     });
 
@@ -260,12 +272,12 @@ class TwitchClient {
       try {
         const botTokens = await tokenManager.getBotTokens();
         const broadcasterTokens = await tokenManager.getBroadcasterTokens();
-        
+
         // Check if tokens exist and attempt refresh
         if (botTokens.accessToken) {
           await botAuthProvider.refresh();
         }
-        
+
         if (broadcasterTokens.accessToken) {
           await broadcasterAuthProvider.refresh();
         }
@@ -408,7 +420,10 @@ class TwitchClient {
 
   async generateResponse(prompt) {
     try {
-      return await generateResponse(prompt, 'You are a funny Twitch chat bot. Keep responses short and entertaining.');
+      return await generateResponse(
+        prompt,
+        'You are a funny Twitch chat bot. Keep responses short and entertaining.'
+      );
     } catch (error) {
       logger.error('AI response error:', error);
       return 'Thanks for the support!';

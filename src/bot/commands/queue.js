@@ -68,15 +68,15 @@ function saveSongQueue() {
 export function handleListQueue() {
   // Reload queue from file to ensure we have latest data
   loadSongQueue();
-  
+
   // Get Spotify's queue state
   const spotifyQueue = spotify.getQueue();
-  
+
   // Read our local queue file
   const queueFilePath = join(process.cwd(), 'src/spotify/song_queue.json');
   try {
     const queueData = JSON.parse(readFileSync(queueFilePath, 'utf8'));
-    
+
     // If both queues are empty
     if ((!Array.isArray(queueData) || queueData.length === 0) && spotifyQueue.length === 0) {
       return {
@@ -87,13 +87,13 @@ export function handleListQueue() {
 
     // Combine and deduplicate queues
     const combinedQueue = [...queueData];
-    spotifyQueue.forEach(spotifyTrack => {
-      if (!combinedQueue.some(song => song.uri === spotifyTrack)) {
+    spotifyQueue.forEach((spotifyTrack) => {
+      if (!combinedQueue.some((song) => song.uri === spotifyTrack)) {
         combinedQueue.push({
-          songName: "Unknown Song",
-          username: "System",
+          songName: 'Unknown Song',
+          username: 'System',
           uri: spotifyTrack,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
     });
@@ -137,7 +137,7 @@ export function handleRemoveFromQueue(username, index) {
   }
 
   loadSongQueue(); // Ensure we have latest state before removing
-  
+
   if (index < 1 || index > songQueue.length) {
     return {
       success: false,
@@ -164,7 +164,7 @@ export async function handleSongRequest(username, songName, twitchClient) {
   try {
     // Reload queue before processing new request
     loadSongQueue();
-    
+
     const cleanSongName = songName
       .trim()
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
@@ -205,7 +205,7 @@ export async function handleSongRequest(username, songName, twitchClient) {
       songName: track.name || cleanSongName,
       timestamp: Date.now(),
       uri: track.uri,
-      artist: track.artists?.[0]?.name || 'Unknown Artist'
+      artist: track.artists?.[0]?.name || 'Unknown Artist',
     };
     songQueue.push(song);
     saveSongQueue();
@@ -240,7 +240,7 @@ export async function handleSongRequest(username, songName, twitchClient) {
 async function syncQueueState() {
   try {
     const spotifyQueue = spotify.getQueue();
-    const localQueue = songQueue.filter(song => song.uri && spotifyQueue.includes(song.uri));
+    const localQueue = songQueue.filter((song) => song.uri && spotifyQueue.includes(song.uri));
     songQueue.length = 0;
     songQueue.push(...localQueue);
     saveSongQueue();

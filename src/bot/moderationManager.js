@@ -73,7 +73,11 @@ class ModerationManager {
       }
 
       // Skip trusted users and moderators early
-      if (userLevel === 'mod' || userLevel === 'broadcaster' || this.data.trustedUsers.includes(username)) {
+      if (
+        userLevel === 'mod' ||
+        userLevel === 'broadcaster' ||
+        this.data.trustedUsers.includes(username)
+      ) {
         return { isSpam: false, confidence: 0, action: 'none' };
       }
 
@@ -206,14 +210,12 @@ Respond with JSON only:
 
   async detectSpamPattern(timeframe = 60000) {
     // Filter out messages from mods, broadcasters, and trusted users
-    const recentMessages = this.messageQueue.filter(
-      (msg) => {
-        const isRecent = Date.now() - msg.timestamp < timeframe;
-        const isTrusted = this.data.trustedUsers.includes(msg.username);
-        const isPrivileged = msg.userLevel === 'mod' || msg.userLevel === 'broadcaster';
-        return isRecent && !isTrusted && !isPrivileged;
-      }
-    );
+    const recentMessages = this.messageQueue.filter((msg) => {
+      const isRecent = Date.now() - msg.timestamp < timeframe;
+      const isTrusted = this.data.trustedUsers.includes(msg.username);
+      const isPrivileged = msg.userLevel === 'mod' || msg.userLevel === 'broadcaster';
+      return isRecent && !isTrusted && !isPrivileged;
+    });
 
     if (recentMessages.length < 3) {
       return null;

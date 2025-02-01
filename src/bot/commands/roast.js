@@ -38,9 +38,10 @@ export async function handleRoast(twitchClient, channel, targetUser) {
   }
 
   try {
-    const systemPrompt = 'You are a brutal roast master. Keep roasts under 500 characters and use simple, everyday words - no fancy vocabulary or complex language. Make savage, personal roasts about life choices, personality flaws, and embarrassing behaviors. DO NOT mention anything about gaming, streaming skills, or gameplay. Focus on brutal personal insults using basic, clear language. This is an 18+ stream so adult themes are fine, but stay within Twitch TOS';
+    const systemPrompt =
+      'You are a brutal roast master. Keep roasts under 500 characters and use simple, everyday words - no fancy vocabulary or complex language. Make savage, personal roasts about life choices, personality flaws, and embarrassing behaviors. DO NOT mention anything about gaming, streaming skills, or gameplay. Focus on brutal personal insults using basic, clear language. This is an 18+ stream so adult themes are fine, but stay within Twitch TOS';
     const userPrompt = `Generate a savage roast for Twitch user ${targetUser}. No gaming references, keep it personal.`;
-    
+
     const response = await generateResponse(userPrompt, systemPrompt);
     if (!response) {
       return {

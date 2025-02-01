@@ -14,7 +14,7 @@ const BONUS_POINTS_FOR_ENGAGEMENT = 5;
 const MIN_MESSAGES_FOR_BONUS = 3;
 
 // Response frequency configuration
-const RESPONSE_FREQUENCY = 5; // Respond every 5th message instead of every 3rd
+const RESPONSE_FREQUENCY = 5; // Respond every 5th message
 const MIN_TIME_BETWEEN_RESPONSES = 60000; // Minimum 60 seconds between automatic responses
 let lastResponseTime = 0;
 
@@ -25,7 +25,7 @@ async function generatePersonalizedResponse(username, message) {
     const context = chatContexts.get(username) || [];
 
     // Create system prompt
-    const systemPrompt = `You are a friendly Twitch chat bot assistant. Keep responses short (1-2 sentences), casual, and engaging. The user ${username} has been chatting about: ${context.join(', ')}. Respond in a way that encourages natural conversation without being overly enthusiastic.`;
+    const systemPrompt = `You are a friendly Twitch chat bot assistant. Keep responses short (1-2 sentences), casual, and engaging. Do NOT include citation numbers like [1] or [2]. The user ${username} has been chatting about: ${context.join(', ')}. Respond in a way that encourages natural conversation without being overly enthusiastic.`;
 
     // Generate response
     const response = await generateResponse(message, systemPrompt);
@@ -61,6 +61,11 @@ async function handleChatMessage(username, message) {
       await viewerManager.addPoints(username, BONUS_POINTS_FOR_ENGAGEMENT);
     }
 
+    // Don't respond if the message is a command or directed at the bot
+    if (message.startsWith('!') || message.toLowerCase().includes('@firepigbot')) {
+      return null;
+    }
+
     // Check if enough time has passed since last response
     const now = Date.now();
     if (now - lastResponseTime < MIN_TIME_BETWEEN_RESPONSES) {
@@ -70,8 +75,8 @@ async function handleChatMessage(username, message) {
     // Generate personalized response with reduced frequency
     if (engagement.messageCount % RESPONSE_FREQUENCY === 0) {
       // Only respond if the message seems to encourage conversation
-      const shouldRespond = message.length > 10 && // Message has some substance
-        !message.startsWith('!') && // Not a command
+      const shouldRespond =
+        message.length > 10 && // Message has some substance
         !message.match(/^[0-9\s]*$/); // Not just numbers/spaces
 
       if (shouldRespond) {
@@ -139,7 +144,8 @@ const chatCommands = {
 
 // Generate a witty response
 async function getWittyResponse(username) {
-  const systemPrompt = 'You are a friendly Twitch chat bot. Keep responses very short (max 5-6 words), casual, and welcoming. Avoid being overly enthusiastic or using too many emotes.';
+  const systemPrompt =
+    'You are a friendly Twitch chat bot. Keep responses very short (max 5-6 words), casual, and welcoming. Do NOT include citation numbers like [1] or [2]. Avoid being overly enthusiastic or using too many emotes.';
   const prompts = [
     `Give a brief friendly greeting to ${username}`,
     `Welcome ${username} with a quick message`,
@@ -152,10 +158,13 @@ async function getWittyResponse(username) {
 // Backward compatibility wrapper
 function getStats() {
   return {
-    totalInteractions: Array.from(viewerEngagement.values()).reduce((sum, v) => sum + v.messageCount, 0),
+    totalInteractions: Array.from(viewerEngagement.values()).reduce(
+      (sum, v) => sum + v.messageCount,
+      0
+    ),
     chatMood: { current: { sentiment: 'Neutral', energy: 'Normal' } },
     topTopics: [],
-    activeHours: []
+    activeHours: [],
   };
 }
 

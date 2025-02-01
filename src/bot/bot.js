@@ -422,12 +422,7 @@ async function initBot() {
             twitchClient.client.say(channel, 'Please specify a username to shoutout');
             break;
           }
-          await handleShoutout.execute(
-            twitchClient.client,
-            channel,
-            user,
-            args.split(' ')
-          );
+          await handleShoutout(twitchClient, channel, user, args.split(' '));
         }
         break;
       }
@@ -519,22 +514,28 @@ async function initBot() {
     const finalAnalysis = await endAnalytics();
     if (finalAnalysis && twitchClient.client) {
       const channelName = process.env.TWITCH_CHANNEL;
-      twitchClient.client.say(
-        `#${channelName}`,
-        'Stream ended! Final stream analysis:\n' +
-          `• Stream Health: ${finalAnalysis.health.status} (Score: ${finalAnalysis.health.score}/100)\n` +
-          `• Stream Duration: ${streamCommands.uptime() === 'Stream is offline' ? '0h 0m' : streamCommands.uptime()}\n` +
-          `• Bitrate: ${finalAnalysis.health.bitrate.average}kbps (${finalAnalysis.health.bitrate.stability})\n` +
-          `• Peak Viewers: ${analytics.getEngagementStats().peakViewers}\n` +
-          `• Average Viewers: ${analytics.getEngagementStats().averageViewers}\n` +
-          `• Best Category: ${finalAnalysis.performance.bestCategory || 'N/A'}\n` +
-          `• Viewer Retention: ${finalAnalysis.performance.viewerRetention}%\n` +
-          `• Engagement Rate: ${finalAnalysis.performance.averageEngagement}%\n` +
-          `• Total Chat Messages: ${chatInteraction.getStats().totalInteractions}\n` +
-          `• Most Active Chatters: ${analytics.getEngagementStats().topChatters.map(c => c.username).join(', ')}\n` +
-          `\nTop Suggestions:\n${finalAnalysis.performance.improvements.slice(0, 2).map(imp => `• ${imp}`).join('\n')}\n` +
-          `\nCheck !insights for more detailed analytics!`
-      );
+      const duration =
+        streamCommands.uptime() === 'Stream is offline' ? '0h 0m' : streamCommands.uptime();
+      const message = [
+        'Stream ended! Final stream analysis:',
+        `• Stream Health: ${finalAnalysis.health.status} (Score: ${finalAnalysis.health.score}/100)`,
+        `• Stream Duration: ${duration}`,
+        `• Bitrate: ${finalAnalysis.health.bitrate.average}kbps (${finalAnalysis.health.bitrate.stability})`,
+        `• Peak Viewers: ${finalAnalysis.stats.peakViewers}`,
+        `• Average Viewers: ${finalAnalysis.stats.averageViewers}`,
+        `• Best Category: ${finalAnalysis.performance.bestCategory}`,
+        `• Viewer Retention: ${finalAnalysis.performance.viewerRetention}%`,
+        `• Engagement Rate: ${finalAnalysis.performance.averageEngagement}%`,
+        `• Total Chat Messages: ${finalAnalysis.stats.totalMessages}`,
+        `• Most Active Chatters: ${finalAnalysis.stats.activeViewers.join(', ')}`,
+        '',
+        'Top Suggestions:',
+        ...finalAnalysis.performance.improvements.slice(0, 2).map((imp) => `• ${imp}`),
+        '',
+        'Check !insights for more detailed analytics!',
+      ].join('\n');
+
+      twitchClient.client.say(`#${channelName}`, message);
     }
     process.exit();
   });

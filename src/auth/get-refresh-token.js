@@ -12,13 +12,14 @@ const spotifyApi = new SpotifyWebApi({
 });
 
 // Get client credentials access token
-spotifyApi.clientCredentialsGrant()
-  .then(data => {
+spotifyApi
+  .clientCredentialsGrant()
+  .then((data) => {
     console.log('Access token:', data.body.access_token);
     console.log('Expires in:', data.body.expires_in);
     process.exit(0);
   })
-  .catch(err => {
+  .catch((err) => {
     console.error('Error details:');
     console.error('Status code:', err.statusCode);
     console.error('Headers:', err.headers);

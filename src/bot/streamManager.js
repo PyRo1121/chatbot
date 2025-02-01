@@ -62,7 +62,7 @@ Rules:
 5. contentSuggestions must be a non-empty array of strings`;
 
     const response = await generateResponse(prompt);
-    
+
     try {
       // Extract and clean JSON
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -73,22 +73,27 @@ Rules:
 
       // Clean the JSON string
       let jsonStr = jsonMatch[0]
-        .replace(/[\u0000-\u001F]+/g, '')    // Remove all control characters
-        .replace(/\s+/g, ' ')                // Normalize whitespace
-        .replace(/,(\s*[}\]])/g, '$1')       // Remove trailing commas
-        .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')  // Ensure property names are quoted
-        .replace(/:\s*'([^']*)'/g, ':"$1"')  // Convert single quotes to double quotes
-        .replace(/\\([^"\\\/bfnrtu])/g, '$1')  // Remove invalid escapes
-        .replace(/\r?\n|\r/g, '')              // Remove all newlines
-        .replace(/\t/g, ' ')                   // Replace tabs with spaces
-        .replace(/\s+/g, ' ')                  // Normalize whitespace
+        .replace(/[\u0000-\u001F]+/g, '') // Remove all control characters
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+        .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Ensure property names are quoted
+        .replace(/:\s*'([^']*)'/g, ':"$1"') // Convert single quotes to double quotes
+        .replace(/\\([^"\\\/bfnrtu])/g, '$1') // Remove invalid escapes
+        .replace(/\r?\n|\r/g, '') // Remove all newlines
+        .replace(/\t/g, ' ') // Replace tabs with spaces
+        .replace(/\s+/g, ' ') // Normalize whitespace
         .trim();
 
       // Parse the cleaned JSON
       const result = JSON.parse(jsonStr);
 
       // Validate structure
-      if (!result.recommendedTitle || !result.suggestedCategory || !result.bestStreamTime || !Array.isArray(result.contentSuggestions)) {
+      if (
+        !result.recommendedTitle ||
+        !result.suggestedCategory ||
+        !result.bestStreamTime ||
+        !Array.isArray(result.contentSuggestions)
+      ) {
         console.error('Invalid response structure:', result);
         return null;
       }

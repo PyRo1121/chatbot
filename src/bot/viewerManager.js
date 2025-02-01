@@ -136,7 +136,7 @@ Keep it fun and personal! Message should be one short paragraph.`;
   getLoyaltyLevel(visits, username) {
     const levels = Object.entries(this.LOYALTY_LEVELS).reverse();
     const points = this.data.viewers[username]?.points || 0;
-    
+
     for (const [, level] of levels) {
       if (visits >= level.minVisits && points >= level.minPoints) {
         return level;

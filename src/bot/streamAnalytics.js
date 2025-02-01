@@ -93,12 +93,15 @@ class StreamAnalytics {
         },
       });
 
-      await authProvider.addUserForToken({
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        expiresIn: 0,
-        obtainmentTimestamp: 0,
-      }, tokens.userId);
+      await authProvider.addUserForToken(
+        {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresIn: 0,
+          obtainmentTimestamp: 0,
+        },
+        tokens.userId
+      );
 
       const apiClient = new ApiClient({
         authProvider,
@@ -106,7 +109,7 @@ class StreamAnalytics {
           logger.warn('Stream analytics token refresh failed, attempting manual refresh...');
           await tokenManager.refreshToken('broadcaster');
           return true;
-        }
+        },
       });
 
       const stream = await apiClient.streams.getStreamByUserId(tokens.userId);
@@ -162,7 +165,7 @@ class StreamAnalytics {
     try {
       const streamData = {
         currentStream: this.currentStreamData,
-        historicalData: this.data
+        historicalData: this.data,
       };
 
       const prompt = `You are a stream analytics system. Return a JSON object analyzing this data:
@@ -184,7 +187,7 @@ Rules:
 9. no comments or additional text`;
 
       const response = await generateResponse(prompt);
-      
+
       const defaultResponse = {
         health: {
           status: 'unknown',
@@ -192,10 +195,10 @@ Rules:
           bitrate: {
             average: 0,
             stability: 'unknown',
-            issues: ['Unable to analyze bitrate']
+            issues: ['Unable to analyze bitrate'],
           },
           issues: ['Unable to analyze stream performance'],
-          recommendations: ['Check stream settings']
+          recommendations: ['Check stream settings'],
         },
         performance: {
           bestCategory: 'unknown',
@@ -203,8 +206,8 @@ Rules:
           averageEngagement: 0,
           peakTimes: [],
           suggestions: ['Unable to generate suggestions'],
-          improvements: ['Check stream configuration']
-        }
+          improvements: ['Check stream configuration'],
+        },
       };
 
       try {
@@ -235,24 +238,61 @@ Rules:
         // Merge response with defaults and validate
         const validatedResult = {
           health: {
-            status: ['excellent', 'good', 'fair', 'poor'].includes(result.health?.status) ? result.health.status : defaultResponse.health.status,
-            score: Math.min(100, Math.max(0, Number(result.health?.score) || defaultResponse.health.score)),
+            status: ['excellent', 'good', 'fair', 'poor'].includes(result.health?.status)
+              ? result.health.status
+              : defaultResponse.health.status,
+            score: Math.min(
+              100,
+              Math.max(0, Number(result.health?.score) || defaultResponse.health.score)
+            ),
             bitrate: {
-              average: Math.max(0, Number(result.health?.bitrate?.average) || defaultResponse.health.bitrate.average),
-              stability: ['stable', 'unstable'].includes(result.health?.bitrate?.stability) ? result.health.bitrate.stability : defaultResponse.health.bitrate.stability,
-              issues: Array.isArray(result.health?.bitrate?.issues) ? result.health.bitrate.issues : defaultResponse.health.bitrate.issues
+              average: Math.max(
+                0,
+                Number(result.health?.bitrate?.average) || defaultResponse.health.bitrate.average
+              ),
+              stability: ['stable', 'unstable'].includes(result.health?.bitrate?.stability)
+                ? result.health.bitrate.stability
+                : defaultResponse.health.bitrate.stability,
+              issues: Array.isArray(result.health?.bitrate?.issues)
+                ? result.health.bitrate.issues
+                : defaultResponse.health.bitrate.issues,
             },
-            issues: Array.isArray(result.health?.issues) ? result.health.issues : defaultResponse.health.issues,
-            recommendations: Array.isArray(result.health?.recommendations) ? result.health.recommendations : defaultResponse.health.recommendations
+            issues: Array.isArray(result.health?.issues)
+              ? result.health.issues
+              : defaultResponse.health.issues,
+            recommendations: Array.isArray(result.health?.recommendations)
+              ? result.health.recommendations
+              : defaultResponse.health.recommendations,
           },
           performance: {
-            bestCategory: result.performance?.bestCategory || defaultResponse.performance.bestCategory,
-            viewerRetention: Math.min(100, Math.max(0, Number(result.performance?.viewerRetention) || defaultResponse.performance.viewerRetention)),
-            averageEngagement: Math.min(100, Math.max(0, Number(result.performance?.averageEngagement) || defaultResponse.performance.averageEngagement)),
-            peakTimes: Array.isArray(result.performance?.peakTimes) ? result.performance.peakTimes : defaultResponse.performance.peakTimes,
-            suggestions: Array.isArray(result.performance?.suggestions) ? result.performance.suggestions : defaultResponse.performance.suggestions,
-            improvements: Array.isArray(result.performance?.improvements) ? result.performance.improvements : defaultResponse.performance.improvements
-          }
+            bestCategory:
+              result.performance?.bestCategory || defaultResponse.performance.bestCategory,
+            viewerRetention: Math.min(
+              100,
+              Math.max(
+                0,
+                Number(result.performance?.viewerRetention) ||
+                  defaultResponse.performance.viewerRetention
+              )
+            ),
+            averageEngagement: Math.min(
+              100,
+              Math.max(
+                0,
+                Number(result.performance?.averageEngagement) ||
+                  defaultResponse.performance.averageEngagement
+              )
+            ),
+            peakTimes: Array.isArray(result.performance?.peakTimes)
+              ? result.performance.peakTimes
+              : defaultResponse.performance.peakTimes,
+            suggestions: Array.isArray(result.performance?.suggestions)
+              ? result.performance.suggestions
+              : defaultResponse.performance.suggestions,
+            improvements: Array.isArray(result.performance?.improvements)
+              ? result.performance.improvements
+              : defaultResponse.performance.improvements,
+          },
         };
 
         return validatedResult;

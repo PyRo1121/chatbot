@@ -5,7 +5,7 @@ const app = express();
 const port = 8888;
 
 app.get('/callback', (req, res) => {
-  const {code} = req.query;
+  const { code } = req.query;
   if (code) {
     res.send(`Authorization code: ${code}`);
   } else {

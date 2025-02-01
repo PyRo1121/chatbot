@@ -1,6 +1,6 @@
 {
-  "totalStreams": 261,
-  "totalHours": 7.81227361111111,
+  "totalStreams": 277,
+  "totalHours": 8.249544999999998,
   "peakViewers": 1,
   "averageViewers": 0,
   "topChatters": [],
@@ -11,20 +11,20 @@
     "!rosat": 1,
     "!insights": 67,
     "!commands": 1,
-    "!songrequest": 8,
-    "!queueclear": 4,
+    "!songrequest": 9,
+    "!queueclear": 5,
     "!spice": 1,
     "!recommendations": 3,
     "!followprotection": 3,
     "!suspicious": 1,
     "!track": 13,
     "!points": 3,
-    "!queue": 4,
+    "!queue": 5,
     "!clearqueue": 1,
-    "!so": 3
+    "!so": 16
   },
   "viewerRetention": {
-    "new": 0,
+    "new": 1,
     "returning": 0,
     "regular": 0
   },
@@ -2143,6 +2143,142 @@
       "commands": {},
       "endTime": "2025-02-01T02:59:21.215Z",
       "duration": 350243
+    },
+    {
+      "startTime": "2025-02-01T03:23:20.228Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T03:24:21.295Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:24:48.801Z",
+      "duration": 27506
+    },
+    {
+      "startTime": "2025-02-01T03:26:49.471Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T03:29:57.513Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:32:39.465Z",
+      "duration": 161952
+    },
+    {
+      "startTime": "2025-02-01T03:32:42.930Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:36:45.489Z",
+      "duration": 242559
+    },
+    {
+      "startTime": "2025-02-01T03:36:49.285Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:38:42.102Z",
+      "duration": 112817
+    },
+    {
+      "startTime": "2025-02-01T03:39:27.593Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:41:40.336Z",
+      "duration": 132743
+    },
+    {
+      "startTime": "2025-02-01T03:41:43.730Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:45:06.501Z",
+      "duration": 202771
+    },
+    {
+      "startTime": "2025-02-01T03:45:57.820Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:46:43.205Z",
+      "duration": 45385
+    },
+    {
+      "startTime": "2025-02-01T03:46:46.939Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:47:42.556Z",
+      "duration": 55617
+    },
+    {
+      "startTime": "2025-02-01T03:47:47.080Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:49:28.497Z",
+      "duration": 101417
+    },
+    {
+      "startTime": "2025-02-01T03:50:38.119Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:56:08.451Z",
+      "duration": 330332
+    },
+    {
+      "startTime": "2025-02-01T03:57:57.928Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T03:58:54.605Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T04:07:23.659Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T04:08:51.822Z",
+      "duration": 88163
+    },
+    {
+      "startTime": "2025-02-01T04:10:31.963Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T04:11:44.878Z",
+      "duration": 72915
     }
   ],
   "lastUpdated": "2025-01-23T16:45:04.782Z"

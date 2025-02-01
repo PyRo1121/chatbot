@@ -2,7 +2,7 @@ import logger from '../utils/logger.js';
 
 jest.mock('tmi.js');
 jest.mock('@ai-sdk/perplexity', () => ({
-  perplexity: jest.fn().mockReturnValue('mocked-model')
+  perplexity: jest.fn().mockReturnValue('mocked-model'),
 }));
 
 jest.mock('ai', () => ({
@@ -13,14 +13,14 @@ jest.mock('ai', () => ({
         text: JSON.stringify({
           toxicityScore: 0.5,
           flagged: false,
-          categories: {}
-        })
+          categories: {},
+        }),
       });
     }
     return Promise.resolve({
-      text: 'Mocked response'
+      text: 'Mocked response',
     });
-  })
+  }),
 }));
 
 jest.mock('../utils/logger.js', () => ({
