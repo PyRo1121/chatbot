@@ -3,7 +3,11 @@ import { ApiClient } from '@twurple/api';
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import logger from '../utils/logger.js';
+<<<<<<< HEAD
 import { OpenAI } from 'openai';
+=======
+import { generateResponse } from '../utils/perplexity.js';
+>>>>>>> origin/master
 import tokenManager from '../auth/tokenManager.js';
 import followProtection from './followProtection.js';
 import { renderTemplate, broadcastUpdate } from '../overlays/overlays.js';
@@ -77,6 +81,7 @@ class TwitchClient {
     }
 
     // Add bot credentials to auth provider with required scopes
+<<<<<<< HEAD
     await botAuthProvider.addUserForToken({
       accessToken: botTokens.accessToken,
       refreshToken: botTokens.refreshToken,
@@ -84,6 +89,38 @@ class TwitchClient {
       obtainmentTimestamp: Date.now(),
       userId: botUser.id,
       scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
+=======
+    await botAuthProvider.addUserForToken(
+      {
+        accessToken: botTokens.accessToken,
+        refreshToken: botTokens.refreshToken,
+        expiresIn: 14400, // 4 hours in seconds
+        obtainmentTimestamp: Date.now(),
+        userId: botUser.id,
+        scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
+      },
+      botUser.id
+    );
+
+    // Add error handler for token issues
+    botAuthProvider.onRefreshFailure(async (userId) => {
+      logger.warn('Bot token refresh failed, attempting manual refresh...');
+      const success = await tokenManager.refreshToken('bot');
+      if (success) {
+        const newTokens = tokenManager.getBotTokens();
+        await botAuthProvider.addUserForToken(
+          {
+            accessToken: newTokens.accessToken,
+            refreshToken: newTokens.refreshToken,
+            expiresIn: 14400,
+            obtainmentTimestamp: Date.now(),
+            userId: botUser.id,
+            scope: ['chat:read', 'chat:edit', 'channel:moderate', 'whispers:read', 'whispers:edit'],
+          },
+          botUser.id
+        );
+      }
+>>>>>>> origin/master
     });
 
     // Initialize broadcaster auth provider
@@ -143,6 +180,7 @@ class TwitchClient {
     }
 
     // Update broadcaster token data with user ID
+<<<<<<< HEAD
     await broadcasterAuthProvider.addUserForToken({
       accessToken: broadcasterTokens.accessToken,
       refreshToken: broadcasterTokens.refreshToken,
@@ -176,16 +214,134 @@ class TwitchClient {
     });
 
     // Initialize API clients with authenticated user
+=======
+    await broadcasterAuthProvider.addUserForToken(
+      {
+        accessToken: broadcasterTokens.accessToken,
+        refreshToken: broadcasterTokens.refreshToken,
+        expiresIn: 14400,
+        obtainmentTimestamp: Date.now(),
+        userId: broadcaster.id,
+        scope: [
+          'channel:read:subscriptions',
+          'channel:read:redemptions',
+          'channel:manage:redemptions',
+          'channel:read:vips',
+          'channel:manage:vips',
+          'channel:moderate',
+          'channel:read:followers',
+          'moderator:read:followers',
+          'channel:read:stream_key',
+          'channel:read:subscriptions',
+          'channel:read:vips',
+          'moderator:read:chatters',
+          'user:read:follows',
+          'user:read:subscriptions',
+          'user:read:email',
+          'user:read:broadcast',
+          'whispers:read',
+          'whispers:edit',
+          'channel:read:follows',
+          'channel:read:goals',
+          'channel:read:polls',
+          'channel:read:predictions',
+        ],
+      },
+      broadcaster.id
+    );
+
+    // Add error handler for broadcaster token issues
+    broadcasterAuthProvider.onRefreshFailure(async (userId) => {
+      logger.warn('Broadcaster token refresh failed, attempting manual refresh...');
+      const success = await tokenManager.refreshToken('broadcaster');
+      if (success) {
+        const newTokens = tokenManager.getBroadcasterTokens();
+        await broadcasterAuthProvider.addUserForToken(
+          {
+            accessToken: newTokens.accessToken,
+            refreshToken: newTokens.refreshToken,
+            expiresIn: 14400,
+            obtainmentTimestamp: Date.now(),
+            userId: broadcaster.id,
+            scope: [
+              'channel:read:subscriptions',
+              'channel:read:redemptions',
+              'channel:manage:redemptions',
+              'channel:read:vips',
+              'channel:manage:vips',
+              'channel:moderate',
+              'channel:read:followers',
+              'moderator:read:followers',
+              'channel:read:stream_key',
+              'channel:read:subscriptions',
+              'channel:read:vips',
+              'moderator:read:chatters',
+              'user:read:follows',
+              'user:read:subscriptions',
+              'user:read:email',
+              'user:read:broadcast',
+              'whispers:read',
+              'whispers:edit',
+              'channel:read:follows',
+              'channel:read:goals',
+              'channel:read:polls',
+              'channel:read:predictions',
+            ],
+          },
+          broadcaster.id
+        );
+      }
+    });
+
+    // Initialize API clients with authenticated user and error handlers
+>>>>>>> origin/master
     this.twitchApi = new ApiClient({
       authProvider: botAuthProvider,
       authId: botUser.id,
     });
 
+<<<<<<< HEAD
+=======
+    // Add error handling through auth providers
+    botAuthProvider.onRefreshFailure(async () => {
+      logger.warn('Bot token refresh failed, attempting manual refresh...');
+      await tokenManager.refreshToken('bot');
+    });
+
+>>>>>>> origin/master
     this.broadcasterApi = new ApiClient({
       authProvider: broadcasterAuthProvider,
       authId: broadcaster.id,
     });
 
+<<<<<<< HEAD
+=======
+    // Add error handling through auth providers
+    broadcasterAuthProvider.onRefreshFailure(async () => {
+      logger.warn('Broadcaster token refresh failed, attempting manual refresh...');
+      await tokenManager.refreshToken('broadcaster');
+    });
+
+    // Set up token refresh check interval
+    setInterval(async () => {
+      try {
+        const botTokens = await tokenManager.getBotTokens();
+        const broadcasterTokens = await tokenManager.getBroadcasterTokens();
+
+        // Check if tokens exist and attempt refresh
+        if (botTokens.accessToken) {
+          await botAuthProvider.refresh();
+        }
+
+        if (broadcasterTokens.accessToken) {
+          await broadcasterAuthProvider.refresh();
+        }
+      } catch (error) {
+        logger.error('Error in token refresh check:', error);
+      }
+    }, 30 * 60000); // Check every 30 minutes
+
+>>>>>>> origin/master
     // Initialize chat client with robust connection options
     this.client = new tmi.Client({
       options: {
@@ -209,11 +365,14 @@ class TwitchClient {
       channels: [`#${broadcasterTokens.channel}`],
     });
 
+<<<<<<< HEAD
     // Initialize OpenAI client (using env directly since it's not part of Twitch API)
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
 
+=======
+>>>>>>> origin/master
     // Set up event handlers
     await this.setupEventHandlers(
       botTokens,
@@ -325,6 +484,7 @@ class TwitchClient {
 
   async generateResponse(prompt) {
     try {
+<<<<<<< HEAD
       const completion = await this.openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
@@ -339,6 +499,14 @@ class TwitchClient {
       return completion.choices[0].message.content;
     } catch (error) {
       logger.error('OpenAI error:', error);
+=======
+      return await generateResponse(
+        prompt,
+        'You are a funny Twitch chat bot. Keep responses short and entertaining.'
+      );
+    } catch (error) {
+      logger.error('AI response error:', error);
+>>>>>>> origin/master
       return 'Thanks for the support!';
     }
   }

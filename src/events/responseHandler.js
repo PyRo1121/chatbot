@@ -1,5 +1,9 @@
 import logger from '../utils/logger.js';
+<<<<<<< HEAD
 import { generateResponse } from '../utils/openai.js';
+=======
+import { generateResponse } from '../utils/perplexity.js';
+>>>>>>> origin/master
 import spotify from '../spotify/spotify.js';
 
 export async function handleMessage(twitchClient, channel, tags, message) {

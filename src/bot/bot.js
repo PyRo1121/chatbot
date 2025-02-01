@@ -5,7 +5,10 @@ import CompetitorAnalysis from './competitorAnalysis.js';
 import AdvancedModeration from './advancedModeration.js';
 import StreamAutomation from './streamAutomation.js';
 import {
+<<<<<<< HEAD
   processSongQueue,
+=======
+>>>>>>> origin/master
   handleChatActivity,
   streamEventHandlers,
   handleClip,
@@ -53,7 +56,11 @@ import {
   handleTriviaAnswer,
   endTrivia,
 } from './commands/index.js';
+<<<<<<< HEAD
 import { detectHighlight } from './streamManager.js';
+=======
+import { detectHighlight, streamCommands } from './streamManager.js';
+>>>>>>> origin/master
 
 async function initBot() {
   const twitchClient = await getClient();
@@ -423,12 +430,16 @@ async function initBot() {
             twitchClient.client.say(channel, 'Please specify a username to shoutout');
             break;
           }
+<<<<<<< HEAD
           const shoutoutResponse = await handleShoutout(
             twitchClient.client,
             channel,
             args.split(' ')
           );
           twitchClient.client.say(channel, shoutoutResponse);
+=======
+          await handleShoutout(twitchClient, channel, user, args.split(' '));
+>>>>>>> origin/master
         }
         break;
       }
@@ -495,11 +506,15 @@ async function initBot() {
   });
 
   // Setup intervals
+<<<<<<< HEAD
   setInterval(() => {
     if (twitchClient.client) {
       processSongQueue();
     }
   }, 30000);
+=======
+  // Queue state is now handled by automatic sync in queue.js
+>>>>>>> origin/master
 
   // Clean up analytics data periodically
   setInterval(
@@ -524,6 +539,7 @@ async function initBot() {
     const finalAnalysis = await endAnalytics();
     if (finalAnalysis && twitchClient.client) {
       const channelName = process.env.TWITCH_CHANNEL;
+<<<<<<< HEAD
       twitchClient.client.say(
         `#${channelName}`,
         'Stream ended! Check !insights for the final stream analysis. Key metrics:\n' +
@@ -531,6 +547,30 @@ async function initBot() {
           `• Best Category: ${finalAnalysis.performance.bestCategory}\n` +
           `• Viewer Retention: ${finalAnalysis.performance.viewerRetention}%`
       );
+=======
+      const duration =
+        streamCommands.uptime() === 'Stream is offline' ? '0h 0m' : streamCommands.uptime();
+      const message = [
+        'Stream ended! Final stream analysis:',
+        `• Stream Health: ${finalAnalysis.health.status} (Score: ${finalAnalysis.health.score}/100)`,
+        `• Stream Duration: ${duration}`,
+        `• Bitrate: ${finalAnalysis.health.bitrate.average}kbps (${finalAnalysis.health.bitrate.stability})`,
+        `• Peak Viewers: ${finalAnalysis.stats.peakViewers}`,
+        `• Average Viewers: ${finalAnalysis.stats.averageViewers}`,
+        `• Best Category: ${finalAnalysis.performance.bestCategory}`,
+        `• Viewer Retention: ${finalAnalysis.performance.viewerRetention}%`,
+        `• Engagement Rate: ${finalAnalysis.performance.averageEngagement}%`,
+        `• Total Chat Messages: ${finalAnalysis.stats.totalMessages}`,
+        `• Most Active Chatters: ${finalAnalysis.stats.activeViewers.join(', ')}`,
+        '',
+        'Top Suggestions:',
+        ...finalAnalysis.performance.improvements.slice(0, 2).map((imp) => `• ${imp}`),
+        '',
+        'Check !insights for more detailed analytics!',
+      ].join('\n');
+
+      twitchClient.client.say(`#${channelName}`, message);
+>>>>>>> origin/master
     }
     process.exit();
   });

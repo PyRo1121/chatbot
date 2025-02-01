@@ -9,8 +9,13 @@ dotenv.config();
 const app = express();
 const port = 8888;
 
+<<<<<<< HEAD
 const {SPOTIFY_CLIENT_ID} = process.env;
 const {SPOTIFY_CLIENT_SECRET} = process.env;
+=======
+const { SPOTIFY_CLIENT_ID } = process.env;
+const { SPOTIFY_CLIENT_SECRET } = process.env;
+>>>>>>> origin/master
 
 console.log('Loaded Spotify Client ID:', SPOTIFY_CLIENT_ID ? '***' : 'Not found');
 console.log('Loaded Spotify Client Secret:', SPOTIFY_CLIENT_SECRET ? '***' : 'Not found');
@@ -28,7 +33,11 @@ app.get('/callback', async (req, res) => {
         grant_type: 'authorization_code',
       },
       headers: {
+<<<<<<< HEAD
         'Authorization': `Basic ${  Buffer.from(`${SPOTIFY_CLIENT_ID  }:${  SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
+=======
+        Authorization: `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
+>>>>>>> origin/master
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     };
@@ -43,14 +52,25 @@ app.get('/callback', async (req, res) => {
     res.send('Refresh token received! You can close this window.');
     process.exit();
   } catch (error) {
+<<<<<<< HEAD
     console.error('Error getting refresh token:', error.response ? error.response.data : error.message);
+=======
+    console.error(
+      'Error getting refresh token:',
+      error.response ? error.response.data : error.message
+    );
+>>>>>>> origin/master
     res.send('Error getting refresh token. Check console for details.');
     process.exit(1);
   }
 });
 
 app.listen(port, () => {
+<<<<<<< HEAD
   const authUrl = `https://accounts.spotify.com/authorize?${  querystring.stringify({
+=======
+  const authUrl = `https://accounts.spotify.com/authorize?${querystring.stringify({
+>>>>>>> origin/master
     response_type: 'code',
     client_id: SPOTIFY_CLIENT_ID,
     scope: 'user-read-currently-playing user-read-playback-state',

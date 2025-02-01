@@ -12,13 +12,23 @@ const spotifyApi = new SpotifyWebApi({
 });
 
 // Get client credentials access token
+<<<<<<< HEAD
 spotifyApi.clientCredentialsGrant()
   .then(data => {
+=======
+spotifyApi
+  .clientCredentialsGrant()
+  .then((data) => {
+>>>>>>> origin/master
     console.log('Access token:', data.body.access_token);
     console.log('Expires in:', data.body.expires_in);
     process.exit(0);
   })
+<<<<<<< HEAD
   .catch(err => {
+=======
+  .catch((err) => {
+>>>>>>> origin/master
     console.error('Error details:');
     console.error('Status code:', err.statusCode);
     console.error('Headers:', err.headers);

@@ -23,4 +23,8 @@
     "userCooldown": 300,
     "handler": "generateAIResponse"
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/master

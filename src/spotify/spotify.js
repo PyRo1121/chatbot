@@ -1,6 +1,10 @@
 import SpotifyWebApi from 'spotify-web-api-node';
 import logger from '../utils/logger.js';
+<<<<<<< HEAD
 import { generateResponse, analyzeAudioFromUrl } from '../utils/openai.js';
+=======
+import { generateResponse } from '../utils/perplexity.js';
+>>>>>>> origin/master
 import songLearning from './songLearning.js';
 
 // Helper function for retrying operations

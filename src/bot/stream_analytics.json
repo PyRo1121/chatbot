@@ -9,9 +9,13 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
+<<<<<<< HEAD
         "issues": [
           "low viewership and engagement metrics"
         ]
+=======
+        "issues": ["low viewership and engagement metrics"]
+>>>>>>> origin/master
       }
     },
     {
@@ -23,9 +27,13 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
+<<<<<<< HEAD
         "issues": [
           "low viewership and engagement metrics"
         ]
+=======
+        "issues": ["low viewership and engagement metrics"]
+>>>>>>> origin/master
       }
     },
     {
@@ -37,9 +45,13 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
+<<<<<<< HEAD
         "issues": [
           "low viewership and engagement metrics"
         ]
+=======
+        "issues": ["low viewership and engagement metrics"]
+>>>>>>> origin/master
       }
     },
     {
@@ -63,9 +75,13 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
+<<<<<<< HEAD
         "issues": [
           "low viewership and engagement metrics"
         ]
+=======
+        "issues": ["low viewership and engagement metrics"]
+>>>>>>> origin/master
       }
     },
     {
@@ -89,9 +105,13 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
+<<<<<<< HEAD
         "issues": [
           "low viewership and engagement metrics"
         ]
+=======
+        "issues": ["low viewership and engagement metrics"]
+>>>>>>> origin/master
       }
     },
     {
@@ -103,9 +123,13 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
+<<<<<<< HEAD
         "issues": [
           "low viewership and engagement metrics"
         ]
+=======
+        "issues": ["low viewership and engagement metrics"]
+>>>>>>> origin/master
       }
     },
     {
@@ -129,9 +153,13 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
+<<<<<<< HEAD
         "issues": [
           "low viewership and engagement metrics"
         ]
+=======
+        "issues": ["low viewership and engagement metrics"]
+>>>>>>> origin/master
       }
     },
     {
@@ -143,9 +171,313 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
+<<<<<<< HEAD
         "issues": [
           "low viewership and engagement metrics"
         ]
+=======
+        "issues": ["low viewership and engagement metrics"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T00:01:31.670Z",
+      "endTime": "2025-02-01T00:03:14.184Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["low viewership and engagement metrics"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T00:03:22.024Z",
+      "endTime": "2025-02-01T00:09:26.035Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+      }
+    },
+    {
+      "startTime": "2025-02-01T00:09:34.858Z",
+      "endTime": "2025-02-01T00:15:24.074Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+      }
+    },
+    {
+      "startTime": "2025-02-01T00:17:23.898Z",
+      "endTime": "2025-02-01T00:19:23.586Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+      }
+    },
+    {
+      "startTime": "2025-02-01T00:21:05.670Z",
+      "endTime": "2025-02-01T00:25:53.190Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+      }
+    },
+    {
+      "startTime": "2025-02-01T00:28:40.833Z",
+      "endTime": "2025-02-01T00:28:47.405Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T00:32:13.765Z",
+      "endTime": "2025-02-01T00:43:04.579Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["low viewership and engagement metrics", "Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T00:49:28.730Z",
+      "endTime": "2025-02-01T00:50:38.868Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["low viewership and engagement metrics", "Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T01:04:03.459Z",
+      "endTime": "2025-02-01T01:06:02.787Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T01:09:16.257Z",
+      "endTime": "2025-02-01T01:09:19.275Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T01:12:16.656Z",
+      "endTime": "2025-02-01T01:12:17.979Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T01:19:06.312Z",
+      "endTime": "2025-02-01T01:19:12.199Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T01:24:22.615Z",
+      "endTime": "2025-02-01T01:24:26.983Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T01:32:47.317Z",
+      "endTime": "2025-02-01T01:32:54.913Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T01:38:47.749Z",
+      "endTime": "2025-02-01T01:38:51.443Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T01:41:58.091Z",
+      "endTime": "2025-02-01T01:41:59.416Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["low viewership and engagement metrics"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:32:33.703Z",
+      "endTime": "2025-02-01T02:35:26.626Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:35:33.772Z",
+      "endTime": "2025-02-01T02:37:00.156Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:37:09.449Z",
+      "endTime": "2025-02-01T02:38:49.380Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:40:08.111Z",
+      "endTime": "2025-02-01T02:41:40.050Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:41:44.012Z",
+      "endTime": "2025-02-01T02:43:23.682Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:47:04.035Z",
+      "endTime": "2025-02-01T02:48:00.792Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": ["Unable to analyze stream performance"]
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:48:16.901Z",
+      "endTime": "2025-02-01T02:48:28.501Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:49:40.994Z",
+      "endTime": "2025-02-01T02:53:21.660Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+      }
+    },
+    {
+      "startTime": "2025-02-01T02:53:31.073Z",
+      "endTime": "2025-02-01T02:59:21.215Z",
+      "peakViewers": 0,
+      "averageViewers": 0,
+      "categoryPerformance": {},
+      "healthSummary": {
+        "averageBitrate": null,
+        "droppedFrames": 0,
+        "issues": []
+>>>>>>> origin/master
       }
     }
   ],
@@ -161,6 +493,24 @@
       "peakViewers": 0,
       "streams": 2
     },
+<<<<<<< HEAD
+=======
+    "18": {
+      "averageViewers": 0,
+      "peakViewers": 0,
+      "streams": 8
+    },
+    "19": {
+      "averageViewers": 0,
+      "peakViewers": 0,
+      "streams": 8
+    },
+    "20": {
+      "averageViewers": 0,
+      "peakViewers": 0,
+      "streams": 9
+    },
+>>>>>>> origin/master
     "21": {
       "averageViewers": 0,
       "peakViewers": 0,
@@ -183,4 +533,8 @@
     "followConversion": [],
     "engagementRates": []
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/master

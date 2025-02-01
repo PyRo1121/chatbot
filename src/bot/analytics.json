@@ -1,27 +1,51 @@
 {
+<<<<<<< HEAD
   "totalStreams": 234,
   "totalHours": 6.898515555555555,
+=======
+  "totalStreams": 277,
+  "totalHours": 8.249544999999998,
+>>>>>>> origin/master
   "peakViewers": 1,
   "averageViewers": 0,
   "topChatters": [],
   "popularCommands": {
+<<<<<<< HEAD
     "!roast": 41,
+=======
+    "!roast": 51,
+>>>>>>> origin/master
     "!besttime": 1,
     "!insight": 2,
     "!rosat": 1,
     "!insights": 67,
     "!commands": 1,
+<<<<<<< HEAD
     "!songrequest": 3,
     "!queueclear": 2,
+=======
+    "!songrequest": 9,
+    "!queueclear": 5,
+>>>>>>> origin/master
     "!spice": 1,
     "!recommendations": 3,
     "!followprotection": 3,
     "!suspicious": 1,
     "!track": 13,
+<<<<<<< HEAD
     "!points": 3
   },
   "viewerRetention": {
     "new": 0,
+=======
+    "!points": 3,
+    "!queue": 5,
+    "!clearqueue": 1,
+    "!so": 16
+  },
+  "viewerRetention": {
+    "new": 1,
+>>>>>>> origin/master
     "returning": 0,
     "regular": 0
   },
@@ -1901,6 +1925,384 @@
       "commands": {},
       "endTime": "2025-01-26T23:45:14.298Z",
       "duration": 121102
+<<<<<<< HEAD
+=======
+    },
+    {
+      "startTime": "2025-02-01T00:01:31.570Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T00:03:14.184Z",
+      "duration": 102614
+    },
+    {
+      "startTime": "2025-02-01T00:03:21.923Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T00:09:26.034Z",
+      "duration": 364111
+    },
+    {
+      "startTime": "2025-02-01T00:09:34.757Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T00:15:24.073Z",
+      "duration": 349316
+    },
+    {
+      "startTime": "2025-02-01T00:17:23.798Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T00:19:23.586Z",
+      "duration": 119788
+    },
+    {
+      "startTime": "2025-02-01T00:21:05.570Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T00:25:53.189Z",
+      "duration": 287619
+    },
+    {
+      "startTime": "2025-02-01T00:28:40.733Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T00:28:47.404Z",
+      "duration": 6671
+    },
+    {
+      "startTime": "2025-02-01T00:32:13.664Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T00:43:04.579Z",
+      "duration": 650915
+    },
+    {
+      "startTime": "2025-02-01T00:49:28.629Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T00:50:38.868Z",
+      "duration": 70239
+    },
+    {
+      "startTime": "2025-02-01T00:55:37.437Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T00:57:56.498Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T01:04:03.359Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T01:06:02.787Z",
+      "duration": 119428
+    },
+    {
+      "startTime": "2025-02-01T01:09:16.156Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T01:09:19.274Z",
+      "duration": 3118
+    },
+    {
+      "startTime": "2025-02-01T01:12:16.555Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T01:12:17.979Z",
+      "duration": 1424
+    },
+    {
+      "startTime": "2025-02-01T01:19:06.212Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T01:19:12.198Z",
+      "duration": 5986
+    },
+    {
+      "startTime": "2025-02-01T01:24:22.515Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T01:24:26.983Z",
+      "duration": 4468
+    },
+    {
+      "startTime": "2025-02-01T01:32:47.216Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T01:32:54.913Z",
+      "duration": 7697
+    },
+    {
+      "startTime": "2025-02-01T01:38:47.648Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T01:38:51.442Z",
+      "duration": 3794
+    },
+    {
+      "startTime": "2025-02-01T01:41:57.990Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T01:41:59.416Z",
+      "duration": 1426
+    },
+    {
+      "startTime": "2025-02-01T02:32:33.603Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:35:26.625Z",
+      "duration": 173022
+    },
+    {
+      "startTime": "2025-02-01T02:35:33.671Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:37:00.156Z",
+      "duration": 86485
+    },
+    {
+      "startTime": "2025-02-01T02:37:09.348Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:38:49.380Z",
+      "duration": 100032
+    },
+    {
+      "startTime": "2025-02-01T02:40:08.010Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:41:40.049Z",
+      "duration": 92039
+    },
+    {
+      "startTime": "2025-02-01T02:41:43.911Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:43:23.681Z",
+      "duration": 99770
+    },
+    {
+      "startTime": "2025-02-01T02:47:03.935Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:48:00.792Z",
+      "duration": 56857
+    },
+    {
+      "startTime": "2025-02-01T02:48:16.800Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:48:28.500Z",
+      "duration": 11700
+    },
+    {
+      "startTime": "2025-02-01T02:49:40.893Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:53:21.660Z",
+      "duration": 220767
+    },
+    {
+      "startTime": "2025-02-01T02:53:30.972Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T02:59:21.215Z",
+      "duration": 350243
+    },
+    {
+      "startTime": "2025-02-01T03:23:20.228Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T03:24:21.295Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:24:48.801Z",
+      "duration": 27506
+    },
+    {
+      "startTime": "2025-02-01T03:26:49.471Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T03:29:57.513Z",
+      "peakViewers": 1,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:32:39.465Z",
+      "duration": 161952
+    },
+    {
+      "startTime": "2025-02-01T03:32:42.930Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:36:45.489Z",
+      "duration": 242559
+    },
+    {
+      "startTime": "2025-02-01T03:36:49.285Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:38:42.102Z",
+      "duration": 112817
+    },
+    {
+      "startTime": "2025-02-01T03:39:27.593Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:41:40.336Z",
+      "duration": 132743
+    },
+    {
+      "startTime": "2025-02-01T03:41:43.730Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:45:06.501Z",
+      "duration": 202771
+    },
+    {
+      "startTime": "2025-02-01T03:45:57.820Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:46:43.205Z",
+      "duration": 45385
+    },
+    {
+      "startTime": "2025-02-01T03:46:46.939Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:47:42.556Z",
+      "duration": 55617
+    },
+    {
+      "startTime": "2025-02-01T03:47:47.080Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:49:28.497Z",
+      "duration": 101417
+    },
+    {
+      "startTime": "2025-02-01T03:50:38.119Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T03:56:08.451Z",
+      "duration": 330332
+    },
+    {
+      "startTime": "2025-02-01T03:57:57.928Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T03:58:54.605Z",
+      "peakViewers": 0,
+      "uniqueViewers": 0,
+      "chatMessages": 0,
+      "commands": {}
+    },
+    {
+      "startTime": "2025-02-01T04:07:23.659Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T04:08:51.822Z",
+      "duration": 88163
+    },
+    {
+      "startTime": "2025-02-01T04:10:31.963Z",
+      "peakViewers": 1,
+      "uniqueViewers": 1,
+      "chatMessages": 0,
+      "commands": {},
+      "endTime": "2025-02-01T04:11:44.878Z",
+      "duration": 72915
+>>>>>>> origin/master
     }
   ],
   "lastUpdated": "2025-01-23T16:45:04.782Z"

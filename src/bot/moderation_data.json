@@ -1,14 +1,31 @@
 {
+<<<<<<< HEAD
   "spamPatterns": [],
+=======
+  "spamPatterns": [
+    "repeated command usage",
+    "queue management commands",
+    "command usage",
+    "queue management command"
+  ],
+>>>>>>> origin/master
   "bannedWords": [],
   "userWarnings": {},
   "raidHistory": [],
   "moderationActions": [],
   "trustedUsers": [],
   "spamStats": {
+<<<<<<< HEAD
     "detectedSpam": 0,
+=======
+    "detectedSpam": 2,
+>>>>>>> origin/master
     "falsePositives": 0,
     "successfulRaids": 0,
     "blockedRaids": 0
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/master

@@ -2,9 +2,23 @@
   "approvedSongs": {
     "sneaky|21 savage": 3,
     "numb|linkin park": 1,
+<<<<<<< HEAD
     "locked up|akon": 1
   },
   "rejectedSongs": {},
+=======
+    "locked up|akon": 4,
+    "redrum|21 savage": 2
+  },
+  "rejectedSongs": {
+    "redrum by 21savage|": {
+      "count": 1,
+      "reasons": {
+        "inappropriate_content": 1
+      }
+    }
+  },
+>>>>>>> origin/master
   "karaokePatterns": [
     "karaoke version",
     "instrumental version",
@@ -35,4 +49,8 @@
     "john cena theme",
     "rickroll"
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/master
