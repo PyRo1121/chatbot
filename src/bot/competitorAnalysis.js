@@ -1,767 +1,222 @@
-<<<<<<< HEAD
 import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { ApiClient } from '@twurple/api';
-import { RefreshingAuthProvider } from '@twurple/auth';
-import tokenManager from '../auth/tokenManager.js';
+import { readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
+import { generateResponse } from '../utils/perplexity.js';
 
 class CompetitorAnalysis {
   constructor() {
-    this.apiClient = null;
-    this.dbPath = join(process.cwd(), 'src/bot/competitor_data.json');
-    this.data = this.loadData();
-    this.UPDATE_INTERVAL = 60 * 60 * 1000; // 1 hour
-    this.lastUpdate = 0;
-    this.initializeApiClient();
+    this.competitorData = this.loadCompetitorData();
+    this.trackedChannels = new Set();
+    this.initializeTracking();
   }
 
-  async initializeApiClient() {
+  loadCompetitorData() {
     try {
-      const tokens = tokenManager.getBroadcasterTokens();
-
-      // Initialize auth provider
-      const authProvider = new RefreshingAuthProvider({
-        clientId: tokens.clientId,
-        clientSecret: tokens.clientSecret,
-        onRefresh: async (userId, newTokenData) => {
-          try {
-            await tokenManager.updateBroadcasterTokens(newTokenData);
-            logger.info('Broadcaster token refreshed successfully for competitor analysis');
-          } catch (error) {
-            logger.error('Error in competitor analysis auth provider refresh:', error);
-            throw error;
-          }
-        },
-      });
-
-      // Add broadcaster credentials
-      await authProvider.addUserForToken({
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        expiresIn: 14400,
-        obtainmentTimestamp: Date.now(),
-        userId: tokens.userId,
-        scope: [
-          'channel:read:subscriptions',
-          'channel:read:followers',
-          'user:read:follows',
-          'user:read:broadcast',
-          'moderator:read:followers',
-        ],
-      });
-
-      // Initialize API client with auth provider
-      this.apiClient = new ApiClient({
-        authProvider,
-        authId: tokens.userId,
-      });
-
-      logger.info('Twitch API client initialized for competitor analysis');
-    } catch (error) {
-      logger.error('Failed to initialize Twitch API client:', error);
-      throw error;
-    }
-  }
-
-  async handleApiError(error, operation) {
-    logger.error(`API error during ${operation}:`, error);
-    if (error.message?.includes('invalid token') || error.message?.includes('unauthorized')) {
-      logger.info('Token appears invalid, attempting refresh...');
-      const refreshed = await tokenManager.refreshToken('broadcaster');
-      if (refreshed) {
-        logger.info('Token refreshed successfully, reinitializing API client');
-        await this.initializeApiClient();
-        return true;
-      }
-    }
-    return false;
-  }
-
-  loadData() {
-    try {
-      if (existsSync(this.dbPath)) {
-        const data = readFileSync(this.dbPath, 'utf8');
-        return JSON.parse(data);
-      }
-      const defaultData = {
-        trackedChannels: [],
-        marketAnalysis: {
-          categoryTrends: {},
-          peakTimes: {},
-          contentTypes: {},
-        },
-        growthMetrics: {},
-        lastUpdated: new Date().toISOString(),
-      };
-      this.saveData(defaultData);
-      return defaultData;
+      const data = readFileSync(
+        join(process.cwd(), 'src/bot/competitor_data.json'),
+        'utf8'
+      );
+      return JSON.parse(data);
     } catch (error) {
       logger.error('Error loading competitor data:', error);
-      return this.getDefaultData();
+      const defaultData = {
+        trackedChannels: {},
+        insights: [],
+        lastUpdated: new Date().toISOString(),
+      };
+      // Create the file with default data
+      writeFileSync(
+        join(process.cwd(), 'src/bot/competitor_data.json'),
+        JSON.stringify(defaultData, null, 2)
+      );
+      return defaultData;
     }
   }
 
-  saveData(data = this.data) {
+  saveCompetitorData() {
     try {
-      writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
+      writeFileSync(
+        join(process.cwd(), 'src/bot/competitor_data.json'),
+        JSON.stringify(this.competitorData, null, 2)
+      );
     } catch (error) {
       logger.error('Error saving competitor data:', error);
     }
   }
 
-  async addTrackedChannel(username) {
-    try {
-      if (!this.apiClient) {
-        await this.initializeApiClient();
+  initializeTracking() {
+    Object.keys(this.competitorData.trackedChannels || {}).forEach(
+      (channel) => {
+        this.trackedChannels.add(channel.toLowerCase());
       }
-
-      let user;
-      try {
-        user = await this.apiClient.users.getUserByName(username);
-      } catch (error) {
-        const retried = await this.handleApiError(error, 'getUserByName');
-        if (retried) {
-          user = await this.apiClient.users.getUserByName(username);
-        } else {
-          throw error;
-        }
-      }
-
-      if (!user) {
-        throw new Error(`Channel ${username} not found`);
-      }
-
-      if (!this.data.trackedChannels.find((channel) => channel.id === user.id)) {
-        this.data.trackedChannels.push({
-          id: user.id,
-          username: user.name,
-          displayName: user.displayName,
-          category: '',
-          followers: 0,
-          avgViewers: 0,
-          peakViewers: 0,
-          streamFrequency: 0,
-          contentTypes: [],
-          addedAt: new Date().toISOString(),
-        });
-        this.saveData();
-      }
-      await this.updateChannelStats(user.id);
-      return true;
-    } catch (error) {
-      logger.error('Error adding tracked channel:', error);
-      return false;
-    }
+    );
   }
 
-  async updateChannelStats(channelId) {
+  async trackChannel(channel) {
     try {
-      if (!this.apiClient) {
-        await this.initializeApiClient();
+      const channelName = channel.toLowerCase();
+      if (this.trackedChannels.has(channelName)) {
+        return `${channel} is already being tracked!`;
       }
 
-      let channel;
-      let stream;
-      try {
-        channel = await this.apiClient.channels.getChannelInfoById(channelId);
-        stream = await this.apiClient.streams.getStreamByUserId(channelId);
-      } catch (error) {
-        const retried = await this.handleApiError(error, 'getChannelInfo');
-        if (retried) {
-          channel = await this.apiClient.channels.getChannelInfoById(channelId);
-          stream = await this.apiClient.streams.getStreamByUserId(channelId);
-        } else {
-          throw error;
-        }
-      }
-
-      const channelIndex = this.data.trackedChannels.findIndex((c) => c.id === channelId);
-      if (channelIndex === -1) {
-        return;
-      }
-
-      const followerCount = await this.getFollowerCount(channelId);
-
-      // Update basic stats
-      this.data.trackedChannels[channelIndex] = {
-        ...this.data.trackedChannels[channelIndex],
-        category: channel.gameName || '',
-        followers: followerCount,
-        avgViewers: stream ? stream.averageViewCount : 0,
-        peakViewers: stream ? stream.peakViewCount : 0,
-        lastUpdated: new Date().toISOString(),
+      this.trackedChannels.add(channelName);
+      this.competitorData.trackedChannels[channelName] = {
+        startedTracking: new Date().toISOString(),
+        streams: [],
+        categories: {},
+        viewerStats: {
+          peak: 0,
+          average: 0,
+        },
+        engagement: {
+          chatActivity: 0,
+          commands: {},
+        },
       };
 
-      // Update growth metrics
-      if (!this.data.growthMetrics[channelId]) {
-        this.data.growthMetrics[channelId] = [];
-      }
-
-      this.data.growthMetrics[channelId].push({
-        timestamp: new Date().toISOString(),
-        followers: this.data.trackedChannels[channelIndex].followers,
-        avgViewers: this.data.trackedChannels[channelIndex].avgViewers,
-      });
-
-      // Keep only last 30 days of metrics
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      this.data.growthMetrics[channelId] = this.data.growthMetrics[channelId].filter(
-        (metric) => new Date(metric.timestamp) > thirtyDaysAgo
-      );
-
-      this.saveData();
+      this.saveCompetitorData();
+      return `Now tracking ${channel}! Use !insights to see analytics.`;
     } catch (error) {
-      logger.error('Error updating channel stats:', error);
+      logger.error('Error tracking channel:', error);
+      return `Failed to track ${channel}. Please try again later.`;
     }
   }
 
-  async getFollowerCount(channelId) {
+  async untrackChannel(channel) {
     try {
-      if (!this.apiClient) {
-        await this.initializeApiClient();
+      const channelName = channel.toLowerCase();
+      if (!this.trackedChannels.has(channelName)) {
+        return `${channel} is not being tracked!`;
       }
 
-      let followers;
-      try {
-        // Use getChannelFollowerCount instead of getChannelFollowers
-        followers = await this.apiClient.channels.getChannelFollowerCount(channelId);
-      } catch (error) {
-        const retried = await this.handleApiError(error, 'getChannelFollowerCount');
-        if (retried) {
-          followers = await this.apiClient.channels.getChannelFollowerCount(channelId);
-        } else {
-          throw error;
-        }
-      }
-      return followers;
+      this.trackedChannels.delete(channelName);
+      delete this.competitorData.trackedChannels[channelName];
+      this.saveCompetitorData();
+      return `Stopped tracking ${channel}!`;
     } catch (error) {
-      logger.error('Error getting follower count:', error);
-      return 0;
+      logger.error('Error untracking channel:', error);
+      return `Failed to untrack ${channel}. Please try again later.`;
     }
   }
 
-  async updateAllChannels() {
+  async updateChannelData(channel, streamData) {
     try {
-      if (!this.apiClient) {
-        await this.initializeApiClient();
-      }
-
-      const now = Date.now();
-      if (now - this.lastUpdate < this.UPDATE_INTERVAL) {
+      const channelName = channel.toLowerCase();
+      if (!this.trackedChannels.has(channelName)) {
         return;
       }
 
-      // Use Promise.all to handle all updates concurrently
-      await Promise.all(
-        this.data.trackedChannels.map((channel) => this.updateChannelStats(channel.id))
+      const channelData = this.competitorData.trackedChannels[channelName];
+      channelData.streams.push({
+        timestamp: new Date().toISOString(),
+        viewers: streamData.viewers,
+        game: streamData.game,
+        title: streamData.title,
+        chatActivity: streamData.chatActivity,
+      });
+
+      // Update categories
+      channelData.categories[streamData.game] =
+        (channelData.categories[streamData.game] || 0) + 1;
+
+      // Update viewer stats
+      channelData.viewerStats.peak = Math.max(
+        channelData.viewerStats.peak,
+        streamData.viewers
+      );
+      channelData.viewerStats.average =
+        channelData.streams.reduce((sum, stream) => sum + stream.viewers, 0) /
+        channelData.streams.length;
+
+      // Update engagement
+      channelData.engagement.chatActivity += streamData.chatActivity;
+
+      // Cleanup old data (keep last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      channelData.streams = channelData.streams.filter(
+        (stream) => new Date(stream.timestamp) > thirtyDaysAgo
       );
 
-      this.analyzeMarketTrends();
-      this.lastUpdate = now;
+      this.saveCompetitorData();
     } catch (error) {
-      logger.error('Error updating all channels:', error);
+      logger.error('Error updating channel data:', error);
     }
   }
 
-  analyzeMarketTrends() {
-    const trends = {
-      categories: {},
-      peakTimes: {},
-      contentTypes: {},
-      growth: {},
-    };
+  async generateInsights() {
+    try {
+      logger.debug('Generating insights with data:', {
+        trackedChannels: Array.from(this.trackedChannels),
+        hasCompetitorData: !!this.competitorData,
+        hasTrackedChannels: !!this.competitorData?.trackedChannels,
+      });
 
-    // Analyze all tracked channels
-    for (const channel of this.data.trackedChannels) {
-      // Category analysis
-      if (channel.category) {
-        trends.categories[channel.category] = (trends.categories[channel.category] || 0) + 1;
+      if (!this.competitorData?.trackedChannels) {
+        logger.warn('No competitor data available');
+        return 'No competitor insights available. Use !track [channel] to start tracking channels!';
       }
 
-      // Growth analysis
-      const metrics = this.data.growthMetrics[channel.id];
-      if (metrics && metrics.length >= 2) {
-        const [oldestMetric, ...rest] = metrics;
-        const latestMetric = rest[rest.length - 1];
-        const growthRate =
-          ((latestMetric.followers - oldestMetric.followers) / oldestMetric.followers) * 100;
-        trends.growth[channel.username] = {
-          rate: growthRate,
-          followers: latestMetric.followers,
-          avgViewers: latestMetric.avgViewers,
-        };
+      const insights = [];
+      for (const [channel, data] of Object.entries(
+        this.competitorData.trackedChannels
+      )) {
+        logger.debug('Processing channel data:', { channel, data });
+
+        if (!data?.categories) {
+          logger.warn(`Missing categories data for channel: ${channel}`);
+          continue;
+        }
+
+        const topCategories = Object.entries(data.categories)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 3)
+          .map(([game, count]) => `${game}(${count})`);
+
+        insights.push(
+          `${channel}: Peak: ${data.viewerStats?.peak || 0} | Avg: ${Math.round(
+            data.viewerStats?.average || 0
+          )} | Top Games: ${topCategories.join(', ') || 'None'}`
+        );
       }
-    }
 
-    this.data.marketAnalysis = {
-      ...this.data.marketAnalysis,
-      categoryTrends: trends.categories,
-      growth: trends.growth,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    this.saveData();
-  }
-
-  getCompetitorInsights() {
-    const insights = {
-      topCategories: Object.entries(this.data.marketAnalysis.categoryTrends)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5)
-        .map(([category, count]) => ({ category, count })),
-
-      fastestGrowing: Object.entries(this.data.marketAnalysis.growth || {})
-        .sort(([, a], [, b]) => b.rate - a.rate)
-        .slice(0, 5)
-        .map(([channel, stats]) => ({
-          channel,
-          growthRate: Math.round(stats.rate * 100) / 100,
-          followers: stats.followers,
-          avgViewers: stats.avgViewers,
-        })),
-
-      trackedChannels: this.data.trackedChannels.map((channel) => ({
-        username: channel.username,
-        category: channel.category,
-        followers: channel.followers,
-        avgViewers: channel.avgViewers,
-      })),
-    };
-
-    return insights;
-  }
-
-  getContentSuggestions() {
-    const suggestions = [];
-    const trends = this.data.marketAnalysis.categoryTrends;
-
-    // Suggest top performing categories
-    const topCategories = Object.entries(trends)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3)
-      .map(([category]) => category);
-
-    suggestions.push({
-      type: 'category',
-      message: `Top performing categories: ${topCategories.join(', ')}`,
-      reason: 'These categories are currently trending among similar channels',
-    });
-
-    // Analyze successful channels
-    const successfulChannels = Object.entries(this.data.marketAnalysis.growth || {})
-      .sort(([, a], [, b]) => b.rate - a.rate)
-      .slice(0, 3);
-
-    for (const [channel, stats] of successfulChannels) {
-      const trackedChannel = this.data.trackedChannels.find((c) => c.username === channel);
-      if (trackedChannel) {
-        suggestions.push({
-          type: 'strategy',
-          message: `Consider analyzing ${channel}'s content strategy in ${trackedChannel.category}`,
-          reason: `Growing at ${Math.round(stats.rate)}% with ${stats.avgViewers} average viewers`,
-        });
+      if (insights.length === 0) {
+        return 'No competitor insights available. Use !track [channel] to start tracking channels!';
       }
-    }
 
-    return suggestions;
+      const result = insights.join(' | ');
+      logger.debug('Generated insights:', { result });
+      return result;
+    } catch (error) {
+      logger.error('Error generating insights:', error);
+      return 'Unable to generate competitor insights at this time.';
+    }
   }
 
-  removeTrackedChannel(username) {
-    const index = this.data.trackedChannels.findIndex((channel) => channel.username === username);
-    if (index !== -1) {
-      this.data.trackedChannels.splice(index, 1);
-      delete this.data.growthMetrics[username];
-      this.saveData();
-      return true;
+  async getSuggestions() {
+    try {
+      const prompt = `Based on this competitor data, suggest content strategies:
+      ${JSON.stringify(this.competitorData.trackedChannels, null, 2)}
+      
+      Focus on:
+      1. Popular categories/games
+      2. Successful stream titles
+      3. Peak viewing times
+      4. Engagement patterns
+      
+      Keep suggestions concise and actionable.`;
+
+      const suggestions = await generateResponse(prompt);
+      return suggestions || 'No suggestions available at this time.';
+    } catch (error) {
+      logger.error('Error getting suggestions:', error);
+      return 'Unable to generate suggestions at this time.';
     }
-    return false;
+  }
+
+  getTrackedChannels() {
+    return Array.from(this.trackedChannels);
   }
 }
 
-export default CompetitorAnalysis;
-=======
-import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { ApiClient } from '@twurple/api';
-import { RefreshingAuthProvider } from '@twurple/auth';
-import tokenManager from '../auth/tokenManager.js';
-import logger from '../utils/logger.js';
-
-class CompetitorAnalysis {
-  constructor() {
-    this.apiClient = null;
-    this.dbPath = join(process.cwd(), 'src/bot/competitor_data.json');
-    this.data = this.loadData();
-    this.UPDATE_INTERVAL = 60 * 60 * 1000; // 1 hour
-    this.lastUpdate = 0;
-    this.initializeApiClient();
-  }
-
-  async initializeApiClient() {
-    try {
-      const tokens = tokenManager.getBroadcasterTokens();
-
-      // Initialize auth provider
-      const authProvider = new RefreshingAuthProvider({
-        clientId: tokens.clientId,
-        clientSecret: tokens.clientSecret,
-        onRefresh: async (userId, newTokenData) => {
-          try {
-            await tokenManager.updateBroadcasterTokens(newTokenData);
-            logger.info('Broadcaster token refreshed successfully for competitor analysis');
-          } catch (error) {
-            logger.error('Error in competitor analysis auth provider refresh:', error);
-            throw error;
-          }
-        },
-      });
-
-      // Add broadcaster credentials
-      await authProvider.addUserForToken({
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        expiresIn: 14400,
-        obtainmentTimestamp: Date.now(),
-        userId: tokens.userId,
-        scope: [
-          'channel:read:subscriptions',
-          'channel:read:followers',
-          'user:read:follows',
-          'user:read:broadcast',
-          'moderator:read:followers',
-        ],
-      });
-
-      // Initialize API client with auth provider
-      this.apiClient = new ApiClient({
-        authProvider,
-        authId: tokens.userId,
-      });
-
-      logger.info('Twitch API client initialized for competitor analysis');
-    } catch (error) {
-      logger.error('Failed to initialize Twitch API client:', error);
-      throw error;
-    }
-  }
-
-  async handleApiError(error, operation) {
-    logger.error(`API error during ${operation}:`, error);
-    if (error.message?.includes('invalid token') || error.message?.includes('unauthorized')) {
-      logger.info('Token appears invalid, attempting refresh...');
-      const refreshed = await tokenManager.refreshToken('broadcaster');
-      if (refreshed) {
-        logger.info('Token refreshed successfully, reinitializing API client');
-        await this.initializeApiClient();
-        return true;
-      }
-    }
-    return false;
-  }
-
-  loadData() {
-    try {
-      if (existsSync(this.dbPath)) {
-        const data = readFileSync(this.dbPath, 'utf8');
-        return JSON.parse(data);
-      }
-      const defaultData = {
-        trackedChannels: [],
-        marketAnalysis: {
-          categoryTrends: {},
-          peakTimes: {},
-          contentTypes: {},
-        },
-        growthMetrics: {},
-        lastUpdated: new Date().toISOString(),
-      };
-      this.saveData(defaultData);
-      return defaultData;
-    } catch (error) {
-      logger.error('Error loading competitor data:', error);
-      return this.getDefaultData();
-    }
-  }
-
-  saveData(data = this.data) {
-    try {
-      writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
-    } catch (error) {
-      logger.error('Error saving competitor data:', error);
-    }
-  }
-
-  async addTrackedChannel(username) {
-    try {
-      if (!this.apiClient) {
-        await this.initializeApiClient();
-      }
-
-      let user;
-      try {
-        user = await this.apiClient.users.getUserByName(username);
-      } catch (error) {
-        const retried = await this.handleApiError(error, 'getUserByName');
-        if (retried) {
-          user = await this.apiClient.users.getUserByName(username);
-        } else {
-          throw error;
-        }
-      }
-
-      if (!user) {
-        throw new Error(`Channel ${username} not found`);
-      }
-
-      if (!this.data.trackedChannels.find((channel) => channel.id === user.id)) {
-        this.data.trackedChannels.push({
-          id: user.id,
-          username: user.name,
-          displayName: user.displayName,
-          category: '',
-          followers: 0,
-          avgViewers: 0,
-          peakViewers: 0,
-          streamFrequency: 0,
-          contentTypes: [],
-          addedAt: new Date().toISOString(),
-        });
-        this.saveData();
-      }
-      await this.updateChannelStats(user.id);
-      return true;
-    } catch (error) {
-      logger.error('Error adding tracked channel:', error);
-      return false;
-    }
-  }
-
-  async updateChannelStats(channelId) {
-    try {
-      if (!this.apiClient) {
-        await this.initializeApiClient();
-      }
-
-      let channel;
-      let stream;
-      try {
-        channel = await this.apiClient.channels.getChannelInfoById(channelId);
-        stream = await this.apiClient.streams.getStreamByUserId(channelId);
-      } catch (error) {
-        const retried = await this.handleApiError(error, 'getChannelInfo');
-        if (retried) {
-          channel = await this.apiClient.channels.getChannelInfoById(channelId);
-          stream = await this.apiClient.streams.getStreamByUserId(channelId);
-        } else {
-          throw error;
-        }
-      }
-
-      const channelIndex = this.data.trackedChannels.findIndex((c) => c.id === channelId);
-      if (channelIndex === -1) {
-        return;
-      }
-
-      const followerCount = await this.getFollowerCount(channelId);
-
-      // Update basic stats
-      this.data.trackedChannels[channelIndex] = {
-        ...this.data.trackedChannels[channelIndex],
-        category: channel.gameName || '',
-        followers: followerCount,
-        avgViewers: stream ? stream.averageViewCount : 0,
-        peakViewers: stream ? stream.peakViewCount : 0,
-        lastUpdated: new Date().toISOString(),
-      };
-
-      // Update growth metrics
-      if (!this.data.growthMetrics[channelId]) {
-        this.data.growthMetrics[channelId] = [];
-      }
-
-      this.data.growthMetrics[channelId].push({
-        timestamp: new Date().toISOString(),
-        followers: this.data.trackedChannels[channelIndex].followers,
-        avgViewers: this.data.trackedChannels[channelIndex].avgViewers,
-      });
-
-      // Keep only last 30 days of metrics
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      this.data.growthMetrics[channelId] = this.data.growthMetrics[channelId].filter(
-        (metric) => new Date(metric.timestamp) > thirtyDaysAgo
-      );
-
-      this.saveData();
-    } catch (error) {
-      logger.error('Error updating channel stats:', error);
-    }
-  }
-
-  async getFollowerCount(channelId) {
-    try {
-      if (!this.apiClient) {
-        await this.initializeApiClient();
-      }
-
-      let followers;
-      try {
-        // Use getChannelFollowerCount instead of getChannelFollowers
-        followers = await this.apiClient.channels.getChannelFollowerCount(channelId);
-      } catch (error) {
-        const retried = await this.handleApiError(error, 'getChannelFollowerCount');
-        if (retried) {
-          followers = await this.apiClient.channels.getChannelFollowerCount(channelId);
-        } else {
-          throw error;
-        }
-      }
-      return followers;
-    } catch (error) {
-      logger.error('Error getting follower count:', error);
-      return 0;
-    }
-  }
-
-  async updateAllChannels() {
-    try {
-      if (!this.apiClient) {
-        await this.initializeApiClient();
-      }
-
-      const now = Date.now();
-      if (now - this.lastUpdate < this.UPDATE_INTERVAL) {
-        return;
-      }
-
-      // Use Promise.all to handle all updates concurrently
-      await Promise.all(
-        this.data.trackedChannels.map((channel) => this.updateChannelStats(channel.id))
-      );
-
-      this.analyzeMarketTrends();
-      this.lastUpdate = now;
-    } catch (error) {
-      logger.error('Error updating all channels:', error);
-    }
-  }
-
-  analyzeMarketTrends() {
-    const trends = {
-      categories: {},
-      peakTimes: {},
-      contentTypes: {},
-      growth: {},
-    };
-
-    // Analyze all tracked channels
-    for (const channel of this.data.trackedChannels) {
-      // Category analysis
-      if (channel.category) {
-        trends.categories[channel.category] = (trends.categories[channel.category] || 0) + 1;
-      }
-
-      // Growth analysis
-      const metrics = this.data.growthMetrics[channel.id];
-      if (metrics && metrics.length >= 2) {
-        const [oldestMetric, ...rest] = metrics;
-        const latestMetric = rest[rest.length - 1];
-        const growthRate =
-          ((latestMetric.followers - oldestMetric.followers) / oldestMetric.followers) * 100;
-        trends.growth[channel.username] = {
-          rate: growthRate,
-          followers: latestMetric.followers,
-          avgViewers: latestMetric.avgViewers,
-        };
-      }
-    }
-
-    this.data.marketAnalysis = {
-      ...this.data.marketAnalysis,
-      categoryTrends: trends.categories,
-      growth: trends.growth,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    this.saveData();
-  }
-
-  getCompetitorInsights() {
-    const insights = {
-      topCategories: Object.entries(this.data.marketAnalysis.categoryTrends)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5)
-        .map(([category, count]) => ({ category, count })),
-
-      fastestGrowing: Object.entries(this.data.marketAnalysis.growth || {})
-        .sort(([, a], [, b]) => b.rate - a.rate)
-        .slice(0, 5)
-        .map(([channel, stats]) => ({
-          channel,
-          growthRate: Math.round(stats.rate * 100) / 100,
-          followers: stats.followers,
-          avgViewers: stats.avgViewers,
-        })),
-
-      trackedChannels: this.data.trackedChannels.map((channel) => ({
-        username: channel.username,
-        category: channel.category,
-        followers: channel.followers,
-        avgViewers: channel.avgViewers,
-      })),
-    };
-
-    return insights;
-  }
-
-  getContentSuggestions() {
-    const suggestions = [];
-    const trends = this.data.marketAnalysis.categoryTrends;
-
-    // Suggest top performing categories
-    const topCategories = Object.entries(trends)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3)
-      .map(([category]) => category);
-
-    suggestions.push({
-      type: 'category',
-      message: `Top performing categories: ${topCategories.join(', ')}`,
-      reason: 'These categories are currently trending among similar channels',
-    });
-
-    // Analyze successful channels
-    const successfulChannels = Object.entries(this.data.marketAnalysis.growth || {})
-      .sort(([, a], [, b]) => b.rate - a.rate)
-      .slice(0, 3);
-
-    for (const [channel, stats] of successfulChannels) {
-      const trackedChannel = this.data.trackedChannels.find((c) => c.username === channel);
-      if (trackedChannel) {
-        suggestions.push({
-          type: 'strategy',
-          message: `Consider analyzing ${channel}'s content strategy in ${trackedChannel.category}`,
-          reason: `Growing at ${Math.round(stats.rate)}% with ${stats.avgViewers} average viewers`,
-        });
-      }
-    }
-
-    return suggestions;
-  }
-
-  removeTrackedChannel(username) {
-    const index = this.data.trackedChannels.findIndex((channel) => channel.username === username);
-    if (index !== -1) {
-      this.data.trackedChannels.splice(index, 1);
-      delete this.data.growthMetrics[username];
-      this.saveData();
-      return true;
-    }
-    return false;
-  }
-}
-
-export default CompetitorAnalysis;
->>>>>>> origin/master
+export default new CompetitorAnalysis();

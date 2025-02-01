@@ -1,131 +1,104 @@
-<<<<<<< HEAD
 import express from 'express';
-import fetch from 'node-fetch';
-import tokenManager from './tokenManager.js';
-import 'dotenv/config';
+import { ApiClient } from '@twurple/api';
+import { RefreshingAuthProvider } from '@twurple/auth';
+import { promises as fs } from 'fs';
+import { join } from 'path';
+import logger from '../utils/logger.js';
 
 const app = express();
-const port = 8888;
+const port = 3002;
+
+async function loadTokens() {
+  try {
+    const data = await fs.readFile(
+      join(process.cwd(), 'broadcaster_tokens.json'),
+      'utf8'
+    );
+    return JSON.parse(data);
+  } catch (error) {
+    logger.error('Error loading broadcaster tokens:', error);
+    return null;
+  }
+}
+
+async function saveTokens(tokens) {
+  try {
+    await fs.writeFile(
+      join(process.cwd(), 'broadcaster_tokens.json'),
+      JSON.stringify(tokens, null, 2)
+    );
+  } catch (error) {
+    logger.error('Error saving broadcaster tokens:', error);
+  }
+}
 
 app.get('/callback', async (req, res) => {
   const { code } = req.query;
-
   if (!code) {
-    res.status(400).send('No authorization code received');
+    res.send('No code provided');
     return;
   }
 
   try {
-    // Exchange code for access token
-    const tokenResponse = await fetch('https://id.twitch.tv/oauth2/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+    const authProvider = new RefreshingAuthProvider(
+      {
+        clientId: process.env.TWITCH_CLIENT_ID,
+        clientSecret: process.env.TWITCH_CLIENT_SECRET,
+        onRefresh: async (userId, newTokenData) => {
+          await saveTokens(newTokenData);
+        },
       },
-      body: new URLSearchParams({
-        client_id: process.env.TWITCH_CLIENT_ID,
-        client_secret: process.env.TWITCH_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: 'http://localhost:8888/callback',
-      }),
-    });
+      await loadTokens()
+    );
 
-    const tokenData = await tokenResponse.json();
+    const apiClient = new ApiClient({ authProvider });
+    const token = await apiClient.getAccessToken();
 
-    if (!tokenResponse.ok) {
-      throw new Error(`Token exchange failed: ${JSON.stringify(tokenData)}`);
+    if (token) {
+      await saveTokens({
+        accessToken: token,
+        refreshToken: code,
+        expiresIn: 14400,
+        obtainmentTimestamp: Date.now(),
+      });
+
+      res.send(
+        'Broadcaster authentication successful! You can close this window.'
+      );
+    } else {
+      res.send('Failed to get broadcaster access token');
     }
-
-    // Update environment variables with new tokens
-    await tokenManager.updateEnvFile({
-      TWITCH_ACCESS_TOKEN: tokenData.access_token,
-      TWITCH_REFRESH_TOKEN: tokenData.refresh_token,
-    });
-
-    console.log('✅ Successfully obtained broadcaster tokens!');
-    console.log('Access Token:', tokenData.access_token);
-    console.log('Refresh Token:', tokenData.refresh_token);
-
-    res.send(`
-      <h1>Authorization Successful!</h1>
-      <p>Your broadcaster tokens have been saved. You can close this window and restart the bot.</p>
-      <script>
-        setTimeout(() => window.close(), 3000);
-      </script>
-    `);
   } catch (error) {
-    console.error('Error exchanging code for token:', error);
-    res.status(500).send(`Error getting access token: ${error.message}`);
+    logger.error('Broadcaster auth error:', error);
+    res.send('Broadcaster authentication failed');
   }
 });
 
 app.listen(port, () => {
-  console.log(`Broadcaster auth server running at http://localhost:${port}`);
-});
-=======
-import express from 'express';
-import fetch from 'node-fetch';
-import tokenManager from './tokenManager.js';
-import 'dotenv/config';
+  logger.info(`Broadcaster auth server running at http://localhost:${port}`);
 
-const app = express();
-const port = 8888;
+  const scopes = [
+    'channel:read:subscriptions',
+    'channel:manage:broadcast',
+    'channel:read:redemptions',
+    'channel:manage:redemptions',
+    'clips:edit',
+    'moderation:read',
+    'moderator:manage:banned_users',
+    'moderator:manage:chat_messages',
+    'channel:moderate',
+  ];
 
-app.get('/callback', async (req, res) => {
-  const { code } = req.query;
+  const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${
+    process.env.TWITCH_CLIENT_ID
+  }&redirect_uri=http://localhost:${port}/callback&response_type=code&scope=${encodeURIComponent(
+    scopes.join(' ')
+  )}`;
 
-  if (!code) {
-    res.status(400).send('No authorization code received');
-    return;
-  }
-
-  try {
-    // Exchange code for access token
-    const tokenResponse = await fetch('https://id.twitch.tv/oauth2/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        client_id: process.env.TWITCH_CLIENT_ID,
-        client_secret: process.env.TWITCH_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: 'http://localhost:8888/callback',
-      }),
-    });
-
-    const tokenData = await tokenResponse.json();
-
-    if (!tokenResponse.ok) {
-      throw new Error(`Token exchange failed: ${JSON.stringify(tokenData)}`);
-    }
-
-    // Update environment variables with new tokens
-    await tokenManager.updateEnvFile({
-      TWITCH_ACCESS_TOKEN: tokenData.access_token,
-      TWITCH_REFRESH_TOKEN: tokenData.refresh_token,
-    });
-
-    console.log('✅ Successfully obtained broadcaster tokens!');
-    console.log('Access Token:', tokenData.access_token);
-    console.log('Refresh Token:', tokenData.refresh_token);
-
-    res.send(`
-      <h1>Authorization Successful!</h1>
-      <p>Your broadcaster tokens have been saved. You can close this window and restart the bot.</p>
-      <script>
-        setTimeout(() => window.close(), 3000);
-      </script>
-    `);
-  } catch (error) {
-    console.error('Error exchanging code for token:', error);
-    res.status(500).send(`Error getting access token: ${error.message}`);
-  }
+  logger.info('Visit this URL to authenticate as broadcaster:', authUrl);
 });
 
-app.listen(port, () => {
-  console.log(`Broadcaster auth server running at http://localhost:${port}`);
+process.on('SIGINT', () => {
+  logger.info('Broadcaster auth server shutting down');
+  process.exit();
 });
->>>>>>> origin/master

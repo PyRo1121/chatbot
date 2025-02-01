@@ -1,14 +1,62 @@
 {
+  "songPatterns": {
+    "locked up (made popular by akon) [backing version]|party tyme": 1,
+    "locked up|akon": 2
+  },
+  "userPreferences": {
+    "pyro1121": {
+      "requestedSongs": [
+        {
+          "query": "locked up (made popular by akon) [backing version]|party tyme",
+          "trackInfo": {
+            "id": "2EQIvY0mfuA67PRxKOFuOA",
+            "name": "Locked Up (made popular by Akon) [backing version]",
+            "artist": "Party Tyme",
+            "uri": "spotify:track:2EQIvY0mfuA67PRxKOFuOA",
+            "genres": [],
+            "popularity": 0
+          },
+          "timestamp": 1738442690376
+        },
+        {
+          "query": "locked up|akon",
+          "trackInfo": {
+            "id": "0YUrjFy4qFKOO5NhM9tYdV",
+            "name": "Locked Up",
+            "artist": "Akon",
+            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
+            "genres": [],
+            "popularity": 64
+          },
+          "timestamp": 1738442930588
+        },
+        {
+          "query": "locked up|akon",
+          "trackInfo": {
+            "id": "0YUrjFy4qFKOO5NhM9tYdV",
+            "name": "Locked Up",
+            "artist": "Akon",
+            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
+            "genres": [],
+            "popularity": 64
+          },
+          "timestamp": 1738442989394
+        }
+      ],
+      "genres": {},
+      "artists": {
+        "party tyme": 1,
+        "akon": 2
+      },
+      "lastRequest": 1738442989394
+    }
+  },
   "approvedSongs": {
     "sneaky|21 savage": 3,
     "numb|linkin park": 1,
-<<<<<<< HEAD
-    "locked up|akon": 1
-  },
-  "rejectedSongs": {},
-=======
-    "locked up|akon": 4,
-    "redrum|21 savage": 2
+    "locked up|akon": 6,
+    "redrum|21 savage": 2,
+    "locked up (made popular by akon) [backing version]|party tyme": 1
   },
   "rejectedSongs": {
     "redrum by 21savage|": {
@@ -18,7 +66,6 @@
       }
     }
   },
->>>>>>> origin/master
   "karaokePatterns": [
     "karaoke version",
     "instrumental version",
@@ -34,7 +81,6 @@
     "sing-along version",
     "without vocals",
     "minus one",
-    "backing track",
     "instrumental only"
   ],
   "trollPatterns": [
@@ -48,9 +94,6 @@
     "sandstorm darude",
     "john cena theme",
     "rickroll"
-  ]
-<<<<<<< HEAD
+  ],
+  "lastUpdated": "2025-02-01T21:16:45.455Z"
 }
-=======
-}
->>>>>>> origin/master

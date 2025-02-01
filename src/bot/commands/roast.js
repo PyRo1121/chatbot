@@ -1,138 +1,104 @@
-<<<<<<< HEAD
-// Track last roast time for each user
-const userCooldowns = new Map();
-const COOLDOWN_TIME = 60000; // 60 seconds in milliseconds
-
-const cooldownResponses = [
-  'Whoa there Satan, let the last burn heal first! 🔥',
-  'Easy tiger, your roasting privileges are on timeout! ⏰',
-  'Sorry chief, the roast oven needs a minute to reheat! 🍖',
-  'Calm down Gordon Ramsay, one roast at a time! 👨‍🍳',
-  'Your roast meter is on cooldown! Try touching grass for 60 seconds 🌱',
-  'Roasting on cooldown - try writing these bangers in your diary instead! 📝',
-  'Hold up! The fire department asked for a 60-second break! 🚒',
-  'Error 420: Too much fire detected. Please wait! 🔥',
-  'Sheesh, save some violence for the rest of us! Come back in a minute! ⚔️',
-  'Your roast game is too powerful - forced 60s nerf applied! 💪',
-];
-
-export async function handleRoast(twitchClient, channel, targetUser) {
-  if (!targetUser) {
-    return {
-      success: false,
-      message: 'Usage: !roast @username',
-    };
-  }
-
-  const now = Date.now();
-  const lastRoastTime = userCooldowns.get(targetUser.toLowerCase());
-
-  if (lastRoastTime && now - lastRoastTime < COOLDOWN_TIME) {
-    const remainingTime = Math.ceil((COOLDOWN_TIME - (now - lastRoastTime)) / 1000);
-    const randomResponse = cooldownResponses[Math.floor(Math.random() * cooldownResponses.length)];
-    return {
-      success: false,
-      message: `${randomResponse} (${remainingTime}s remaining)`,
-    };
-  }
-
-  try {
-    const response = await twitchClient.openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a brutal roast master. Keep roasts under 500 characters and use simple, everyday words - no fancy vocabulary or complex language. Make savage, personal roasts about life choices, personality flaws, and embarrassing behaviors. DO NOT mention anything about gaming, streaming skills, or gameplay. Focus on brutal personal insults using basic, clear language. This is an 18+ stream so adult themes are fine, but stay within Twitch TOS',
-        },
-        {
-          role: 'user',
-          content: `Generate a savage roast for Twitch user ${targetUser}. No gaming references, keep it personal.`,
-        },
-      ],
-      max_tokens: 125,
-      temperature: 0.95,
-    });
-
-    // Update cooldown timer after successful roast
-    userCooldowns.set(targetUser.toLowerCase(), now);
-
-    return {
-      success: true,
-      message: `@${targetUser} ${response.choices[0].message.content}`,
-    };
-  } catch {
-    return {
-      success: false,
-      message: `Failed to roast ${targetUser}. Try again later.`,
-    };
-  }
-}
-=======
 import { generateResponse } from '../../utils/perplexity.js';
+import logger from '../../utils/logger.js';
 
 // Track last roast time for each user
-const userCooldowns = new Map();
-const COOLDOWN_TIME = 60000; // 60 seconds in milliseconds
+const lastRoastTime = new Map();
+const COOLDOWN = 5 * 60 * 1000; // 5 minutes
 
-const cooldownResponses = [
-  'Whoa there Satan, let the last burn heal first! 🔥',
-  'Easy tiger, your roasting privileges are on timeout! ⏰',
-  'Sorry chief, the roast oven needs a minute to reheat! 🍖',
-  'Calm down Gordon Ramsay, one roast at a time! 👨‍🍳',
-  'Your roast meter is on cooldown! Try touching grass for 60 seconds 🌱',
-  'Roasting on cooldown - try writing these bangers in your diary instead! 📝',
-  'Hold up! The fire department asked for a 60-second break! 🚒',
-  'Error 420: Too much fire detected. Please wait! 🔥',
-  'Sheesh, save some violence for the rest of us! Come back in a minute! ⚔️',
-  'Your roast game is too powerful - forced 60s nerf applied! 💪',
-];
+// Single strong template that maintains appropriate boundaries
+const ROAST_TEMPLATE =
+  'Generate an absolutely brutal, savage roast for {target}. Go completely unhinged with devastating analogies and ruthless mockery of their life choices, personality, and general existence. Use creative metaphors and absurd comparisons to obliterate their self-esteem. Focus on their questionable decision-making, lack of achievements, and general mediocrity. Make it psychologically devastating with dark humor and existential dread (but avoid slurs/bigotry/discrimination/appearance/violence). This is an 18+ community - make them question every life choice that led to this moment. Be creative, philosophical, and absolutely merciless. Length: 300-500 characters.';
 
-export async function handleRoast(twitchClient, channel, targetUser) {
-  if (!targetUser) {
-    return {
-      success: false,
-      message: 'Usage: !roast @username',
-    };
-  }
-
-  const now = Date.now();
-  const lastRoastTime = userCooldowns.get(targetUser.toLowerCase());
-
-  if (lastRoastTime && now - lastRoastTime < COOLDOWN_TIME) {
-    const remainingTime = Math.ceil((COOLDOWN_TIME - (now - lastRoastTime)) / 1000);
-    const randomResponse = cooldownResponses[Math.floor(Math.random() * cooldownResponses.length)];
-    return {
-      success: false,
-      message: `${randomResponse} (${remainingTime}s remaining)`,
-    };
-  }
+export async function handleRoast(client, channel, user, args) {
+  logger.debug('handleRoast called:', {
+    channel,
+    username: user.username,
+    args,
+  });
 
   try {
-    const systemPrompt =
-      'You are a brutal roast master. Keep roasts under 500 characters and use simple, everyday words - no fancy vocabulary or complex language. Make savage, personal roasts about life choices, personality flaws, and embarrassing behaviors. DO NOT mention anything about gaming, streaming skills, or gameplay. Focus on brutal personal insults using basic, clear language. This is an 18+ stream so adult themes are fine, but stay within Twitch TOS';
-    const userPrompt = `Generate a savage roast for Twitch user ${targetUser}. No gaming references, keep it personal.`;
+    // Check if target is specified
+    const target = args ? args.replace('@', '') : user.username;
+    logger.debug('Roast target:', { target });
 
-    const response = await generateResponse(userPrompt, systemPrompt);
-    if (!response) {
-      return {
-        success: false,
-        message: `Failed to roast ${targetUser}. Try again later.`,
-      };
+    // Check cooldown
+    const now = Date.now();
+    const lastRoast = lastRoastTime.get(target);
+    if (lastRoast && now - lastRoast < COOLDOWN) {
+      const remainingTime = Math.ceil(
+        (COOLDOWN - (now - lastRoast)) / 1000 / 60
+      );
+      return `@${user.username}, please wait ${remainingTime} minutes before roasting ${target} again!`;
     }
 
-    // Update cooldown timer after successful roast
-    userCooldowns.set(targetUser.toLowerCase(), now);
+    const prompt = ROAST_TEMPLATE.replace('{target}', target);
 
-    return {
-      success: true,
-      message: `@${targetUser} ${response}`,
-    };
-  } catch {
-    return {
-      success: false,
-      message: `Failed to roast ${targetUser}. Try again later.`,
-    };
+    logger.debug('Generating roast with prompt:', { prompt });
+    let roast = await generateResponse(prompt);
+    logger.debug('Generated roast:', { roast });
+
+    if (!roast) {
+      logger.error('No roast generated');
+      return `Sorry @${user.username}, I couldn't think of a good roast right now!`;
+    }
+
+    // Ensure roast starts with fire emoji
+    if (!roast.startsWith('🔥')) {
+      roast = `🔥 ${roast}`;
+    }
+
+    // Remove quotes and emojis (except the initial fire and skull)
+    roast = roast.replace(/["']/g, '');
+    roast = roast.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+    if (!roast.startsWith('🔥')) {
+      roast = `🔥 💀 ${roast}`;
+    }
+
+    // Remove any gaming/streaming references and weak words
+    const streamTerms = [
+      /\b(?:stream(?:er|ing)?|twitch|chat|viewer|mod|sub|clip|emote|lag|gameplay|channel)\b/gi,
+      /\b(?:no(?:scope|signal))\b/gi,
+      /\b(?:technical difficulties)\b/gi,
+      /\b(?:game(?:r|play)?|skill|aim|mechanics|ranked|bronze|silver|gold|platinum|diamond)\b/gi,
+      /\b(?:maybe|perhaps|kind of|sort of|a bit|slightly)\b/gi,
+      /\b(?:nice|good|okay|fine|alright)\b/gi,
+    ];
+
+    for (const term of streamTerms) {
+      roast = roast.replace(term, '');
+    }
+
+    // Clean up any double spaces from removals
+    roast = roast.replace(/\s+/g, ' ').trim();
+    if (!roast.startsWith('🔥')) {
+      roast = `🔥 ${roast}`;
+    }
+
+    // Ensure length is between 300-500 characters
+    if (roast.length < 300) {
+      logger.debug('Roast too short, regenerating');
+      return handleRoast(client, channel, user, args);
+    }
+
+    if (roast.length > 500) {
+      roast = `${roast.substring(0, 497)}...`;
+    }
+
+    // Update cooldown
+    lastRoastTime.set(target, now);
+
+    // Clean up old cooldowns periodically
+    if (lastRoastTime.size > 1000) {
+      for (const [username, time] of lastRoastTime.entries()) {
+        if (now - time > COOLDOWN) {
+          lastRoastTime.delete(username);
+        }
+      }
+    }
+
+    return roast;
+  } catch (error) {
+    logger.error('Error generating roast:', error);
+    return `Sorry @${user.username}, something went wrong with the roast!`;
   }
 }
->>>>>>> origin/master

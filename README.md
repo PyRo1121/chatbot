@@ -215,6 +215,7 @@ pnpm start
 - `!leaderboard` - View the points leaderboard with humorous commentary
 - `!commands` - List available commands
 - `!ping` - Check if the bot is responsive
+- `!lurk` - Announce you're lurking with a witty AI-generated message
 - `!viewerstats` - Show viewer statistics and engagement metrics
 - `!loyalty` - Display community loyalty distribution
 - `!topviewers` - List top viewers and their loyalty levels

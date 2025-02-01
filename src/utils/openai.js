@@ -15,7 +15,10 @@ const openai = new OpenAI({
 });
 
 // Generate AI response
-export async function generateResponse(prompt, systemPrompt = 'You are a helpful assistant.') {
+export async function generateResponse(
+  prompt,
+  systemPrompt = 'You are a helpful assistant.'
+) {
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
@@ -75,7 +78,9 @@ export async function analyzeAudioFromUrl(url) {
       transcript: transcript.text,
       analysis: analysis.choices[0].message.content,
       isAppropriate:
-        !analysis.choices[0].message.content.toLowerCase().includes('inappropriate') &&
+        !analysis.choices[0].message.content
+          .toLowerCase()
+          .includes('inappropriate') &&
         !analysis.choices[0].message.content.toLowerCase().includes('troll') &&
         !analysis.choices[0].message.content.toLowerCase().includes('meme'),
     };

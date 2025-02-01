@@ -1,653 +1,206 @@
-<<<<<<< HEAD
-import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/openai.js';
 
-class ModerationManager {
-  constructor() {
-    this.dbPath = join(process.cwd(), 'src/bot/moderation_data.json');
-    this.data = this.loadData();
-    this.MESSAGE_HISTORY = 100; // Number of messages to keep for pattern detection
-    this.SPAM_THRESHOLD = 0.7; // Confidence threshold for spam detection
-    this.RAID_QUALITY_THRESHOLD = 0.6; // Threshold for raid quality assessment
-    this.messageQueue = [];
-    this.userMessageCounts = new Map();
-    this.userFirstMessage = new Map();
-    this.suspiciousPatterns = new Set();
+// Store moderation data in memory
+const moderationData = {
+  warnings: new Map(), // username -> [{timestamp, reason}]
+  trustedUsers: new Set(),
+  raidHistory: [], // [{username, viewers, timestamp, suspicious}]
+  chatStats: new Map(), // username -> {messages, timeouts, bans, lastActive}
+};
+
+export async function getModStats() {
+  try {
+    const stats = {
+      totalWarnings: Array.from(moderationData.warnings.values()).flat().length,
+      trustedUsers: moderationData.trustedUsers.size,
+      recentRaids: moderationData.raidHistory.slice(-7).length,
+      suspiciousRaids: moderationData.raidHistory.filter((r) => r.suspicious)
+        .length,
+    };
+
+    return `Moderation Stats: Warnings: ${stats.totalWarnings} | Trusted Users: ${stats.trustedUsers} | Recent Raids: ${stats.recentRaids} | Suspicious Raids: ${stats.suspiciousRaids}`;
+  } catch (error) {
+    logger.error('Error getting mod stats:', error);
+    return 'Failed to get moderation statistics';
   }
+}
 
-  loadData() {
-    try {
-      if (existsSync(this.dbPath)) {
-        const data = readFileSync(this.dbPath, 'utf8');
-        return JSON.parse(data);
-      }
-      const defaultData = {
-        spamPatterns: [],
-        bannedWords: [],
-        userWarnings: {},
-        raidHistory: [],
-        moderationActions: [],
-        trustedUsers: [],
-        spamStats: {
-          detectedSpam: 0,
-          falsePositives: 0,
-          successfulRaids: 0,
-          blockedRaids: 0,
-        },
-      };
-      this.saveData(defaultData);
-      return defaultData;
-    } catch (error) {
-      logger.error('Error loading moderation data:', error);
-      return {
-        spamPatterns: [],
-        bannedWords: [],
-        userWarnings: {},
-        raidHistory: [],
-        moderationActions: [],
-        trustedUsers: [],
-        spamStats: {
-          detectedSpam: 0,
-          falsePositives: 0,
-          successfulRaids: 0,
-          blockedRaids: 0,
-        },
-      };
-    }
+export async function getUserHistory(targetUser) {
+  try {
+    const userStats = moderationData.chatStats.get(
+      targetUser.toLowerCase()
+    ) || {
+      messages: 0,
+      timeouts: 0,
+      bans: 0,
+      lastActive: null,
+    };
+
+    const warnings =
+      moderationData.warnings.get(targetUser.toLowerCase()) || [];
+    const isTrusted = moderationData.trustedUsers.has(targetUser.toLowerCase());
+
+    return `User History for ${targetUser}: Messages: ${userStats.messages} | Timeouts: ${userStats.timeouts} | Bans: ${userStats.bans} | Warnings: ${warnings.length} | Trusted: ${isTrusted} | Last Active: ${userStats.lastActive ? new Date(userStats.lastActive).toLocaleString() : 'Never'}`;
+  } catch (error) {
+    logger.error('Error getting user history:', error);
+    return 'Failed to get user history';
   }
+}
 
-  saveData(data = this.data) {
-    try {
-      writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
-    } catch (error) {
-      logger.error('Error saving moderation data:', error);
-    }
+export async function trustUser(targetUser) {
+  try {
+    moderationData.trustedUsers.add(targetUser.toLowerCase());
+    logger.info(`User trusted: ${targetUser}`);
+    return `${targetUser} has been added to trusted users`;
+  } catch (error) {
+    logger.error('Error trusting user:', error);
+    return 'Failed to trust user';
   }
+}
 
-  async analyzeMessage(message, username, userLevel) {
-    try {
-      // Update message history
-      this.messageQueue.push({ message, username, timestamp: Date.now() });
-      if (this.messageQueue.length > this.MESSAGE_HISTORY) {
-        this.messageQueue.shift();
-      }
-
-      // Update user message counts
-      this.userMessageCounts.set(username, (this.userMessageCounts.get(username) || 0) + 1);
-      if (!this.userFirstMessage.has(username)) {
-        this.userFirstMessage.set(username, Date.now());
-      }
-
-      // Skip trusted users and moderators
-      if (
-        userLevel === 'mod' ||
-        userLevel === 'broadcaster' ||
-        this.data.trustedUsers.includes(username)
-      ) {
-        return { isSpam: false, confidence: 0, action: 'none' };
-      }
-
-      const prompt = `Analyze this chat message for spam or inappropriate content:
-Message: "${message}"
-Username: ${username}
-Message Count: ${this.userMessageCounts.get(username)}
-Account Age: ${Date.now() - this.userFirstMessage.get(username)}ms
-
-Recent chat context:
-${this.messageQueue
-  .slice(-5)
-  .map((m) => `${m.username}: ${m.message}`)
-  .join('\n')}
-
-Respond with JSON only:
-{
-  "isSpam": boolean,
-  "confidence": number (0-1),
-  "type": "string (spam|inappropriate|excessive|normal)",
-  "patterns": ["array of detected patterns"],
-  "action": "string (none|warning|timeout|ban)",
-  "reason": "string (explanation)"
-}`;
-
-      const response = await generateResponse(prompt);
-      // Remove any markdown formatting and extract just the JSON
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response');
-      }
-      const analysis = JSON.parse(jsonMatch[0]);
-
-      // Update spam patterns if high confidence spam detected
-      if (analysis.isSpam && analysis.confidence > this.SPAM_THRESHOLD) {
-        analysis.patterns.forEach((pattern) => {
-          if (!this.data.spamPatterns.includes(pattern)) {
-            this.data.spamPatterns.push(pattern);
-          }
-        });
-        this.data.spamStats.detectedSpam++;
-        this.saveData();
-      }
-
-      return analysis;
-    } catch (error) {
-      logger.error('Error analyzing message:', error);
-      return { isSpam: false, confidence: 0, action: 'none' };
-    }
-  }
-
-  async assessRaidQuality(raider, viewers, raidHistory) {
-    try {
-      const prompt = `Assess the quality of this raid:
-Raider: ${raider}
-Viewers: ${viewers}
-Raid History: ${JSON.stringify(raidHistory)}
-
-Consider:
-1. Previous raid patterns
-2. Viewer count patterns
-3. Timing and frequency
-4. Known raid botting patterns
-
-Respond with JSON only:
-{
-  "isSuspicious": boolean,
-  "confidence": number (0-1),
-  "risk": "string (low|medium|high)",
-  "patterns": ["array of suspicious patterns"],
-  "action": "string (allow|monitor|block)",
-  "reason": "string (explanation)"
-}`;
-
-      const response = await generateResponse(prompt);
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response');
-      }
-      const assessment = JSON.parse(jsonMatch[0]);
-
-      // Record raid assessment
-      this.data.raidHistory.push({
-        raider,
-        viewers,
-        timestamp: new Date().toISOString(),
-        assessment,
-      });
-
-      // Update stats
-      if (assessment.action === 'allow') {
-        this.data.spamStats.successfulRaids++;
-      } else if (assessment.action === 'block') {
-        this.data.spamStats.blockedRaids++;
-      }
-
-      this.saveData();
-      return assessment;
-    } catch (error) {
-      logger.error('Error assessing raid:', error);
-      return {
-        isSuspicious: false,
-        confidence: 0,
-        risk: 'low',
-        action: 'allow',
-      };
-    }
-  }
-
-  async detectSpamPattern(timeframe = 60000) {
-    const recentMessages = this.messageQueue.filter(
-      (msg) => Date.now() - msg.timestamp < timeframe
+export async function untrustUser(targetUser) {
+  try {
+    const removed = moderationData.trustedUsers.delete(
+      targetUser.toLowerCase()
     );
-
-    if (recentMessages.length < 3) {
-      return null;
-    }
-
-    try {
-      const prompt = `Analyze these chat messages for spam patterns:
-Messages: ${JSON.stringify(recentMessages)}
-
-Consider:
-1. Message frequency per user
-2. Content similarity
-3. Known spam patterns
-4. Timing patterns
-
-Respond with JSON only:
-{
-  "hasPattern": boolean,
-  "confidence": number (0-1),
-  "patterns": ["array of detected patterns"],
-  "involvedUsers": ["array of usernames"],
-  "recommendedAction": "string (none|warn|timeout|ban)"
-}`;
-
-      const response = await generateResponse(prompt);
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response');
-      }
-      const analysis = JSON.parse(jsonMatch[0]);
-
-      if (analysis.hasPattern && analysis.confidence > this.SPAM_THRESHOLD) {
-        analysis.patterns.forEach((pattern) => this.suspiciousPatterns.add(pattern));
-      }
-
-      return analysis;
-    } catch (error) {
-      logger.error('Error detecting spam pattern:', error);
-      return null;
-    }
-  }
-
-  warnUser(username, reason) {
-    if (!this.data.userWarnings[username]) {
-      this.data.userWarnings[username] = [];
-    }
-
-    this.data.userWarnings[username].push({
-      timestamp: new Date().toISOString(),
-      reason,
-    });
-
-    this.data.moderationActions.push({
-      type: 'warning',
-      username,
-      reason,
-      timestamp: new Date().toISOString(),
-    });
-
-    this.saveData();
-    return this.data.userWarnings[username].length;
-  }
-
-  addTrustedUser(username) {
-    if (!this.data.trustedUsers.includes(username)) {
-      this.data.trustedUsers.push(username);
-      this.saveData();
-    }
-  }
-
-  removeTrustedUser(username) {
-    const index = this.data.trustedUsers.indexOf(username);
-    if (index !== -1) {
-      this.data.trustedUsers.splice(index, 1);
-      this.saveData();
-    }
-  }
-
-  getModerationStats() {
-    const warningsByUser = Object.entries(this.data.userWarnings).map(([user, warnings]) => ({
-      username: user,
-      count: warnings.length,
-      lastWarning: warnings[warnings.length - 1],
-    }));
-
-    const recentActions = this.data.moderationActions
-      .slice(-10)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    return {
-      spamStats: this.data.spamStats,
-      activePatterns: Array.from(this.suspiciousPatterns),
-      warningsByUser: warningsByUser.sort((a, b) => b.count - a.count),
-      recentActions,
-      trustedUsers: this.data.trustedUsers.length,
-    };
-  }
-
-  getRecentRaids(limit = 10) {
-    return this.data.raidHistory
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, limit);
-  }
-
-  getUserHistory(username) {
-    return {
-      warnings: this.data.userWarnings[username] || [],
-      messageCount: this.userMessageCounts.get(username) || 0,
-      firstSeen: this.userFirstMessage.get(username),
-      isTrusted: this.data.trustedUsers.includes(username),
-    };
+    logger.info(`User untrusted: ${targetUser}`);
+    return removed
+      ? `${targetUser} has been removed from trusted users`
+      : `${targetUser} was not a trusted user`;
+  } catch (error) {
+    logger.error('Error untrusting user:', error);
+    return 'Failed to untrust user';
   }
 }
 
-const moderationManager = new ModerationManager();
-export default moderationManager;
-=======
-import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/perplexity.js';
+export async function getRaidHistory() {
+  try {
+    const recentRaids = moderationData.raidHistory
+      .slice(-5)
+      .map(
+        (raid) =>
+          `${raid.username} (${raid.viewers} viewers)${raid.suspicious ? ' ⚠️' : ''}`
+      )
+      .join(' | ');
 
-class ModerationManager {
-  constructor() {
-    this.dbPath = join(process.cwd(), 'src/bot/moderation_data.json');
-    this.data = this.loadData();
-    this.MESSAGE_HISTORY = 100; // Number of messages to keep for pattern detection
-    this.SPAM_THRESHOLD = 0.7; // Confidence threshold for spam detection
-    this.RAID_QUALITY_THRESHOLD = 0.6; // Threshold for raid quality assessment
-    this.messageQueue = [];
-    this.userMessageCounts = new Map();
-    this.userFirstMessage = new Map();
-    this.suspiciousPatterns = new Set();
-  }
-
-  loadData() {
-    try {
-      if (existsSync(this.dbPath)) {
-        const data = readFileSync(this.dbPath, 'utf8');
-        return JSON.parse(data);
-      }
-      const defaultData = {
-        spamPatterns: [],
-        bannedWords: [],
-        userWarnings: {},
-        raidHistory: [],
-        moderationActions: [],
-        trustedUsers: [],
-        spamStats: {
-          detectedSpam: 0,
-          falsePositives: 0,
-          successfulRaids: 0,
-          blockedRaids: 0,
-        },
-      };
-      this.saveData(defaultData);
-      return defaultData;
-    } catch (error) {
-      logger.error('Error loading moderation data:', error);
-      return {
-        spamPatterns: [],
-        bannedWords: [],
-        userWarnings: {},
-        raidHistory: [],
-        moderationActions: [],
-        trustedUsers: [],
-        spamStats: {
-          detectedSpam: 0,
-          falsePositives: 0,
-          successfulRaids: 0,
-          blockedRaids: 0,
-        },
-      };
-    }
-  }
-
-  saveData(data = this.data) {
-    try {
-      writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
-    } catch (error) {
-      logger.error('Error saving moderation data:', error);
-    }
-  }
-
-  async analyzeMessage(message, username, userLevel) {
-    try {
-      // Skip command messages
-      if (message.startsWith('!')) {
-        return { isSpam: false, confidence: 0, action: 'none' };
-      }
-
-      // Skip trusted users and moderators early
-      if (
-        userLevel === 'mod' ||
-        userLevel === 'broadcaster' ||
-        this.data.trustedUsers.includes(username)
-      ) {
-        return { isSpam: false, confidence: 0, action: 'none' };
-      }
-
-      // Update message history with user level
-      this.messageQueue.push({ message, username, timestamp: Date.now(), userLevel });
-      if (this.messageQueue.length > this.MESSAGE_HISTORY) {
-        this.messageQueue.shift();
-      }
-
-      // Update user message counts
-      this.userMessageCounts.set(username, (this.userMessageCounts.get(username) || 0) + 1);
-      if (!this.userFirstMessage.has(username)) {
-        this.userFirstMessage.set(username, Date.now());
-      }
-
-      // Skip trusted users and moderators
-      if (
-        userLevel === 'mod' ||
-        userLevel === 'broadcaster' ||
-        this.data.trustedUsers.includes(username)
-      ) {
-        return { isSpam: false, confidence: 0, action: 'none' };
-      }
-
-      const prompt = `Analyze this chat message for spam or inappropriate content:
-Message: "${message}"
-Username: ${username}
-Message Count: ${this.userMessageCounts.get(username)}
-Account Age: ${Date.now() - this.userFirstMessage.get(username)}ms
-
-Recent chat context:
-${this.messageQueue
-  .slice(-5)
-  .map((m) => `${m.username}: ${m.message}`)
-  .join('\n')}
-
-Respond with JSON only:
-{
-  "isSpam": boolean,
-  "confidence": number (0-1),
-  "type": "string (spam|inappropriate|excessive|normal)",
-  "patterns": ["array of detected patterns"],
-  "action": "string (none|warning|timeout|ban)",
-  "reason": "string (explanation)"
-}`;
-
-      const response = await generateResponse(prompt);
-      // Remove any markdown formatting and extract just the JSON
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response');
-      }
-      const analysis = JSON.parse(jsonMatch[0]);
-
-      // Update spam patterns if high confidence spam detected
-      if (analysis.isSpam && analysis.confidence > this.SPAM_THRESHOLD) {
-        analysis.patterns.forEach((pattern) => {
-          if (!this.data.spamPatterns.includes(pattern)) {
-            this.data.spamPatterns.push(pattern);
-          }
-        });
-        this.data.spamStats.detectedSpam++;
-        this.saveData();
-      }
-
-      return analysis;
-    } catch (error) {
-      logger.error('Error analyzing message:', error);
-      return { isSpam: false, confidence: 0, action: 'none' };
-    }
-  }
-
-  async assessRaidQuality(raider, viewers, raidHistory) {
-    try {
-      const prompt = `Assess the quality of this raid:
-Raider: ${raider}
-Viewers: ${viewers}
-Raid History: ${JSON.stringify(raidHistory)}
-
-Consider:
-1. Previous raid patterns
-2. Viewer count patterns
-3. Timing and frequency
-4. Known raid botting patterns
-
-Respond with JSON only:
-{
-  "isSuspicious": boolean,
-  "confidence": number (0-1),
-  "risk": "string (low|medium|high)",
-  "patterns": ["array of suspicious patterns"],
-  "action": "string (allow|monitor|block)",
-  "reason": "string (explanation)"
-}`;
-
-      const response = await generateResponse(prompt);
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response');
-      }
-      const assessment = JSON.parse(jsonMatch[0]);
-
-      // Record raid assessment
-      this.data.raidHistory.push({
-        raider,
-        viewers,
-        timestamp: new Date().toISOString(),
-        assessment,
-      });
-
-      // Update stats
-      if (assessment.action === 'allow') {
-        this.data.spamStats.successfulRaids++;
-      } else if (assessment.action === 'block') {
-        this.data.spamStats.blockedRaids++;
-      }
-
-      this.saveData();
-      return assessment;
-    } catch (error) {
-      logger.error('Error assessing raid:', error);
-      return {
-        isSuspicious: false,
-        confidence: 0,
-        risk: 'low',
-        action: 'allow',
-      };
-    }
-  }
-
-  async detectSpamPattern(timeframe = 60000) {
-    // Filter out messages from mods, broadcasters, and trusted users
-    const recentMessages = this.messageQueue.filter((msg) => {
-      const isRecent = Date.now() - msg.timestamp < timeframe;
-      const isTrusted = this.data.trustedUsers.includes(msg.username);
-      const isPrivileged = msg.userLevel === 'mod' || msg.userLevel === 'broadcaster';
-      return isRecent && !isTrusted && !isPrivileged;
-    });
-
-    if (recentMessages.length < 3) {
-      return null;
-    }
-
-    try {
-      const prompt = `Analyze these chat messages for spam patterns:
-Messages: ${JSON.stringify(recentMessages)}
-
-Consider:
-1. Message frequency per user
-2. Content similarity
-3. Known spam patterns
-4. Timing patterns
-
-Respond with JSON only:
-{
-  "hasPattern": boolean,
-  "confidence": number (0-1),
-  "patterns": ["array of detected patterns"],
-  "involvedUsers": ["array of usernames"],
-  "recommendedAction": "string (none|warn|timeout|ban)"
-}`;
-
-      const response = await generateResponse(prompt);
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response');
-      }
-      const analysis = JSON.parse(jsonMatch[0]);
-
-      if (analysis.hasPattern && analysis.confidence > this.SPAM_THRESHOLD) {
-        analysis.patterns.forEach((pattern) => this.suspiciousPatterns.add(pattern));
-      }
-
-      return analysis;
-    } catch (error) {
-      logger.error('Error detecting spam pattern:', error);
-      return null;
-    }
-  }
-
-  warnUser(username, reason) {
-    if (!this.data.userWarnings[username]) {
-      this.data.userWarnings[username] = [];
-    }
-
-    this.data.userWarnings[username].push({
-      timestamp: new Date().toISOString(),
-      reason,
-    });
-
-    this.data.moderationActions.push({
-      type: 'warning',
-      username,
-      reason,
-      timestamp: new Date().toISOString(),
-    });
-
-    this.saveData();
-    return this.data.userWarnings[username].length;
-  }
-
-  addTrustedUser(username) {
-    if (!this.data.trustedUsers.includes(username)) {
-      this.data.trustedUsers.push(username);
-      this.saveData();
-    }
-  }
-
-  removeTrustedUser(username) {
-    const index = this.data.trustedUsers.indexOf(username);
-    if (index !== -1) {
-      this.data.trustedUsers.splice(index, 1);
-      this.saveData();
-    }
-  }
-
-  getModerationStats() {
-    const warningsByUser = Object.entries(this.data.userWarnings).map(([user, warnings]) => ({
-      username: user,
-      count: warnings.length,
-      lastWarning: warnings[warnings.length - 1],
-    }));
-
-    const recentActions = this.data.moderationActions
-      .slice(-10)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    return {
-      spamStats: this.data.spamStats,
-      activePatterns: Array.from(this.suspiciousPatterns),
-      warningsByUser: warningsByUser.sort((a, b) => b.count - a.count),
-      recentActions,
-      trustedUsers: this.data.trustedUsers.length,
-    };
-  }
-
-  getRecentRaids(limit = 10) {
-    return this.data.raidHistory
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, limit);
-  }
-
-  getUserHistory(username) {
-    return {
-      warnings: this.data.userWarnings[username] || [],
-      messageCount: this.userMessageCounts.get(username) || 0,
-      firstSeen: this.userFirstMessage.get(username),
-      isTrusted: this.data.trustedUsers.includes(username),
-    };
+    return recentRaids ? `Recent raids: ${recentRaids}` : 'No recent raids';
+  } catch (error) {
+    logger.error('Error getting raid history:', error);
+    return 'Failed to get raid history';
   }
 }
 
-const moderationManager = new ModerationManager();
-export default moderationManager;
->>>>>>> origin/master
+export async function analyzeChat() {
+  try {
+    const stats = {
+      activeUsers: moderationData.chatStats.size,
+      totalMessages: Array.from(moderationData.chatStats.values()).reduce(
+        (sum, user) => sum + user.messages,
+        0
+      ),
+      moderationActions: Array.from(moderationData.chatStats.values()).reduce(
+        (sum, user) => sum + user.timeouts + user.bans,
+        0
+      ),
+    };
+
+    return `Chat Analysis: Active Users: ${stats.activeUsers} | Total Messages: ${stats.totalMessages} | Moderation Actions: ${stats.moderationActions}`;
+  } catch (error) {
+    logger.error('Error analyzing chat:', error);
+    return 'Failed to analyze chat';
+  }
+}
+
+export async function warnUser(targetUser, reason) {
+  try {
+    const warnings =
+      moderationData.warnings.get(targetUser.toLowerCase()) || [];
+    warnings.push({
+      timestamp: Date.now(),
+      reason: reason || 'No reason provided',
+    });
+    moderationData.warnings.set(targetUser.toLowerCase(), warnings);
+
+    logger.info(`User warned: ${targetUser}`, { reason });
+    return `${targetUser} has been warned. Total warnings: ${warnings.length}`;
+  } catch (error) {
+    logger.error('Error warning user:', error);
+    return 'Failed to warn user';
+  }
+}
+
+export function moderateMessage(message, username, userLevel) {
+  try {
+    // Update user stats
+    const userStats = moderationData.chatStats.get(username.toLowerCase()) || {
+      messages: 0,
+      timeouts: 0,
+      bans: 0,
+      lastActive: null,
+    };
+
+    userStats.messages++;
+    userStats.lastActive = Date.now();
+    moderationData.chatStats.set(username.toLowerCase(), userStats);
+
+    // Basic moderation checks
+    const isTrusted = moderationData.trustedUsers.has(username.toLowerCase());
+    const warnings = moderationData.warnings.get(username.toLowerCase()) || [];
+
+    // Return if trusted or mod
+    if (isTrusted || userLevel === 'mod') {
+      return null;
+    }
+
+    // Check for suspicious behavior
+    const suspicious = {
+      excessiveCaps:
+        message.replace(/[^A-Z]/g, '').length > message.length * 0.7,
+      spamCharacters: /(.)\1{9,}/.test(message), // 10+ repeated characters
+      urlSpam: (message.match(/https?:\/\//g) || []).length > 2,
+    };
+
+    if (Object.values(suspicious).some(Boolean)) {
+      return {
+        action: warnings.length >= 3 ? 'timeout' : 'warning',
+        duration: 300, // 5 minute timeout
+        reason: Object.entries(suspicious)
+          .filter(([_, value]) => value)
+          .map(([key]) => key)
+          .join(', '),
+      };
+    }
+
+    return null;
+  } catch (error) {
+    logger.error('Error moderating message:', error);
+    return null;
+  }
+}
+
+// Track raid for history
+export function trackRaid(username, viewers, suspicious = false) {
+  moderationData.raidHistory.push({
+    username,
+    viewers,
+    timestamp: Date.now(),
+    suspicious,
+  });
+
+  // Keep only last 100 raids
+  if (moderationData.raidHistory.length > 100) {
+    moderationData.raidHistory.shift();
+  }
+}
+
+export default {
+  getModStats,
+  getUserHistory,
+  trustUser,
+  untrustUser,
+  getRaidHistory,
+  analyzeChat,
+  warnUser,
+  moderateMessage,
+  trackRaid,
+};

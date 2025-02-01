@@ -29,7 +29,9 @@ export async function generateEnhancedShoutout(username, channelInfo) {
   const shoutoutData = {
     username,
     channelInfo,
-    previousShoutouts: communityData.shoutouts.history.filter((so) => so.username === username),
+    previousShoutouts: communityData.shoutouts.history.filter(
+      (so) => so.username === username
+    ),
     effectiveness: communityData.shoutouts.effectiveness[username],
   };
 
@@ -56,7 +58,9 @@ export async function getRaidSuggestions(currentCategory, viewerCount) {
     currentCategory,
     viewerCount,
     recentRaids: communityData.raids.outgoing.slice(-5),
-    successfulRaids: communityData.raids.outgoing.filter((raid) => raid.retention > 0.5),
+    successfulRaids: communityData.raids.outgoing.filter(
+      (raid) => raid.retention > 0.5
+    ),
   };
 
   const prompt = `Suggest optimal raid targets based on this data: ${JSON.stringify(raidData)}. Consider category alignment, viewer count compatibility, and past raid success.`;
@@ -81,7 +85,9 @@ export async function findCollaborationPartners(channelInfo) {
     'You are a collaboration matchmaking assistant. Suggest partners that would create engaging content and mutual growth opportunities.';
 
   const suggestions = await generateResponse(prompt, systemPrompt);
-  return suggestions || 'Unable to find collaboration suggestions at this time.';
+  return (
+    suggestions || 'Unable to find collaboration suggestions at this time.'
+  );
 }
 
 // Track networking effectiveness

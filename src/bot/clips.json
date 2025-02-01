@@ -1,5 +1,17 @@
-<<<<<<< HEAD
-{"clips":[],"highlights":[]}
-=======
-{ "clips": [], "highlights": [] }
->>>>>>> origin/master
+{
+  "clips": [],
+  "highlights": [],
+  "settings": {
+    "autoClipEnabled": true,
+    "clipDuration": 30,
+    "minViewers": 5,
+    "cooldownPeriod": 300
+  },
+  "stats": {
+    "totalClips": 0,
+    "totalHighlights": 0,
+    "lastClipTime": null,
+    "lastHighlightTime": null
+  },
+  "lastUpdated": "2025-02-01T19:06:51.000Z"
+}

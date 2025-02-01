@@ -1,5 +1,12 @@
-<<<<<<< HEAD
-{{songs}}
-=======
-{{songs}}
->>>>>>> origin/master
+Current Queue:
+{{#if songs.length}}
+{{#each songs}}
+{{position}}. "{{name}}" by {{artist}} (requested by {{requestedBy}})
+{{/each}}
+
+Total Songs: {{songs.length}}
+{{else}}
+The queue is currently empty! Use !songrequest to add a song.
+{{/if}}
+
+Now Playing: {{#if currentSong}}{{currentSong.name}} - {{currentSong.artist}}{{else}}Nothing playing{{/if}}

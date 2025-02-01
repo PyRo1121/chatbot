@@ -1,741 +1,497 @@
-<<<<<<< HEAD
 import { ApiClient } from '@twurple/api';
-import { RefreshingAuthProvider } from '@twurple/auth';
-import tokenManager from '../auth/tokenManager.js';
-import fs from 'fs/promises';
-import path from 'path';
-import { generateResponse } from '../utils/openai.js';
-import chatInteraction from './chatInteraction.js';
-import viewerManager from './viewerManager.js';
-
-const STREAM_DATA_FILE = path.join(process.cwd(), 'src/bot/stream_data.json');
-let streamStartTime = null;
-let milestones = [];
-
-// Initialize stream data storage
-async function initStreamData() {
-  try {
-    await fs.access(STREAM_DATA_FILE);
-  } catch {
-    await fs.writeFile(
-      STREAM_DATA_FILE,
-      JSON.stringify({
-        milestones: [],
-        categories: [],
-        streamHistory: [],
-        viewerEngagement: {},
-        contentAnalytics: {
-          successfulTitles: [],
-          popularCategories: [],
-          peakTimes: {},
-          highlights: [],
-        },
-      })
-    );
-  }
-}
-
-// Analyze stream performance
-async function analyzeStreamPerformance(streamData) {
-  try {
-    const prompt = `Analyze this stream data and provide insights. Focus on:
-1. Viewer engagement patterns
-2. Successful content types
-3. Peak activity times
-4. Notable moments
-
-Data: ${JSON.stringify(streamData)}
-
-Respond with JSON only:
-{
-  "recommendedTitle": "string (engaging title based on successful patterns)",
-  "suggestedCategory": "string (category with highest engagement)",
-  "bestStreamTime": "string (hour with highest viewer activity)",
-  "contentSuggestions": ["array of content suggestions based on patterns"]
-}`;
-
-    const response = await generateResponse(prompt);
-    return JSON.parse(response);
-  } catch (error) {
-    console.error('Error analyzing stream performance:', error);
-    return null;
-  }
-}
-
-// Track viewer engagement
-async function trackEngagement(channel, viewerCount, chatActivity) {
-  const streamData = await loadStreamData();
-  const hour = new Date().getHours();
-
-  if (!streamData.viewerEngagement[hour]) {
-    streamData.viewerEngagement[hour] = {
-      averageViewers: 0,
-      chatActivity: 0,
-      samples: 0,
-    };
-  }
-
-  const current = streamData.viewerEngagement[hour];
-  current.averageViewers =
-    (current.averageViewers * current.samples + viewerCount) / (current.samples + 1);
-  current.chatActivity =
-    (current.chatActivity * current.samples + chatActivity) / (current.samples + 1);
-  current.samples++;
-
-  await saveStreamData(streamData);
-}
-
-// Auto-detect stream highlights
-async function detectHighlight(message, viewerCount, chatActivity) {
-  const streamData = await loadStreamData();
-  const currentUptime = getStreamUptime();
-
-  // Consider it a highlight if:
-  // 1. High chat activity (2x normal)
-  // 2. Increased viewer count (1.5x average)
-  // 3. Positive chat sentiment
-  const averageActivity =
-    Object.values(streamData.viewerEngagement).reduce((sum, hour) => sum + hour.chatActivity, 0) /
-      Object.keys(streamData.viewerEngagement).length || 1;
-
-  const averageViewers =
-    Object.values(streamData.viewerEngagement).reduce((sum, hour) => sum + hour.averageViewers, 0) /
-      Object.keys(streamData.viewerEngagement).length || 1;
-
-  if (chatActivity > averageActivity * 2 && viewerCount > averageViewers * 1.5) {
-    const chatMood = chatInteraction.getMoodString();
-    if (chatMood === 'Positive') {
-      streamData.contentAnalytics.highlights.push({
-        timestamp: new Date().toISOString(),
-        uptime: currentUptime,
-        message,
-        viewerCount,
-        chatActivity,
-      });
-      await saveStreamData(streamData);
-      return true;
-    }
-  }
-  return false;
-}
-
-// Get content recommendations
-async function getStreamRecommendations() {
-  const streamData = await loadStreamData();
-  const analysis = await analyzeStreamPerformance(streamData);
-
-  if (!analysis) {
-    return null;
-  }
-
-  return {
-    title: analysis.recommendedTitle,
-    category: analysis.suggestedCategory,
-    bestTime: analysis.bestStreamTime,
-    suggestions: analysis.contentSuggestions,
-  };
-}
-
-// Load stream data
-async function loadStreamData() {
-  try {
-    const data = await fs.readFile(STREAM_DATA_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error loading stream data:', error);
-    return {
-      milestones: [],
-      categories: [],
-      streamHistory: [],
-      viewerEngagement: {},
-      contentAnalytics: {
-        successfulTitles: [],
-        popularCategories: [],
-        peakTimes: {},
-        highlights: [],
-      },
-    };
-  }
-}
-
-// Save stream data
-async function saveStreamData(data) {
-  try {
-    await fs.writeFile(STREAM_DATA_FILE, JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error('Error saving stream data:', error);
-  }
-}
-
-// Update stream information
-async function updateStreamInfo(channel, title, category) {
-  try {
-    const tokens = await tokenManager.getBroadcasterTokens();
-
-    const authProvider = new RefreshingAuthProvider({
-      clientId: tokens.clientId,
-      clientSecret: tokens.clientSecret,
-      onRefresh: async (userId, newTokenData) => {
-        await tokenManager.updateBroadcasterTokens(newTokenData);
-      },
-    });
-
-    await authProvider.addUserForToken({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: 0,
-      obtainmentTimestamp: 0,
-    });
-
-    const apiClient = new ApiClient({ authProvider });
-
-    await apiClient.channels.updateChannelInfo(channel.id, {
-      title,
-      gameId: category,
-    });
-
-    const streamData = await loadStreamData();
-    streamData.categories.push({
-      timestamp: new Date().toISOString(),
-      title,
-      category,
-    });
-    await saveStreamData(streamData);
-
-    return true;
-  } catch (error) {
-    console.error('Error updating stream info:', error);
-    return false;
-  }
-}
-
-// Track stream uptime and milestones
-function getStreamUptime() {
-  if (!streamStartTime) {
-    return 'Stream is offline';
-  }
-  const uptime = Date.now() - streamStartTime;
-  const hours = Math.floor(uptime / (1000 * 60 * 60));
-  const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
-}
-
-// Add stream milestone
-async function addMilestone(milestone) {
-  const streamData = await loadStreamData();
-  streamData.milestones.push({
-    timestamp: new Date().toISOString(),
-    description: milestone,
-    uptime: getStreamUptime(),
-  });
-  await saveStreamData(streamData);
-}
-
-// Stream commands
-export { detectHighlight };
-
-export const streamCommands = {
-  recommendations: async () => {
-    const recommendations = await getStreamRecommendations();
-    if (!recommendations) {
-      return 'Unable to generate recommendations at this time';
-    }
-
-    return `📊 Stream Recommendations:
-    Title: ${recommendations.title}
-    Category: ${recommendations.category}
-    Best Time: ${recommendations.bestTime}
-    Tips: ${recommendations.suggestions.join(', ')}`;
-  },
-
-  title: async (client, channel, user, message) => {
-    if (!message.trim()) {
-      return 'Please provide a new title for the stream';
-    }
-    const success = await updateStreamInfo(channel, message.trim(), null);
-    return success ? 'Stream title updated!' : 'Failed to update stream title';
-  },
-
-  category: async (client, channel, user, message) => {
-    if (!message.trim()) {
-      return 'Please provide a category/game name';
-    }
-    const success = await updateStreamInfo(channel, null, message.trim());
-    return success ? 'Stream category updated!' : 'Failed to update stream category';
-  },
-
-  uptime: () => getStreamUptime(),
-
-  milestone: async (client, channel, user, message) => {
-    if (!message.trim()) {
-      return 'Please provide a milestone description';
-    }
-    await addMilestone(message.trim());
-    return 'Milestone added!';
-  },
-};
-
-// Stream event handlers
-export const streamEventHandlers = {
-  onStreamStart: () => {
-    streamStartTime = Date.now();
-    // Start engagement tracking
-    setInterval(
-      async () => {
-        const chatStats = chatInteraction.getStats();
-        const viewerCount = 0; // This should be fetched from Twitch API
-        await trackEngagement('channel', viewerCount, chatStats.totalInteractions);
-      },
-      5 * 60 * 1000
-    ); // Every 5 minutes
-  },
-
-  onStreamEnd: async () => {
-    if (streamStartTime) {
-      const streamData = await loadStreamData();
-      const chatStats = chatInteraction.getStats();
-      const viewerStats = viewerManager.getViewerStats();
-
-      // Enhanced stream history
-      streamData.streamHistory.push({
-        startTime: new Date(streamStartTime).toISOString(),
-        endTime: new Date().toISOString(),
-        duration: getStreamUptime(),
-        milestones,
-        analytics: {
-          totalInteractions: chatStats.totalInteractions,
-          topTopics: chatStats.topTopics,
-          chatMood: chatStats.chatMood,
-          highlights: streamData.contentAnalytics.highlights,
-          viewerStats: {
-            unique: viewerStats.totalUnique,
-            returning: viewerStats.returningRate,
-            loyalty: viewerStats.loyaltyDistribution,
-            topViewers: viewerStats.topViewers,
-          },
-        },
-      });
-
-      // Update successful patterns
-      const currentTitle = streamData.categories[streamData.categories.length - 1]?.title;
-      const currentCategory = streamData.categories[streamData.categories.length - 1]?.category;
-
-      if (currentTitle && chatStats.totalInteractions > 0) {
-        streamData.contentAnalytics.successfulTitles.push({
-          title: currentTitle,
-          engagement: chatStats.totalInteractions,
-          mood: chatStats.chatMood.current.sentiment,
-        });
-      }
-
-      if (currentCategory) {
-        streamData.contentAnalytics.popularCategories.push({
-          category: currentCategory,
-          engagement: chatStats.totalInteractions,
-          duration: getStreamUptime(),
-        });
-      }
-      await saveStreamData(streamData);
-      streamStartTime = null;
-      milestones = [];
-    }
-  },
-};
-
-// Initialize stream data on module load
-initStreamData();
-=======
-import { ApiClient } from '@twurple/api';
-import { RefreshingAuthProvider } from '@twurple/auth';
-import tokenManager from '../auth/tokenManager.js';
-import fs from 'fs/promises';
-import path from 'path';
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import { EventEmitter } from 'events';
+import logger from '../utils/logger.js';
 import { generateResponse } from '../utils/perplexity.js';
-import chatInteraction from './chatInteraction.js';
-import viewerManager from './viewerManager.js';
 
-const STREAM_DATA_FILE = path.join(process.cwd(), 'src/bot/stream_data.json');
-let streamStartTime = null;
-let milestones = [];
-
-// Initialize stream data storage
-async function initStreamData() {
-  try {
-    await fs.access(STREAM_DATA_FILE);
-  } catch {
-    await fs.writeFile(
-      STREAM_DATA_FILE,
-      JSON.stringify({
-        milestones: [],
-        categories: [],
-        streamHistory: [],
-        viewerEngagement: {},
-        contentAnalytics: {
-          successfulTitles: [],
-          popularCategories: [],
-          peakTimes: {},
-          highlights: [],
-        },
-      })
-    );
+class StreamManager extends EventEmitter {
+  constructor() {
+    super();
+    this.streamData = this.loadStreamData();
+    this.currentStream = {
+      startTime: null,
+      endTime: null,
+      viewers: [],
+      chatActivity: 0,
+      commands: {},
+      highlights: [],
+      raids: [],
+    };
+    this.isEndingStream = false;
+    this.initStreamData();
   }
-}
 
-// Analyze stream performance
-async function analyzeStreamPerformance(streamData) {
-  try {
-    const prompt = `Analyze this stream data and provide insights. Focus on:
-1. Viewer engagement patterns
-2. Successful content types
-3. Peak activity times
-4. Notable moments
+  loadStreamData() {
+    try {
+      const data = readFileSync(
+        join(process.cwd(), 'src/bot/stream_data.json'),
+        'utf8'
+      );
+      return JSON.parse(data);
+    } catch (error) {
+      logger.error('Error loading stream data:', error);
+      return {
+        totalStreams: 0,
+        totalHours: 0,
+        streamHistory: {},
+        viewerStats: {
+          peak: 0,
+          average: 0,
+          retention: 0,
+        },
+        performance: {
+          categories: {},
+          titles: {},
+          times: {},
+        },
+      };
+    }
+  }
 
-Data: ${JSON.stringify(streamData)}
+  saveStreamData() {
+    try {
+      writeFileSync(
+        join(process.cwd(), 'src/bot/stream_data.json'),
+        JSON.stringify(this.streamData, null, 2)
+      );
+    } catch (error) {
+      logger.error('Error saving stream data:', error);
+    }
+  }
 
-CRITICAL: Return ONLY a JSON object with EXACTLY this structure, and NOTHING else:
+  initStreamData() {
+    if (!this.streamData.streamHistory) {
+      this.streamData.streamHistory = {};
+    }
+    if (!this.streamData.viewerStats) {
+      this.streamData.viewerStats = { peak: 0, average: 0, retention: 0 };
+    }
+    if (!this.streamData.performance) {
+      this.streamData.performance = { categories: {}, titles: {}, times: {} };
+    }
+  }
 
-{
-  "recommendedTitle": "Example Stream Title",
-  "suggestedCategory": "Just Chatting",
-  "bestStreamTime": "8:00 PM",
-  "contentSuggestions": ["Suggestion 1", "Suggestion 2"]
-}
+  startStream() {
+    this.currentStream.startTime = Date.now();
+    this.streamData.totalStreams++;
+    logger.info('Stream started');
+  }
 
-Rules:
-1. All strings must be properly escaped
-2. NO trailing commas
-3. NO comments
-4. NO additional whitespace or newlines
-5. contentSuggestions must be a non-empty array of strings`;
+  calculateHealthScore(streamData) {
+    try {
+      if (!streamData || !streamData.viewers || streamData.viewers.length === 0) {
+        logger.debug('No stream data available for health score calculation');
+        return 0;
+      }
 
-    const response = await generateResponse(prompt);
+      // Validate required data
+      if (!Array.isArray(streamData.viewers) || !streamData.chatActivity || !streamData.commands) {
+        logger.warn('Invalid stream data for health score calculation:', { streamData });
+        return 0;
+      }
+
+      // Calculate various metrics
+      const peakViewers = Math.max(...streamData.viewers);
+      const avgViewers = streamData.viewers.reduce((sum, count) => sum + count, 0) / streamData.viewers.length;
+      const retention = streamData.viewers.length > 0 
+        ? (streamData.viewers[streamData.viewers.length - 1] / peakViewers) * 100 
+        : 0;
+
+      const chatEngagement = streamData.chatActivity / (streamData.viewers.length || 1);
+      const commandUsage = Object.values(streamData.commands).reduce((sum, count) => sum + count, 0);
+
+      // Weight different factors
+      const viewerScore = Math.min((avgViewers / (peakViewers || 1)) * 40, 40); // Up to 40 points for viewer retention
+      const chatScore = Math.min(chatEngagement * 5, 30); // Up to 30 points for chat engagement
+      const commandScore = Math.min(commandUsage / 10, 20); // Up to 20 points for command usage
+      const highlightScore = Math.min(streamData.highlights?.length * 2 || 0, 10); // Up to 10 points for highlights
+
+      // Calculate total score (0-100)
+      return Math.round(viewerScore + chatScore + commandScore + highlightScore);
+    } catch (error) {
+      logger.error('Error calculating health score:', error);
+      return 0;
+    }
+  }
+
+  endStream() {
+    logger.debug('Starting stream end process');
+    
+    // Prevent multiple end stream calls
+    if (this.isEndingStream) {
+      logger.warn('Stream end already in progress, skipping');
+      return;
+    }
+    this.isEndingStream = true;
+    
+    // If no stream was active, emit default insights and return
+    if (!this.currentStream.startTime) {
+      logger.info('No active stream found');
+      const defaultInsights = {
+        health: { status: 'offline', score: 0, bitrate: { average: 0, stability: 'stable' } },
+        stats: { peakViewers: 0, averageViewers: 0, totalMessages: 0, activeViewers: [] },
+        performance: {
+          bestCategory: 'No category data available',
+          viewerRetention: 0,
+          averageEngagement: 0,
+          improvements: ['No stream data available', 'Try streaming first!']
+        }
+      };
+      this.emit('streamEnd', defaultInsights);
+      return;
+    }
+
+    this.currentStream.endTime = Date.now();
+    const duration =
+      (this.currentStream.endTime - this.currentStream.startTime) /
+      1000 /
+      60 /
+      60;
+    this.streamData.totalHours += duration;
+
+    // Update stream history
+    const streamDate = new Date().toISOString().split('T')[0];
+    this.streamData.streamHistory[streamDate] = {
+      duration,
+      viewers: {
+        peak: Math.max(...this.currentStream.viewers, 0),
+        average:
+          this.currentStream.viewers.reduce((sum, count) => sum + count, 0) /
+          this.currentStream.viewers.length,
+      },
+      chatActivity: this.currentStream.chatActivity,
+      commands: this.currentStream.commands,
+      highlights: this.currentStream.highlights,
+      raids: this.currentStream.raids,
+    };
+
+    // Update viewer stats
+    this.streamData.viewerStats.peak = Math.max(
+      this.streamData.viewerStats.peak,
+      Math.max(...this.currentStream.viewers, 0)
+    );
+    this.streamData.viewerStats.average =
+      (this.streamData.viewerStats.average *
+        (this.streamData.totalStreams - 1) +
+        this.currentStream.viewers.reduce((sum, count) => sum + count, 0) /
+          this.currentStream.viewers.length) /
+      this.streamData.totalStreams;
+
+    // Save data and log insights
+    this.saveStreamData();
+
+    // Log detailed stream insights
+    const stats = {
+      duration: duration.toFixed(2),
+      viewers: {
+        peak: Math.max(...this.currentStream.viewers, 0),
+        average: (
+          this.currentStream.viewers.reduce((sum, count) => sum + count, 0) /
+          this.currentStream.viewers.length
+        ).toFixed(1),
+        retention:
+          this.currentStream.viewers.length > 0
+            ? (
+                (this.currentStream.viewers[
+                  this.currentStream.viewers.length - 1
+                ] /
+                  Math.max(...this.currentStream.viewers)) *
+                100
+              ).toFixed(1)
+            : 0,
+      },
+      engagement: {
+        chatMessages: this.currentStream.chatActivity,
+        messagesPerHour: (this.currentStream.chatActivity / duration).toFixed(
+          1
+        ),
+        commands: Object.entries(this.currentStream.commands).reduce(
+          (sum, [_, count]) => sum + count,
+          0
+        ),
+        highlights: this.currentStream.highlights.length,
+        raids: this.currentStream.raids.length,
+      },
+    };
+
+    logger.info('Stream Insights:', {
+      duration: `${stats.duration} hours`,
+      viewers: `Peak: ${stats.viewers.peak}, Avg: ${stats.viewers.average}, Retention: ${stats.viewers.retention}%`,
+      engagement: `${stats.engagement.chatMessages} messages (${stats.engagement.messagesPerHour}/hr), ${stats.engagement.commands} commands, ${stats.engagement.highlights} highlights, ${stats.engagement.raids} raids`,
+    });
+
+    // Return stream insights for the bot to handle
+    const insights = {
+      health: {
+        status: 'offline',
+        score: 0,
+        bitrate: { average: 0, stability: 'stable' }
+      },
+      stats: {
+        peakViewers: 0,
+        averageViewers: 0,
+        totalMessages: 0,
+        activeViewers: []
+      },
+      performance: {
+        bestCategory: 'No category data available',
+        viewerRetention: 0,
+        averageEngagement: 0,
+        improvements: [
+          'No stream data available',
+          'Try streaming first!'
+        ]
+      }
+    };
+
+    // Only update insights if we have valid stream data
+    if (this.currentStream.viewers.length > 0) {
+      insights.health = {
+        status:
+          this.calculateHealthScore(this.currentStream) > 70
+            ? 'healthy'
+            : this.calculateHealthScore(this.currentStream) > 40
+              ? 'warning'
+              : 'critical',
+        score: this.calculateHealthScore(this.currentStream),
+        bitrate: { average: 0, stability: 'stable' },
+      };
+      insights.stats = {
+        peakViewers: stats.viewers.peak,
+        averageViewers: parseFloat(stats.viewers.average),
+        totalMessages: stats.engagement.chatMessages,
+        activeViewers: [], // Would need to track individual viewer messages to populate this
+      };
+      insights.performance = {
+        bestCategory: this.getBestCategory(),
+        viewerRetention: parseFloat(stats.viewers.retention),
+        averageEngagement: parseFloat(
+          (stats.engagement.messagesPerHour / 10).toFixed(1)
+        ), // Normalize to percentage
+        improvements: [
+          `Focus on viewer interaction (${stats.engagement.messagesPerHour} messages/hr)`,
+          `Work on viewer retention (${stats.viewers.retention}% retained)`,
+        ],
+      };
+    }
+
+    // Log and emit stream end event with insights
+    logger.debug('Emitting streamEnd event with insights:', insights);
+    this.emit('streamEnd', insights);
+    logger.debug('StreamEnd event emitted');
 
     try {
-      // Extract and clean JSON
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('No JSON object found in response');
-        return null;
-      }
-
-      // Clean the JSON string
-      let jsonStr = jsonMatch[0]
-        .replace(/[\u0000-\u001F]+/g, '') // Remove all control characters
-        .replace(/\s+/g, ' ') // Normalize whitespace
-        .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
-        .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Ensure property names are quoted
-        .replace(/:\s*'([^']*)'/g, ':"$1"') // Convert single quotes to double quotes
-        .replace(/\\([^"\\\/bfnrtu])/g, '$1') // Remove invalid escapes
-        .replace(/\r?\n|\r/g, '') // Remove all newlines
-        .replace(/\t/g, ' ') // Replace tabs with spaces
-        .replace(/\s+/g, ' ') // Normalize whitespace
-        .trim();
-
-      // Parse the cleaned JSON
-      const result = JSON.parse(jsonStr);
-
-      // Validate structure
-      if (
-        !result.recommendedTitle ||
-        !result.suggestedCategory ||
-        !result.bestStreamTime ||
-        !Array.isArray(result.contentSuggestions)
-      ) {
-        console.error('Invalid response structure:', result);
-        return null;
-      }
-
-      return result;
-    } catch (parseError) {
-      console.error('Error parsing stream analysis response:', parseError);
-      return null;
-    }
-  } catch (error) {
-    console.error('Error analyzing stream performance:', error);
-    return null;
-  }
-}
-
-// Track viewer engagement
-async function trackEngagement(channel, viewerCount, chatActivity) {
-  const streamData = await loadStreamData();
-  const hour = new Date().getHours();
-
-  if (!streamData.viewerEngagement[hour]) {
-    streamData.viewerEngagement[hour] = {
-      averageViewers: 0,
-      chatActivity: 0,
-      samples: 0,
-    };
-  }
-
-  const current = streamData.viewerEngagement[hour];
-  current.averageViewers =
-    (current.averageViewers * current.samples + viewerCount) / (current.samples + 1);
-  current.chatActivity =
-    (current.chatActivity * current.samples + chatActivity) / (current.samples + 1);
-  current.samples++;
-
-  await saveStreamData(streamData);
-}
-
-// Auto-detect stream highlights
-async function detectHighlight(message, viewerCount, chatActivity) {
-  const streamData = await loadStreamData();
-  const currentUptime = getStreamUptime();
-
-  // Consider it a highlight if:
-  // 1. High chat activity (2x normal)
-  // 2. Increased viewer count (1.5x average)
-  // 3. Positive chat sentiment
-  const averageActivity =
-    Object.values(streamData.viewerEngagement).reduce((sum, hour) => sum + hour.chatActivity, 0) /
-      Object.keys(streamData.viewerEngagement).length || 1;
-
-  const averageViewers =
-    Object.values(streamData.viewerEngagement).reduce((sum, hour) => sum + hour.averageViewers, 0) /
-      Object.keys(streamData.viewerEngagement).length || 1;
-
-  if (chatActivity > averageActivity * 2 && viewerCount > averageViewers * 1.5) {
-    const chatMood = chatInteraction.getMoodString();
-    if (chatMood === 'Positive') {
-      streamData.contentAnalytics.highlights.push({
-        timestamp: new Date().toISOString(),
-        uptime: currentUptime,
-        message,
-        viewerCount,
-        chatActivity,
-      });
-      await saveStreamData(streamData);
-      return true;
-    }
-  }
-  return false;
-}
-
-// Get content recommendations
-async function getStreamRecommendations() {
-  const streamData = await loadStreamData();
-  const analysis = await analyzeStreamPerformance(streamData);
-
-  if (!analysis) {
-    return null;
-  }
-
-  return {
-    title: analysis.recommendedTitle,
-    category: analysis.suggestedCategory,
-    bestTime: analysis.bestStreamTime,
-    suggestions: analysis.contentSuggestions,
-  };
-}
-
-// Load stream data
-async function loadStreamData() {
-  try {
-    const data = await fs.readFile(STREAM_DATA_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error loading stream data:', error);
-    return {
-      milestones: [],
-      categories: [],
-      streamHistory: [],
-      viewerEngagement: {},
-      contentAnalytics: {
-        successfulTitles: [],
-        popularCategories: [],
-        peakTimes: {},
+      // Reset current stream
+      this.currentStream = {
+        startTime: null,
+        endTime: null,
+        viewers: [],
+        chatActivity: 0,
+        commands: {},
         highlights: [],
+        raids: [],
+      };
+    } finally {
+      this.isEndingStream = false;
+    }
+  }
+
+  updateViewers(count) {
+    this.currentStream.viewers.push(count);
+  }
+
+  trackCommand(command) {
+    this.currentStream.commands[command] =
+      (this.currentStream.commands[command] || 0) + 1;
+  }
+
+  trackChatActivity() {
+    this.currentStream.chatActivity++;
+  }
+
+  addHighlight(highlight) {
+    this.currentStream.highlights.push({
+      timestamp: Date.now(),
+      ...highlight,
+    });
+  }
+
+  trackRaid(raid) {
+    this.currentStream.raids.push({
+      timestamp: Date.now(),
+      ...raid,
+    });
+  }
+
+  async generateStreamEndMessage() {
+    try {
+      const stats = {
+        duration: (
+          (Date.now() - this.currentStream.startTime) /
+          1000 /
+          60 /
+          60
+        ).toFixed(2),
+        peakViewers: Math.max(...this.currentStream.viewers, 0),
+        averageViewers: (
+          this.currentStream.viewers.reduce((sum, count) => sum + count, 0) /
+          this.currentStream.viewers.length
+        ).toFixed(1),
+        chatMessages: this.currentStream.chatActivity,
+        commands: Object.entries(this.currentStream.commands)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 3)
+          .map(([cmd, count]) => `${cmd}(${count})`)
+          .join(', '),
+        highlights: this.currentStream.highlights.length,
+        raids: this.currentStream.raids.length,
+      };
+
+      const prompt = `Generate a stream end message with these stats:
+      Duration: ${stats.duration} hours
+      Peak Viewers: ${stats.peakViewers}
+      Average Viewers: ${stats.averageViewers}
+      Chat Messages: ${stats.chatMessages}
+      Top Commands: ${stats.commands}
+      Highlights: ${stats.highlights}
+      Raids: ${stats.raids}
+      
+      Make it engaging and thankful to the community. Keep it under 300 characters.`;
+
+      const message = await generateResponse(prompt);
+      return message || 'Stream ended! Thanks for watching!';
+    } catch (error) {
+      logger.error('Error generating stream end message:', error);
+      return 'Stream ended! Thanks for watching!';
+    }
+  }
+
+  getStreamStats() {
+    return {
+      currentStream: {
+        duration: this.currentStream.startTime
+          ? (Date.now() - this.currentStream.startTime) / 1000 / 60 / 60
+          : 0,
+        viewers: this.currentStream.viewers,
+        chatActivity: this.currentStream.chatActivity,
+        commands: this.currentStream.commands,
+        highlights: this.currentStream.highlights,
+        raids: this.currentStream.raids,
+      },
+      overall: {
+        totalStreams: this.streamData.totalStreams,
+        totalHours: this.streamData.totalHours,
+        viewerStats: this.streamData.viewerStats,
+        performance: this.streamData.performance,
       },
     };
   }
-}
 
-// Save stream data
-async function saveStreamData(data) {
-  try {
-    await fs.writeFile(STREAM_DATA_FILE, JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error('Error saving stream data:', error);
+  getBestCategory() {
+    // If no performance data is available, return a default message
+    if (
+      !this.streamData.performance?.categories ||
+      Object.keys(this.streamData.performance.categories).length === 0
+    ) {
+      return 'No category data available';
+    }
+
+    // Find the category with the highest average viewers
+    const categories = Object.entries(this.streamData.performance.categories);
+    const bestCategory = categories.reduce((best, [category, stats]) => {
+      if (!best || stats.averageViewers > best.stats.averageViewers) {
+        return { category, stats };
+      }
+      return best;
+    }, null);
+
+    return bestCategory ? bestCategory.category : 'No category data available';
+  }
+
+  cleanup() {
+    // Keep only last 30 days of stream history
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const cutoffDate = thirtyDaysAgo.toISOString().split('T')[0];
+
+    this.streamData.streamHistory = Object.entries(
+      this.streamData.streamHistory
+    )
+      .filter(([date]) => date >= cutoffDate)
+      .reduce((acc, [date, data]) => {
+        acc[date] = data;
+        return acc;
+      }, {});
+
+    // Calculate cleanup insights
+    const removedDates = Object.keys(this.streamData.streamHistory).filter(
+      (date) => date < cutoffDate
+    );
+    const retainedDates = Object.keys(this.streamData.streamHistory);
+
+    const cleanupStats = {
+      daysRemoved: removedDates.length,
+      daysRetained: retainedDates.length,
+      dateRange:
+        retainedDates.length > 0
+          ? `${retainedDates[0]} to ${retainedDates[retainedDates.length - 1]}`
+          : 'None',
+    };
+
+    this.saveStreamData();
+    logger.info('Stream Data Cleanup:', {
+      removed: `${cleanupStats.daysRemoved} days of historical data`,
+      retained: `${cleanupStats.daysRetained} days (${cleanupStats.dateRange})`,
+    });
   }
 }
 
-// Update stream information
-async function updateStreamInfo(channel, title, category) {
+const streamManager = new StreamManager();
+
+// Ensure all handlers are properly bound to maintain context
+const boundHandlers = {
+  onStreamStart: streamManager.startStream.bind(streamManager),
+  onStreamEnd: () => {
+    logger.debug('Stream end handler called');
+    return streamManager.endStream();
+  },
+  onViewerUpdate: streamManager.updateViewers.bind(streamManager),
+  onChatActivity: streamManager.trackChatActivity.bind(streamManager),
+  onCommand: streamManager.trackCommand.bind(streamManager),
+  onRaid: streamManager.trackRaid.bind(streamManager),
+};
+
+export const streamEventHandlers = boundHandlers;
+
+export async function detectHighlight(message, viewerCount, totalInteractions) {
   try {
-    const tokens = await tokenManager.getBroadcasterTokens();
+    const prompt = `Analyze this chat message for potential stream highlight:
+    Message: ${message}
+    Current Viewers: ${viewerCount}
+    Total Chat Interactions: ${totalInteractions}
+    
+    Respond with true if this seems like a highlight moment, false otherwise.`;
 
-    const authProvider = new RefreshingAuthProvider({
-      clientId: tokens.clientId,
-      clientSecret: tokens.clientSecret,
-      onRefresh: async (userId, newTokenData) => {
-        await tokenManager.updateBroadcasterTokens(newTokenData);
-      },
-    });
-
-    await authProvider.addUserForToken({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: 0,
-      obtainmentTimestamp: 0,
-    });
-
-    const apiClient = new ApiClient({ authProvider });
-
-    await apiClient.channels.updateChannelInfo(channel.id, {
-      title,
-      gameId: category,
-    });
-
-    const streamData = await loadStreamData();
-    streamData.categories.push({
-      timestamp: new Date().toISOString(),
-      title,
-      category,
-    });
-    await saveStreamData(streamData);
-
-    return true;
+    const response = await generateResponse(prompt);
+    return response?.toLowerCase().includes('true') || false;
   } catch (error) {
-    console.error('Error updating stream info:', error);
+    logger.error('Error detecting highlight:', error);
     return false;
   }
 }
 
-// Track stream uptime and milestones
-function getStreamUptime() {
-  if (!streamStartTime) {
-    return 'Stream is offline';
-  }
-  const uptime = Date.now() - streamStartTime;
-  const hours = Math.floor(uptime / (1000 * 60 * 60));
-  const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
-}
-
-// Add stream milestone
-async function addMilestone(milestone) {
-  const streamData = await loadStreamData();
-  streamData.milestones.push({
-    timestamp: new Date().toISOString(),
-    description: milestone,
-    uptime: getStreamUptime(),
-  });
-  await saveStreamData(streamData);
-}
-
-// Stream commands
-export { detectHighlight };
-
 export const streamCommands = {
-  recommendations: async () => {
-    const recommendations = await getStreamRecommendations();
-    if (!recommendations) {
-      return 'Unable to generate recommendations at this time';
+  uptime: () => {
+    if (!streamManager.currentStream.startTime) {
+      return 'Stream is offline';
     }
-
-    return `📊 Stream Recommendations:
-    Title: ${recommendations.title}
-    Category: ${recommendations.category}
-    Best Time: ${recommendations.bestTime}
-    Tips: ${recommendations.suggestions.join(', ')}`;
-  },
-
-  title: async (client, channel, user, message) => {
-    if (!message.trim()) {
-      return 'Please provide a new title for the stream';
-    }
-    const success = await updateStreamInfo(channel, message.trim(), null);
-    return success ? 'Stream title updated!' : 'Failed to update stream title';
-  },
-
-  category: async (client, channel, user, message) => {
-    if (!message.trim()) {
-      return 'Please provide a category/game name';
-    }
-    const success = await updateStreamInfo(channel, null, message.trim());
-    return success ? 'Stream category updated!' : 'Failed to update stream category';
-  },
-
-  uptime: () => getStreamUptime(),
-
-  milestone: async (client, channel, user, message) => {
-    if (!message.trim()) {
-      return 'Please provide a milestone description';
-    }
-    await addMilestone(message.trim());
-    return 'Milestone added!';
+    const duration =
+      (Date.now() - streamManager.currentStream.startTime) / 1000;
+    const hours = Math.floor(duration / 3600);
+    const minutes = Math.floor((duration % 3600) / 60);
+    return `${hours}h ${minutes}m`;
   },
 };
 
-// Stream event handlers
-export const streamEventHandlers = {
-  onStreamStart: () => {
-    streamStartTime = Date.now();
-    // Start engagement tracking
-    setInterval(
-      async () => {
-        const chatStats = chatInteraction.getStats();
-        const viewerCount = 0; // This should be fetched from Twitch API
-        await trackEngagement('channel', viewerCount, chatStats.totalInteractions);
-      },
-      5 * 60 * 1000
-    ); // Every 5 minutes
-  },
-
-  onStreamEnd: async () => {
-    if (streamStartTime) {
-      const streamData = await loadStreamData();
-      const chatStats = chatInteraction.getStats();
-      const viewerStats = viewerManager.getViewerStats();
-
-      // Enhanced stream history
-      streamData.streamHistory.push({
-        startTime: new Date(streamStartTime).toISOString(),
-        endTime: new Date().toISOString(),
-        duration: getStreamUptime(),
-        milestones,
-        analytics: {
-          totalInteractions: chatStats.totalInteractions,
-          topTopics: chatStats.topTopics,
-          chatMood: chatStats.chatMood,
-          highlights: streamData.contentAnalytics.highlights,
-          viewerStats: {
-            unique: viewerStats.totalUnique,
-            returning: viewerStats.returningRate,
-            loyalty: viewerStats.loyaltyDistribution,
-            topViewers: viewerStats.topViewers,
-          },
-        },
-      });
-
-      // Update successful patterns
-      const currentTitle = streamData.categories[streamData.categories.length - 1]?.title;
-      const currentCategory = streamData.categories[streamData.categories.length - 1]?.category;
-
-      if (currentTitle && chatStats.totalInteractions > 0) {
-        streamData.contentAnalytics.successfulTitles.push({
-          title: currentTitle,
-          engagement: chatStats.totalInteractions,
-          mood: chatStats.chatMood.current.sentiment,
-        });
-      }
-
-      if (currentCategory) {
-        streamData.contentAnalytics.popularCategories.push({
-          category: currentCategory,
-          engagement: chatStats.totalInteractions,
-          duration: getStreamUptime(),
-        });
-      }
-      await saveStreamData(streamData);
-      streamStartTime = null;
-      milestones = [];
-    }
-  },
-};
-
-// Initialize stream data on module load
-initStreamData();
->>>>>>> origin/master
+export default streamManager;

@@ -1,99 +1,68 @@
-<<<<<<< HEAD
-import { getRandomQuestion } from '../../utils/trivia.js';
+import {
+  startTrivia as startTriviaGame,
+  handleAnswer,
+  endTrivia as endTriviaGame,
+} from '../triviaManager.js';
+import { categories } from '../../utils/trivia.js';
+import logger from '../../utils/logger.js';
 
-let currentGame = null;
+export async function startTrivia(client, channel, user, args) {
+  try {
+    // Check if user has permission (mod or broadcaster)
+    if (!user.isMod && !user.isBroadcaster) {
+      return 'Only moderators and the broadcaster can start trivia games!';
+    }
 
-export async function startTrivia(client, channel) {
-  if (currentGame) {
-    return 'A trivia game is already in progress!';
+    const category =
+      args && args.length > 0 ? args[0].toLowerCase() : 'general';
+
+    // Start the game and get formatted question
+    const response = await startTriviaGame(channel, category);
+    return response;
+  } catch (error) {
+    logger.error('Error in trivia command:', error);
+    return 'Error starting trivia game. Please try again.';
   }
-
-  currentGame = {
-    question: await getRandomQuestion(),
-    active: true,
-    attempts: 0,
-    correctAnswer: null,
-  };
-
-  return `🎲 Trivia Time! ${currentGame.question.question} (Type your answer in chat!)`;
 }
 
-export async function handleTriviaAnswer(client, channel, user, answer) {
-  if (!currentGame || !currentGame.active) {
-    return null;
+export async function handleTriviaAnswer(client, channel, user, args) {
+  try {
+    if (!args || args.length === 0) {
+      return 'Please provide an answer (A/B/C/D)!';
+    }
+
+    const answer = args[0].toUpperCase();
+    const response = await handleAnswer(channel, user.username, answer);
+    return response; // Will be null if answer was accepted
+  } catch (error) {
+    logger.error('Error handling trivia answer:', error);
+    return 'Error processing answer. Please try again.';
   }
-
-  currentGame.attempts++;
-
-  if (answer.toLowerCase() === currentGame.question.answer.toLowerCase()) {
-    currentGame.active = false;
-    currentGame.correctAnswer = user.username;
-    return `🎉 @${user.username} got it right! The answer was: ${currentGame.question.answer}`;
-  }
-
-  if (currentGame.attempts >= 3) {
-    currentGame.active = false;
-    return `😢 No one got it! The correct answer was: ${currentGame.question.answer}`;
-  }
-
-  return null;
 }
 
-export function endTrivia() {
-  if (!currentGame) {
-    return 'No trivia game is currently running!';
+export async function endTrivia(client, channel, user) {
+  try {
+    // Check if user has permission (mod or broadcaster)
+    if (!user.isMod && !user.isBroadcaster) {
+      return 'Only moderators and the broadcaster can end trivia games!';
+    }
+
+    const response = await endTriviaGame(channel);
+    return response;
+  } catch (error) {
+    logger.error('Error ending trivia:', error);
+    return 'Error ending trivia game.';
   }
-
-  currentGame = null;
-  return 'Trivia game ended!';
-}
-=======
-import { getRandomQuestion } from '../../utils/trivia.js';
-
-let currentGame = null;
-
-export async function startTrivia(client, channel) {
-  if (currentGame) {
-    return 'A trivia game is already in progress!';
-  }
-
-  currentGame = {
-    question: await getRandomQuestion(),
-    active: true,
-    attempts: 0,
-    correctAnswer: null,
-  };
-
-  return `🎲 Trivia Time! ${currentGame.question.question} (Type your answer in chat!)`;
 }
 
-export async function handleTriviaAnswer(client, channel, user, answer) {
-  if (!currentGame || !currentGame.active) {
-    return null;
-  }
-
-  currentGame.attempts++;
-
-  if (answer.toLowerCase() === currentGame.question.answer.toLowerCase()) {
-    currentGame.active = false;
-    currentGame.correctAnswer = user.username;
-    return `🎉 @${user.username} got it right! The answer was: ${currentGame.question.answer}`;
-  }
-
-  if (currentGame.attempts >= 3) {
-    currentGame.active = false;
-    return `😢 No one got it! The correct answer was: ${currentGame.question.answer}`;
-  }
-
-  return null;
+export function listCategories() {
+  const categoryList = Object.keys(categories).join(', ');
+  return `Available trivia categories: ${categoryList}`;
 }
 
-export function endTrivia() {
-  if (!currentGame) {
-    return 'No trivia game is currently running!';
-  }
-
-  currentGame = null;
-  return 'Trivia game ended!';
-}
->>>>>>> origin/master
+export default {
+  startTrivia,
+  handleTriviaAnswer,
+  endTrivia,
+  listCategories,
+};

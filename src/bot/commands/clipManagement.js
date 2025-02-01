@@ -1,331 +1,202 @@
-<<<<<<< HEAD
 import clipManager from '../clipManager.js';
+import logger from '../../utils/logger.js';
+import { generateResponse } from '../../utils/perplexity.js';
 
-export const clipManagementCommands = {
-  // Create and categorize a new clip
-  createclip: async (client, channel, user, title) => {
-    const clipInfo = await clipManager.createClip(title || 'Stream Highlight', user.username);
-    if (!clipInfo) {
-      return 'Failed to create clip. Please try again.';
+export async function handleCreateClip(client, channel, user, args) {
+  try {
+    const title = args ? args.join(' ') : `Clip by ${user.username}`;
+    const clip = await client.twitchApi.clips.createClip({
+      channel: process.env.TWITCH_CHANNEL_ID,
+      title,
+    });
+
+    if (clip) {
+      await clipManager.addClip({
+        id: clip.id,
+        url: clip.url,
+        title,
+        creatorName: user.username,
+        timestamp: new Date().toISOString(),
+        game: clip.gameId,
+        views: 0,
+      });
+
+      return `Clip created! Watch it here: ${clip.url}`;
     }
-    return `Clip created! 📎 ${clipInfo.url}
-Category: ${clipInfo.category}
-Tags: ${clipInfo.tags.join(', ')}`;
-  },
 
-  // Get clips by category
-  clipsbycategory: async (category) => {
-    // Wait for clips to be loaded and filtered
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const clips = clipManager.getClipsByCategory(category);
-    if (!clips || clips.length === 0) {
-      return `No clips found in category: ${category}`;
+    return 'Failed to create clip. Please try again later.';
+  } catch (error) {
+    logger.error('Error creating clip:', error);
+    return 'Error creating clip. Please try again later.';
+  }
+}
+
+export async function handleClipsByCategory(client, channel, user, args) {
+  try {
+    if (!args || args.length === 0) {
+      return 'Please specify a category!';
     }
 
-    const clipList = clips
-      .slice(0, 5)
-      .map((clipId) => {
-        const clip = clipManager.data.clips.find((c) => c.id === clipId);
-        return clip ? `• ${clip.title} (${clip.url})` : null;
-      })
-      .filter(Boolean);
+    const category = args.join(' ');
+    const clips = await clipManager.getClipsByCategory(category);
 
-    return `📂 Clips in ${category} (showing ${clipList.length}/${clips.length}):
-${clipList.join('\n')}`;
-  },
+    if (clips.length === 0) {
+      return `No clips found for category: ${category}`;
+    }
 
-  // Get clips by tag
-  clipsbytag: async (tag) => {
-    // Wait for clips to be loaded and filtered by tag
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const clips = clipManager.getClipsByTag(tag);
-    if (!clips || clips.length === 0) {
+    const topClips = clips
+      .slice(0, 3)
+      .map((c) => `${c.title} (${c.views} views): ${c.url}`)
+      .join(' | ');
+
+    return `Top clips for ${category}: ${topClips}`;
+  } catch (error) {
+    logger.error('Error getting clips by category:', error);
+    return 'Error retrieving clips. Please try again later.';
+  }
+}
+
+export async function handleClipsByTag(client, channel, user, args) {
+  try {
+    if (!args || args.length === 0) {
+      return 'Please specify a tag!';
+    }
+
+    const tag = args.join(' ');
+    const clips = await clipManager.getClipsByTag(tag);
+
+    if (clips.length === 0) {
       return `No clips found with tag: ${tag}`;
     }
 
-    const clipList = clips
+    const topClips = clips
+      .slice(0, 3)
+      .map((c) => `${c.title} (${c.views} views): ${c.url}`)
+      .join(' | ');
+
+    return `Top clips for tag "${tag}": ${topClips}`;
+  } catch (error) {
+    logger.error('Error getting clips by tag:', error);
+    return 'Error retrieving clips. Please try again later.';
+  }
+}
+
+export async function handleRecentClips(client, channel, user, args) {
+  try {
+    const days = args && !isNaN(args[0]) ? parseInt(args[0]) : 7;
+    const clips = await clipManager.getRecentClips(days);
+
+    if (clips.length === 0) {
+      return `No clips found from the last ${days} days!`;
+    }
+
+    const recentClips = clips
+      .slice(0, 3)
+      .map((c) => `${c.title} (${c.views} views): ${c.url}`)
+      .join(' | ');
+
+    return `Recent clips from the last ${days} days: ${recentClips}`;
+  } catch (error) {
+    logger.error('Error getting recent clips:', error);
+    return 'Error retrieving clips. Please try again later.';
+  }
+}
+
+export async function handleTopClips(client, channel, user) {
+  try {
+    const clips = await clipManager.getTopClips();
+
+    if (clips.length === 0) {
+      return 'No clips found!';
+    }
+
+    const topClips = clips
+      .slice(0, 3)
+      .map((c) => `${c.title} (${c.views} views): ${c.url}`)
+      .join(' | ');
+
+    return `Top clips: ${topClips}`;
+  } catch (error) {
+    logger.error('Error getting top clips:', error);
+    return 'Error retrieving clips. Please try again later.';
+  }
+}
+
+export async function handleClipStats(client, channel, user) {
+  try {
+    const stats = await clipManager.getStats();
+    return `Clip Stats: Total: ${stats.totalClips} | Views: ${stats.totalViews} | Categories: ${stats.uniqueCategories} | Most Clipped: ${stats.topCategory}`;
+  } catch (error) {
+    logger.error('Error getting clip stats:', error);
+    return 'Error retrieving clip stats. Please try again later.';
+  }
+}
+
+export async function handleSuggestCompilation(client, channel, user) {
+  try {
+    const clips = await clipManager.getTopClips();
+
+    if (clips.length === 0) {
+      return 'Not enough clips to suggest a compilation!';
+    }
+
+    const prompt = `Based on these clips, suggest a compilation theme:
+    ${clips
       .slice(0, 5)
-      .map((clipId) => {
-        const clip = clipManager.data.clips.find((c) => c.id === clipId);
-        return clip ? `• ${clip.title} (${clip.url})` : null;
-      })
-      .filter(Boolean);
+      .map((c) => c.title)
+      .join('\n')}
+    
+    Keep it concise and catchy, max 100 characters.`;
 
-    return `🏷️ Clips tagged "${tag}" (showing ${clipList.length}/${clips.length}):
-${clipList.join('\n')}`;
-  },
-
-  // Get recent clips
-  recentclips: async (days = 7) => {
-    // Wait for recent clips to be loaded
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const clips = clipManager.getRecentClips(days);
-    if (clips.length === 0) {
-      return `No clips found from the last ${days} days`;
-    }
-
-    const clipList = clips.slice(0, 5).map((clip) => `• ${clip.title} (${clip.url})`);
-
-    return `🎬 Recent Clips (last ${days} days, showing ${clipList.length}/${clips.length}):
-${clipList.join('\n')}`;
-  },
-
-  // Get top clips
-  topclips: async () => {
-    // Wait for clips to be sorted by popularity
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const clips = clipManager.getTopClips(5);
-    if (clips.length === 0) {
-      return 'No clips found';
-    }
-
-    const clipList = clips.map(
-      (clip) => `• ${clip.title} (${clip.reactions.likes} likes) - ${clip.url}`
+    const suggestion = await generateResponse(prompt);
+    return (
+      suggestion || 'Unable to generate compilation suggestion at this time.'
     );
+  } catch (error) {
+    logger.error('Error suggesting compilation:', error);
+    return 'Error generating compilation suggestion. Please try again later.';
+  }
+}
 
-    return `🏆 Top Clips:
-${clipList.join('\n')}`;
-  },
-
-  // Get clip stats
-  clipstats: async () => {
-    // Wait for clip statistics to be calculated
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const stats = clipManager.getClipStats();
-    const categoryList = Object.entries(stats.categoryDistribution)
-      .map(([cat, count]) => `${cat}: ${count}`)
-      .join(', ');
-    const tagList = stats.popularTags.map((t) => `${t.tag} (${t.count})`).join(', ');
-
-    return `📊 Clip Statistics:
-Total Clips: ${stats.totalClips}
-Recent Clips (7 days): ${stats.recentClips}
-Categories: ${categoryList}
-Popular Tags: ${tagList}
-Compilations: ${stats.compilations}`;
-  },
-
-  // Suggest clip compilation
-  suggestcompilation: async () => {
-    const compilation = await clipManager.suggestCompilation();
-    if (!compilation) {
-      return 'Not enough clips available for a compilation suggestion.';
+export async function handleAnalyzeClip(client, channel, user, args) {
+  try {
+    if (!args || args.length === 0) {
+      return 'Please provide a clip ID!';
     }
 
-    const clipList = compilation.selectedClips
-      .map((clipId, index) => {
-        const clip = clipManager.data.clips.find((c) => c.id === clipId);
-        return clip ? `${index + 1}. ${clip.title} - ${clip.url}` : null;
-      })
-      .filter(Boolean);
+    const clipId = args[0];
+    const clip = await clipManager.getClipById(clipId);
 
-    return `🎬 Suggested Compilation: "${compilation.theme}"
-${compilation.description}
-
-Selected Clips:
-${clipList.join('\n')}
-
-Editing Suggestions:
-${compilation.transitions.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
-  },
-
-  // Analyze clip performance
-  analyzeclip: async (clipId) => {
-    const analysis = await clipManager.analyzeClipPerformance(clipId);
-    if (!analysis) {
-      return 'Clip not found or analysis failed.';
+    if (!clip) {
+      return 'Clip not found!';
     }
 
-    return `📈 Clip Performance Analysis:
-Status: ${analysis.performance}
+    const prompt = `Analyze this Twitch clip:
+    Title: ${clip.title}
+    Views: ${clip.views}
+    Created by: ${clip.creatorName}
+    Game: ${clip.game}
+    
+    Provide a brief analysis of its performance and potential improvements.
+    Keep it concise, max 200 characters.`;
 
-Key Insights:
-${analysis.insights.map((i) => `• ${i}`).join('\n')}
+    const analysis = await generateResponse(prompt);
+    return analysis || 'Unable to analyze clip at this time.';
+  } catch (error) {
+    logger.error('Error analyzing clip:', error);
+    return 'Error analyzing clip. Please try again later.';
+  }
+}
 
-Recommendations:
-${analysis.recommendations.map((r) => `• ${r}`).join('\n')}
-
-Similar Successful Clips:
-${analysis.similarSuccessful
-  .map((id) => {
-    const clip = clipManager.data.clips.find((c) => c.id === id);
-    return clip ? `• ${clip.title} (${clip.url})` : null;
-  })
-  .filter(Boolean)
-  .join('\n')}`;
-  },
-};
-
-// Initialize clip cleanup interval
-setInterval(
-  () => {
-    clipManager.cleanupOldClips();
-  },
-  24 * 60 * 60 * 1000
-); // Run daily
-=======
-import clipManager from '../clipManager.js';
-
-export const clipManagementCommands = {
-  // Create and categorize a new clip
-  createclip: async (client, channel, user, title) => {
-    const clipInfo = await clipManager.createClip(title || 'Stream Highlight', user.username);
-    if (!clipInfo) {
-      return 'Failed to create clip. Please try again.';
+// Run daily cleanup at midnight
+setInterval(async () => {
+  try {
+    const now = new Date();
+    if (now.getHours() === 0 && now.getMinutes() === 0) {
+      await clipManager.cleanup();
+      logger.info('Daily clip cleanup completed');
     }
-    return `Clip created! 📎 ${clipInfo.url}
-Category: ${clipInfo.category}
-Tags: ${clipInfo.tags.join(', ')}`;
-  },
-
-  // Get clips by category
-  clipsbycategory: async (category) => {
-    // Wait for clips to be loaded and filtered
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const clips = clipManager.getClipsByCategory(category);
-    if (!clips || clips.length === 0) {
-      return `No clips found in category: ${category}`;
-    }
-
-    const clipList = clips
-      .slice(0, 5)
-      .map((clipId) => {
-        const clip = clipManager.data.clips.find((c) => c.id === clipId);
-        return clip ? `• ${clip.title} (${clip.url})` : null;
-      })
-      .filter(Boolean);
-
-    return `📂 Clips in ${category} (showing ${clipList.length}/${clips.length}):
-${clipList.join('\n')}`;
-  },
-
-  // Get clips by tag
-  clipsbytag: async (tag) => {
-    // Wait for clips to be loaded and filtered by tag
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const clips = clipManager.getClipsByTag(tag);
-    if (!clips || clips.length === 0) {
-      return `No clips found with tag: ${tag}`;
-    }
-
-    const clipList = clips
-      .slice(0, 5)
-      .map((clipId) => {
-        const clip = clipManager.data.clips.find((c) => c.id === clipId);
-        return clip ? `• ${clip.title} (${clip.url})` : null;
-      })
-      .filter(Boolean);
-
-    return `🏷️ Clips tagged "${tag}" (showing ${clipList.length}/${clips.length}):
-${clipList.join('\n')}`;
-  },
-
-  // Get recent clips
-  recentclips: async (days = 7) => {
-    // Wait for recent clips to be loaded
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const clips = clipManager.getRecentClips(days);
-    if (clips.length === 0) {
-      return `No clips found from the last ${days} days`;
-    }
-
-    const clipList = clips.slice(0, 5).map((clip) => `• ${clip.title} (${clip.url})`);
-
-    return `🎬 Recent Clips (last ${days} days, showing ${clipList.length}/${clips.length}):
-${clipList.join('\n')}`;
-  },
-
-  // Get top clips
-  topclips: async () => {
-    // Wait for clips to be sorted by popularity
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const clips = clipManager.getTopClips(5);
-    if (clips.length === 0) {
-      return 'No clips found';
-    }
-
-    const clipList = clips.map(
-      (clip) => `• ${clip.title} (${clip.reactions.likes} likes) - ${clip.url}`
-    );
-
-    return `🏆 Top Clips:
-${clipList.join('\n')}`;
-  },
-
-  // Get clip stats
-  clipstats: async () => {
-    // Wait for clip statistics to be calculated
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const stats = clipManager.getClipStats();
-    const categoryList = Object.entries(stats.categoryDistribution)
-      .map(([cat, count]) => `${cat}: ${count}`)
-      .join(', ');
-    const tagList = stats.popularTags.map((t) => `${t.tag} (${t.count})`).join(', ');
-
-    return `📊 Clip Statistics:
-Total Clips: ${stats.totalClips}
-Recent Clips (7 days): ${stats.recentClips}
-Categories: ${categoryList}
-Popular Tags: ${tagList}
-Compilations: ${stats.compilations}`;
-  },
-
-  // Suggest clip compilation
-  suggestcompilation: async () => {
-    const compilation = await clipManager.suggestCompilation();
-    if (!compilation) {
-      return 'Not enough clips available for a compilation suggestion.';
-    }
-
-    const clipList = compilation.selectedClips
-      .map((clipId, index) => {
-        const clip = clipManager.data.clips.find((c) => c.id === clipId);
-        return clip ? `${index + 1}. ${clip.title} - ${clip.url}` : null;
-      })
-      .filter(Boolean);
-
-    return `🎬 Suggested Compilation: "${compilation.theme}"
-${compilation.description}
-
-Selected Clips:
-${clipList.join('\n')}
-
-Editing Suggestions:
-${compilation.transitions.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
-  },
-
-  // Analyze clip performance
-  analyzeclip: async (clipId) => {
-    const analysis = await clipManager.analyzeClipPerformance(clipId);
-    if (!analysis) {
-      return 'Clip not found or analysis failed.';
-    }
-
-    return `📈 Clip Performance Analysis:
-Status: ${analysis.performance}
-
-Key Insights:
-${analysis.insights.map((i) => `• ${i}`).join('\n')}
-
-Recommendations:
-${analysis.recommendations.map((r) => `• ${r}`).join('\n')}
-
-Similar Successful Clips:
-${analysis.similarSuccessful
-  .map((id) => {
-    const clip = clipManager.data.clips.find((c) => c.id === id);
-    return clip ? `• ${clip.title} (${clip.url})` : null;
-  })
-  .filter(Boolean)
-  .join('\n')}`;
-  },
-};
-
-// Initialize clip cleanup interval
-setInterval(
-  () => {
-    clipManager.cleanupOldClips();
-  },
-  24 * 60 * 60 * 1000
-); // Run daily
->>>>>>> origin/master
+  } catch (error) {
+    logger.error('Error in clip cleanup:', error);
+  }
+}, 60000); // Run every minute to check

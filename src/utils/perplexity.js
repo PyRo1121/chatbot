@@ -8,29 +8,72 @@ if (!process.env.PERPLEXITY_API_KEY) {
 }
 
 // Initialize Perplexity model
-const model = perplexity('sonar');
+let model;
+try {
+  logger.debug('Initializing Perplexity model with API key:', {
+    keyLength: process.env.PERPLEXITY_API_KEY?.length,
+    keyPrefix: process.env.PERPLEXITY_API_KEY?.substring(0, 4),
+  });
+
+  model = perplexity('sonar-pro', {
+    apiKey: process.env.PERPLEXITY_API_KEY,
+    debug: true,
+  });
+
+  logger.debug('Perplexity model initialized successfully');
+} catch (error) {
+  logger.error('Failed to initialize Perplexity model:', {
+    error,
+    errorMessage: error.message,
+    errorStack: error.stack,
+  });
+  throw error;
+}
 
 // Generate AI response using Perplexity Sonar
-export async function generateResponse(prompt, systemPrompt = 'You are a witty assistant.') {
+export async function generateResponse(
+  prompt,
+  systemPrompt = 'You are a witty assistant.'
+) {
   try {
+    logger.debug('Generating response with:', {
+      prompt,
+      systemPrompt,
+      apiKeyExists: !!process.env.PERPLEXITY_API_KEY,
+      modelInitialized: !!model,
+    });
+
+    const messages = [
+      {
+        role: 'system',
+        content: `${systemPrompt} Important: NEVER include citation numbers like [1], [2], etc. in your responses.`,
+      },
+      { role: 'user', content: prompt },
+    ];
+
+    logger.debug('Calling generateText with:', { messages });
+
     const { text } = await generateText({
       model,
-      messages: [
-        {
-          role: 'system',
-          content: `${systemPrompt} Important: NEVER include citation numbers like [1], [2], etc. in your responses.`,
-        },
-        { role: 'user', content: prompt },
-      ],
+      messages,
       temperature: 0.9,
       maxTokens: 500,
       num_searches: 1,
     });
 
+    logger.debug('Raw response from API:', { text });
+
     // Remove any remaining citation numbers if they somehow got through
-    return text.replace(/\[\d+\]/g, '').trim();
+    const cleanedText = text.replace(/\[\d+\]/g, '').trim();
+    logger.debug('Cleaned response:', { cleanedText });
+
+    return cleanedText;
   } catch (error) {
-    logger.error('Error generating AI response:', error);
+    logger.error('Error generating AI response:', {
+      error,
+      errorMessage: error.message,
+      errorStack: error.stack,
+    });
     return null;
   }
 }
@@ -61,7 +104,10 @@ export async function analyzeSentiment(message) {
       const analysis = JSON.parse(text.trim());
 
       // Validate the response structure
-      if (typeof analysis.toxicityScore !== 'number' || typeof analysis.flagged !== 'boolean') {
+      if (
+        typeof analysis.toxicityScore !== 'number' ||
+        typeof analysis.flagged !== 'boolean'
+      ) {
         throw new Error('Invalid response structure');
       }
 

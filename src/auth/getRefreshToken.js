@@ -1,83 +1,65 @@
 import express from 'express';
 import axios from 'axios';
-import open from 'open';
 import querystring from 'querystring';
-import dotenv from 'dotenv';
+import logger from '../utils/logger.js';
 
-dotenv.config();
-
-const app = express();
-const port = 8888;
-
-<<<<<<< HEAD
-const {SPOTIFY_CLIENT_ID} = process.env;
-const {SPOTIFY_CLIENT_SECRET} = process.env;
-=======
 const { SPOTIFY_CLIENT_ID } = process.env;
 const { SPOTIFY_CLIENT_SECRET } = process.env;
->>>>>>> origin/master
 
-console.log('Loaded Spotify Client ID:', SPOTIFY_CLIENT_ID ? '***' : 'Not found');
-console.log('Loaded Spotify Client Secret:', SPOTIFY_CLIENT_SECRET ? '***' : 'Not found');
+const app = express();
+const port = 3000;
 
 app.get('/callback', async (req, res) => {
-  const code = req.query.code || null;
+  const { code } = req.query;
+
+  if (!code) {
+    res.send('No code provided');
+    return;
+  }
 
   try {
-    const authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      method: 'post',
-      params: {
-        code,
-        redirect_uri: 'http://localhost:8888/callback',
+    const response = await axios.post(
+      'https://accounts.spotify.com/api/token',
+      querystring.stringify({
         grant_type: 'authorization_code',
-      },
-      headers: {
-<<<<<<< HEAD
-        'Authorization': `Basic ${  Buffer.from(`${SPOTIFY_CLIENT_ID  }:${  SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
-=======
-        Authorization: `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
->>>>>>> origin/master
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    };
+        code,
+        redirect_uri: 'http://localhost:3000/callback',
+      }),
+      {
+        headers: {
+          Authorization: `Basic ${Buffer.from(
+            `${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`
+          ).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
 
-    const response = await axios(authOptions);
-    const refreshToken = response.data.refresh_token;
-
-    console.log('\nYour Spotify refresh token is:');
-    console.log(refreshToken);
-    console.log('\nAdd this to your .env file as SPOTIFY_REFRESH_TOKEN');
-
-    res.send('Refresh token received! You can close this window.');
-    process.exit();
+    const { refresh_token: refreshToken } = response.data;
+    console.log('Refresh token:', refreshToken);
+    res.send('Got refresh token! Check console.');
   } catch (error) {
-<<<<<<< HEAD
-    console.error('Error getting refresh token:', error.response ? error.response.data : error.message);
-=======
-    console.error(
+    logger.error(
       'Error getting refresh token:',
       error.response ? error.response.data : error.message
     );
->>>>>>> origin/master
     res.send('Error getting refresh token. Check console for details.');
-    process.exit(1);
   }
 });
 
 app.listen(port, () => {
-<<<<<<< HEAD
-  const authUrl = `https://accounts.spotify.com/authorize?${  querystring.stringify({
-=======
-  const authUrl = `https://accounts.spotify.com/authorize?${querystring.stringify({
->>>>>>> origin/master
-    response_type: 'code',
-    client_id: SPOTIFY_CLIENT_ID,
-    scope: 'user-read-currently-playing user-read-playback-state',
-    redirect_uri: 'http://localhost:8888/callback',
-    show_dialog: true,
-  })}`;
+  console.log(`Auth server running at http://localhost:${port}`);
 
-  console.log('Opening Spotify authorization in your browser...');
-  open(authUrl);
+  // Generate auth URL
+  const authUrl = `https://accounts.spotify.com/authorize?${querystring.stringify(
+    {
+      response_type: 'code',
+      client_id: SPOTIFY_CLIENT_ID,
+      scope:
+        'user-read-playback-state user-modify-playback-state user-read-currently-playing',
+      redirect_uri: 'http://localhost:3000/callback',
+    }
+  )}`;
+
+  console.log('Visit this URL to get your refresh token:', authUrl);
 });

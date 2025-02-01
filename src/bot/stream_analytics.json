@@ -9,13 +9,7 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-<<<<<<< HEAD
-        "issues": [
-          "low viewership and engagement metrics"
-        ]
-=======
         "issues": ["low viewership and engagement metrics"]
->>>>>>> origin/master
       }
     },
     {
@@ -27,13 +21,7 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-<<<<<<< HEAD
-        "issues": [
-          "low viewership and engagement metrics"
-        ]
-=======
         "issues": ["low viewership and engagement metrics"]
->>>>>>> origin/master
       }
     },
     {
@@ -45,13 +33,7 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-<<<<<<< HEAD
-        "issues": [
-          "low viewership and engagement metrics"
-        ]
-=======
         "issues": ["low viewership and engagement metrics"]
->>>>>>> origin/master
       }
     },
     {
@@ -75,13 +57,7 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-<<<<<<< HEAD
-        "issues": [
-          "low viewership and engagement metrics"
-        ]
-=======
         "issues": ["low viewership and engagement metrics"]
->>>>>>> origin/master
       }
     },
     {
@@ -105,13 +81,7 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-<<<<<<< HEAD
-        "issues": [
-          "low viewership and engagement metrics"
-        ]
-=======
         "issues": ["low viewership and engagement metrics"]
->>>>>>> origin/master
       }
     },
     {
@@ -123,13 +93,7 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-<<<<<<< HEAD
-        "issues": [
-          "low viewership and engagement metrics"
-        ]
-=======
         "issues": ["low viewership and engagement metrics"]
->>>>>>> origin/master
       }
     },
     {
@@ -153,13 +117,7 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-<<<<<<< HEAD
-        "issues": [
-          "low viewership and engagement metrics"
-        ]
-=======
         "issues": ["low viewership and engagement metrics"]
->>>>>>> origin/master
       }
     },
     {
@@ -171,11 +129,6 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-<<<<<<< HEAD
-        "issues": [
-          "low viewership and engagement metrics"
-        ]
-=======
         "issues": ["low viewership and engagement metrics"]
       }
     },
@@ -260,7 +213,10 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-        "issues": ["low viewership and engagement metrics", "Unable to analyze stream performance"]
+        "issues": [
+          "low viewership and engagement metrics",
+          "Unable to analyze stream performance"
+        ]
       }
     },
     {
@@ -272,7 +228,10 @@
       "healthSummary": {
         "averageBitrate": null,
         "droppedFrames": 0,
-        "issues": ["low viewership and engagement metrics", "Unable to analyze stream performance"]
+        "issues": [
+          "low viewership and engagement metrics",
+          "Unable to analyze stream performance"
+        ]
       }
     },
     {
@@ -477,7 +436,6 @@
         "averageBitrate": null,
         "droppedFrames": 0,
         "issues": []
->>>>>>> origin/master
       }
     }
   ],
@@ -493,8 +451,6 @@
       "peakViewers": 0,
       "streams": 2
     },
-<<<<<<< HEAD
-=======
     "18": {
       "averageViewers": 0,
       "peakViewers": 0,
@@ -510,7 +466,6 @@
       "peakViewers": 0,
       "streams": 9
     },
->>>>>>> origin/master
     "21": {
       "averageViewers": 0,
       "peakViewers": 0,
@@ -533,8 +488,4 @@
     "followConversion": [],
     "engagementRates": []
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/master

@@ -1,21 +1,17 @@
 import { generateResponse } from '../../utils/perplexity.js';
 import logger from '../../utils/logger.js';
 
+let twitchClient;
+
+export function initializeMetrics(client) {
+  twitchClient = client;
+}
+
 // Store stream metrics
 const streamData = {
   peakViewers: {
     count: 0,
     timestamp: null,
-  },
-  followers: {
-    initial: 0,
-    current: 0,
-    history: [],
-  },
-  subscribers: {
-    initial: 0,
-    current: 0,
-    history: [],
   },
   segments: [],
   chatActivity: [],
@@ -24,7 +20,11 @@ const streamData = {
 };
 
 // Update peak viewers
-export function updatePeakViewers(currentViewers) {
+export async function updatePeakViewers() {
+  const stream = await twitchClient.twitchApi.streams.getStreamByUserId(twitchClient.configuration.userId);
+  if (!stream) return;
+  
+  const currentViewers = stream.viewerCount;
   const now = new Date();
   if (currentViewers > streamData.peakViewers.count) {
     streamData.peakViewers = {
@@ -38,30 +38,6 @@ export function updatePeakViewers(currentViewers) {
     timestamp: now,
     viewers: currentViewers,
     type: 'viewers',
-  });
-}
-
-// Update follower count
-export function updateFollowers(count) {
-  if (streamData.followers.initial === 0) {
-    streamData.followers.initial = count;
-  }
-  streamData.followers.current = count;
-  streamData.followers.history.push({
-    count,
-    timestamp: new Date(),
-  });
-}
-
-// Update subscriber count
-export function updateSubscribers(count) {
-  if (streamData.subscribers.initial === 0) {
-    streamData.subscribers.initial = count;
-  }
-  streamData.subscribers.current = count;
-  streamData.subscribers.history.push({
-    count,
-    timestamp: new Date(),
   });
 }
 
@@ -106,35 +82,40 @@ export async function getPeakViewers() {
 
 // Get growth stats command
 export async function getGrowthStats() {
-  const followerGrowth = streamData.followers.current - streamData.followers.initial;
-  const subGrowth = streamData.subscribers.current - streamData.subscribers.initial;
+  try {
+    const channel = await twitchClient.twitchApi.channels.getChannelInfo(twitchClient.configuration.userId);
+    const followers = await twitchClient.twitchApi.channels.getChannelFollowers(twitchClient.configuration.userId);
+    const subscriptions = await twitchClient.twitchApi.subscriptions.getSubscriptions(twitchClient.configuration.userId);
+    
+    const stats = {
+      followers: {
+        count: followers.total,
+        recentFollowers: followers.data.length
+      },
+      subscribers: {
+        count: subscriptions.total,
+        points: channel.channelPoints
+      }
+    };
 
-  const stats = {
-    followers: {
-      initial: streamData.followers.initial,
-      current: streamData.followers.current,
-      growth: followerGrowth,
-    },
-    subscribers: {
-      initial: streamData.subscribers.initial,
-      current: streamData.subscribers.current,
-      growth: subGrowth,
-    },
-  };
+    // Generate AI insights about the growth
+    const prompt = `Generate a brief, encouraging analysis of these stream growth stats: ${JSON.stringify(stats)}. Focus on positive trends and growth opportunities.`;
+    const systemPrompt =
+      'You are a helpful streaming analytics assistant. Keep responses concise and actionable.';
 
-  // Generate AI insights about the growth
-  const prompt = `Generate a brief, encouraging analysis of these stream growth stats: ${JSON.stringify(stats)}. Focus on positive trends and growth opportunities.`;
-  const systemPrompt =
-    'You are a helpful streaming analytics assistant. Keep responses concise and actionable.';
+    const insight = await generateResponse(prompt, systemPrompt);
 
-  const insight = await generateResponse(prompt, systemPrompt);
-
-  return (
-    `Growth Stats:\n` +
-    `Followers: ${followerGrowth >= 0 ? '+' : ''}${followerGrowth}\n` +
-    `Subscribers: ${subGrowth >= 0 ? '+' : ''}${subGrowth}\n` +
-    `${insight || ''}`
-  );
+    return (
+      'Growth Stats:\n' +
+      `Followers: ${stats.followers.count} (${stats.followers.recentFollowers} new)\n` +
+      `Subscribers: ${stats.subscribers.count}\n` +
+      `Channel Points: ${stats.subscribers.points}\n` +
+      `${insight || ''}`
+    );
+  } catch (error) {
+    logger.error('Error getting growth stats:', error);
+    return 'Unable to get growth stats at this time.';
+  }
 }
 
 // Get trending segments
@@ -144,7 +125,9 @@ export async function getTrendingSegments() {
   }
 
   // Find segments with highest viewer counts
-  const sortedSegments = [...streamData.segments].sort((a, b) => b.viewers - a.viewers).slice(0, 3);
+  const sortedSegments = [...streamData.segments]
+    .sort((a, b) => b.viewers - a.viewers)
+    .slice(0, 3);
 
   // Generate AI analysis of the trending segments
   const prompt = `Analyze these top performing stream segments and suggest why they might have been successful: ${JSON.stringify(sortedSegments)}`;
@@ -159,13 +142,14 @@ export async function getTrendingSegments() {
 // Get viewer retention insights
 export async function getRetentionInsights() {
   // Calculate retention metrics
-  const segments = streamData.segments;
+  const { segments } = streamData;
   if (segments.length < 2) {
     return 'Not enough data to analyze viewer retention yet.';
   }
 
   const retentionData = {
-    averageViewers: segments.reduce((sum, seg) => sum + seg.viewers, 0) / segments.length,
+    averageViewers:
+      segments.reduce((sum, seg) => sum + seg.viewers, 0) / segments.length,
     viewerTrend: segments[segments.length - 1].viewers - segments[0].viewers,
     peakRetention: Math.max(...segments.map((s) => s.viewers)),
     totalSegments: segments.length,
@@ -184,18 +168,16 @@ export async function getRetentionInsights() {
 // Reset stream data
 export function resetStreamData() {
   streamData.peakViewers = { count: 0, timestamp: null };
-  streamData.followers = { initial: 0, current: 0, history: [] };
-  streamData.subscribers = { initial: 0, current: 0, history: [] };
   streamData.segments = [];
   streamData.chatActivity = [];
   streamData.raids = [];
   streamData.clips = [];
 }
 
+// Export all functions
 export default {
+  initializeMetrics,
   updatePeakViewers,
-  updateFollowers,
-  updateSubscribers,
   addChatActivity,
   addRaid,
   addClip,

@@ -1,429 +1,205 @@
-<<<<<<< HEAD
 import logger from '../utils/logger.js';
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 class FollowProtection {
   constructor() {
-    this.followHistory = new Map(); // Store follow history by userId
-    this.followRateWindow = new Map(); // Track follows within time windows
-    this.suspiciousFollowers = new Map(); // Track suspicious followers
-    this.silentMode = false;
-    this.silentModeTimeout = null;
-
-    // Configuration
-    this.config = {
-      minAccountAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-      maxFollowsPerMinute: 5,
-      silentModeDuration: 5 * 60 * 1000, // 5 minutes in milliseconds
-      rateWindowDuration: 60 * 1000, // 1 minute in milliseconds
-    };
+    this.protectionData = this.loadProtectionData();
+    this.initializeData();
   }
 
-  updateConfig(key, value) {
-    if (!(key in this.config)) {
-      throw new Error(`Invalid config key: ${key}`);
-    }
-
-    // Convert time-based values to milliseconds
-    if (key === 'minAccountAge') {
-      // Value is in hours
-      this.config[key] = value * 60 * 60 * 1000;
-    } else if (key === 'silentModeDuration') {
-      // Value is in minutes
-      this.config[key] = value * 60 * 1000;
-    } else {
-      this.config[key] = value;
-    }
-
-    logger.info(`Updated follow protection config: ${key} = ${value}`);
-    return this.config[key];
-  }
-
-  getConfig() {
-    return {
-      minAccountAge: this.config.minAccountAge / (60 * 60 * 1000), // Convert to hours
-      maxFollowsPerMinute: this.config.maxFollowsPerMinute,
-      silentModeDuration: this.config.silentModeDuration / (60 * 1000), // Convert to minutes
-      rateWindowDuration: this.config.rateWindowDuration,
-    };
-  }
-
-  async isFollowSuspicious(event) {
+  loadProtectionData() {
     try {
-      const { userId, userDisplayName, userLogin } = event;
-      const now = Date.now();
+      const data = readFileSync(
+        join(process.cwd(), 'src/bot/moderation_data.json'),
+        'utf8'
+      );
+      return JSON.parse(data);
+    } catch (error) {
+      logger.error('Error loading follow protection data:', error);
+      return {
+        settings: {
+          enabled: true,
+          minAccountAge: 7, // days
+          followRateLimit: 10, // follows per hour
+        },
+        suspiciousFollowers: [],
+        followMode: {
+          enabled: false,
+          type: 'followers',
+          duration: 300,
+        },
+        stats: {
+          suspicious: 0,
+          blocked: 0,
+          falsePositives: 0,
+          totalFollows: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    }
+  }
 
-      // Check follow rate
-      this.updateFollowRate(now);
-      if (this.isRateExceeded()) {
-        logger.warn('Follow rate exceeded. Triggering silent mode.');
-        this.enableSilentMode();
-        return true;
+  saveProtectionData() {
+    try {
+      writeFileSync(
+        join(process.cwd(), 'src/bot/moderation_data.json'),
+        JSON.stringify(this.protectionData, null, 2)
+      );
+    } catch (error) {
+      logger.error('Error saving follow protection data:', error);
+    }
+  }
+
+  initializeData() {
+    if (!this.protectionData.settings) {
+      this.protectionData.settings = {
+        enabled: true,
+        minAccountAge: 7,
+        followRateLimit: 10,
+      };
+    }
+    if (!this.protectionData.suspiciousFollowers) {
+      this.protectionData.suspiciousFollowers = [];
+    }
+    if (!this.protectionData.followMode) {
+      this.protectionData.followMode = {
+        enabled: false,
+        type: 'followers',
+        duration: 300,
+      };
+    }
+    if (!this.protectionData.stats) {
+      this.protectionData.stats = {
+        suspicious: 0,
+        blocked: 0,
+        falsePositives: 0,
+        totalFollows: 0,
+        lastUpdated: new Date().toISOString(),
+      };
+    }
+  }
+
+  async checkFollower(username, accountAge, followCount) {
+    try {
+      if (!this.protectionData.settings.enabled) {
+        return { suspicious: false };
       }
 
-      // Check username patterns
-      if (this.hasSuspiciousUsername(userLogin)) {
-        logger.warn(`Suspicious username pattern detected: ${userLogin}`);
-        return true;
-      }
+      const reasons = [];
 
       // Check account age
-      const accountAge = await this.getAccountAge(userId);
-      if (accountAge < this.config.minAccountAge) {
-        logger.warn(`New account detected: ${userDisplayName} (Age: ${accountAge}ms)`);
-        return true;
+      if (accountAge < this.protectionData.settings.minAccountAge) {
+        reasons.push(
+          `Account age (${accountAge}d) below minimum (${this.protectionData.settings.minAccountAge}d)`
+        );
       }
 
-      // Track this follow
-      this.followHistory.set(userId, {
-        timestamp: now,
-        username: userDisplayName,
-      });
-
-      // If any checks failed, add to suspicious followers
-      if (
-        this.isRateExceeded() ||
-        this.hasSuspiciousUsername(userLogin) ||
-        accountAge < this.config.minAccountAge
-      ) {
-        this.suspiciousFollowers.set(userId, {
-          timestamp: now,
-          username: userDisplayName,
-          login: userLogin,
-          reason: this.getSuspiciousReason(userLogin, accountAge),
-          accountAge,
-        });
-        return true;
+      // Check follow rate
+      if (followCount > this.protectionData.settings.followRateLimit) {
+        reasons.push(
+          `Follow rate (${followCount}/h) exceeds limit (${this.protectionData.settings.followRateLimit}/h)`
+        );
       }
 
-      return false;
-    } catch (error) {
-      logger.error('Error in follow protection:', error);
-      return false; // Default to allowing follows if check fails
-    }
-  }
-
-  updateFollowRate(now) {
-    // Clean up old entries
-    for (const [timestamp] of this.followRateWindow) {
-      if (now - timestamp > this.config.rateWindowDuration) {
-        this.followRateWindow.delete(timestamp);
-      }
-    }
-
-    // Add new follow
-    this.followRateWindow.set(now, true);
-  }
-
-  isRateExceeded() {
-    return this.followRateWindow.size > this.config.maxFollowsPerMinute;
-  }
-
-  hasSuspiciousUsername(username) {
-    // Check for common bot patterns
-    const botPatterns = [
-      /\d{8,}/, // Many numbers in sequence
-      /[a-z]\d{4,}/, // Letter followed by many numbers
-      /(.)\1{4,}/, // Repeated characters
-      /[a-z]+\d+[a-z]+\d+/, // Alternating letters and numbers
-    ];
-
-    return botPatterns.some((pattern) => pattern.test(username.toLowerCase()));
-  }
-
-  async getAccountAge(userId) {
-    try {
-      // Get the Twitch client instance
-      const twitchClient = await (await import('./twitchClient.js')).default();
-
-      // Get user information from Twitch API
-      const user = await twitchClient.twitchApi.users.getUserById(userId);
-      if (!user) {
-        logger.warn(`Could not find user with ID ${userId}`);
-        return 0; // Treat as brand new account
-      }
-
-      // Calculate account age in milliseconds
-      const creationDate = new Date(user.creationDate);
-      const accountAge = Date.now() - creationDate.getTime();
-
-      logger.info(
-        `Account age for ${user.displayName}: ${accountAge}ms (created: ${creationDate.toISOString()})`
+      // Check if already marked as suspicious
+      const existingSuspicious = this.protectionData.suspiciousFollowers.find(
+        (f) => f.username.toLowerCase() === username.toLowerCase()
       );
-      return accountAge;
-    } catch (error) {
-      logger.error('Error getting account age:', error);
-      return Infinity; // Assume old account on error to avoid false positives
-    }
-  }
 
-  enableSilentMode() {
-    if (!this.silentMode) {
-      this.silentMode = true;
-      logger.info('Entering silent mode for follow announcements');
-
-      // Clear existing timeout if any
-      if (this.silentModeTimeout) {
-        clearTimeout(this.silentModeTimeout);
+      if (existingSuspicious) {
+        reasons.push(
+          `Previously marked as suspicious: ${existingSuspicious.reason}`
+        );
       }
 
-      // Set timeout to disable silent mode
-      this.silentModeTimeout = setTimeout(() => {
-        this.silentMode = false;
-        this.followRateWindow.clear();
-        logger.info('Exiting silent mode for follow announcements');
-      }, this.config.silentModeDuration);
+      if (reasons.length > 0) {
+        this.protectionData.stats.suspicious++;
+        this.protectionData.suspiciousFollowers.push({
+          username,
+          reason: reasons.join(', '),
+          timestamp: new Date().toISOString(),
+        });
+        this.saveProtectionData();
+        return { suspicious: true, reason: reasons.join(', ') };
+      }
+
+      return { suspicious: false };
+    } catch (error) {
+      logger.error('Error checking follower:', error);
+      return { suspicious: false };
     }
   }
 
-  isSilentMode() {
-    return this.silentMode;
+  async getSuspiciousFollowers() {
+    return this.protectionData.suspiciousFollowers;
   }
 
-  getSuspiciousReason(userLogin, accountAge) {
-    if (this.isRateExceeded()) {
-      return 'Follow rate exceeded';
-    }
-    if (this.hasSuspiciousUsername(userLogin)) {
-      return 'Suspicious username pattern';
-    }
-    if (accountAge < this.config.minAccountAge) {
-      return 'New account';
-    }
-    return 'Unknown';
-  }
-
-  getSuspiciousFollowers() {
-    const followers = Array.from(this.suspiciousFollowers.entries()).map(([userId, data]) => ({
-      userId,
-      ...data,
-      timestamp: new Date(data.timestamp).toISOString(),
-      accountAge: `${Math.round(data.accountAge / (1000 * 60 * 60))} hours`,
-    }));
-
-    return followers.sort((a, b) => b.timestamp - a.timestamp);
-  }
-
-  clearSuspiciousFollowers() {
-    const count = this.suspiciousFollowers.size;
-    this.suspiciousFollowers.clear();
+  async clearSuspiciousFollowers() {
+    const count = this.protectionData.suspiciousFollowers.length;
+    this.protectionData.suspiciousFollowers = [];
+    this.saveProtectionData();
     return count;
+  }
+
+  async updateSettings(settings) {
+    this.protectionData.settings = {
+      ...this.protectionData.settings,
+      ...settings,
+    };
+    this.saveProtectionData();
+    return this.protectionData.settings;
+  }
+
+  getSettings() {
+    return this.protectionData.settings;
+  }
+
+  async setFollowMode(mode) {
+    this.protectionData.followMode = {
+      ...this.protectionData.followMode,
+      ...mode,
+    };
+    this.saveProtectionData();
+    return this.protectionData.followMode;
+  }
+
+  getFollowMode() {
+    return this.protectionData.followMode;
+  }
+
+  getStats() {
+    return this.protectionData.stats;
+  }
+
+  cleanup() {
+    try {
+      // Keep only last 30 days of suspicious followers
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      this.protectionData.suspiciousFollowers =
+        this.protectionData.suspiciousFollowers.filter(
+          (follower) => new Date(follower.timestamp) > thirtyDaysAgo
+        );
+
+      // Reset stats
+      this.protectionData.stats = {
+        suspicious: this.protectionData.suspiciousFollowers.length,
+        blocked: 0,
+        falsePositives: 0,
+        totalFollows: 0,
+        lastUpdated: new Date().toISOString(),
+      };
+
+      this.saveProtectionData();
+      logger.info('Follow protection data cleaned up');
+      return true;
+    } catch (error) {
+      logger.error('Error cleaning up follow protection data:', error);
+      return false;
+    }
   }
 }
 
-// Export singleton instance
 export default new FollowProtection();
-=======
-import logger from '../utils/logger.js';
-
-class FollowProtection {
-  constructor() {
-    this.followHistory = new Map(); // Store follow history by userId
-    this.followRateWindow = new Map(); // Track follows within time windows
-    this.suspiciousFollowers = new Map(); // Track suspicious followers
-    this.silentMode = false;
-    this.silentModeTimeout = null;
-
-    // Configuration
-    this.config = {
-      minAccountAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-      maxFollowsPerMinute: 5,
-      silentModeDuration: 5 * 60 * 1000, // 5 minutes in milliseconds
-      rateWindowDuration: 60 * 1000, // 1 minute in milliseconds
-    };
-  }
-
-  updateConfig(key, value) {
-    if (!(key in this.config)) {
-      throw new Error(`Invalid config key: ${key}`);
-    }
-
-    // Convert time-based values to milliseconds
-    if (key === 'minAccountAge') {
-      // Value is in hours
-      this.config[key] = value * 60 * 60 * 1000;
-    } else if (key === 'silentModeDuration') {
-      // Value is in minutes
-      this.config[key] = value * 60 * 1000;
-    } else {
-      this.config[key] = value;
-    }
-
-    logger.info(`Updated follow protection config: ${key} = ${value}`);
-    return this.config[key];
-  }
-
-  getConfig() {
-    return {
-      minAccountAge: this.config.minAccountAge / (60 * 60 * 1000), // Convert to hours
-      maxFollowsPerMinute: this.config.maxFollowsPerMinute,
-      silentModeDuration: this.config.silentModeDuration / (60 * 1000), // Convert to minutes
-      rateWindowDuration: this.config.rateWindowDuration,
-    };
-  }
-
-  async isFollowSuspicious(event) {
-    try {
-      const { userId, userDisplayName, userLogin } = event;
-      const now = Date.now();
-
-      // Check follow rate
-      this.updateFollowRate(now);
-      if (this.isRateExceeded()) {
-        logger.warn('Follow rate exceeded. Triggering silent mode.');
-        this.enableSilentMode();
-        return true;
-      }
-
-      // Check username patterns
-      if (this.hasSuspiciousUsername(userLogin)) {
-        logger.warn(`Suspicious username pattern detected: ${userLogin}`);
-        return true;
-      }
-
-      // Check account age
-      const accountAge = await this.getAccountAge(userId);
-      if (accountAge < this.config.minAccountAge) {
-        logger.warn(`New account detected: ${userDisplayName} (Age: ${accountAge}ms)`);
-        return true;
-      }
-
-      // Track this follow
-      this.followHistory.set(userId, {
-        timestamp: now,
-        username: userDisplayName,
-      });
-
-      // If any checks failed, add to suspicious followers
-      if (
-        this.isRateExceeded() ||
-        this.hasSuspiciousUsername(userLogin) ||
-        accountAge < this.config.minAccountAge
-      ) {
-        this.suspiciousFollowers.set(userId, {
-          timestamp: now,
-          username: userDisplayName,
-          login: userLogin,
-          reason: this.getSuspiciousReason(userLogin, accountAge),
-          accountAge,
-        });
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      logger.error('Error in follow protection:', error);
-      return false; // Default to allowing follows if check fails
-    }
-  }
-
-  updateFollowRate(now) {
-    // Clean up old entries
-    for (const [timestamp] of this.followRateWindow) {
-      if (now - timestamp > this.config.rateWindowDuration) {
-        this.followRateWindow.delete(timestamp);
-      }
-    }
-
-    // Add new follow
-    this.followRateWindow.set(now, true);
-  }
-
-  isRateExceeded() {
-    return this.followRateWindow.size > this.config.maxFollowsPerMinute;
-  }
-
-  hasSuspiciousUsername(username) {
-    // Check for common bot patterns
-    const botPatterns = [
-      /\d{8,}/, // Many numbers in sequence
-      /[a-z]\d{4,}/, // Letter followed by many numbers
-      /(.)\1{4,}/, // Repeated characters
-      /[a-z]+\d+[a-z]+\d+/, // Alternating letters and numbers
-    ];
-
-    return botPatterns.some((pattern) => pattern.test(username.toLowerCase()));
-  }
-
-  async getAccountAge(userId) {
-    try {
-      // Get the Twitch client instance
-      const twitchClient = await (await import('./twitchClient.js')).default();
-
-      // Get user information from Twitch API
-      const user = await twitchClient.twitchApi.users.getUserById(userId);
-      if (!user) {
-        logger.warn(`Could not find user with ID ${userId}`);
-        return 0; // Treat as brand new account
-      }
-
-      // Calculate account age in milliseconds
-      const creationDate = new Date(user.creationDate);
-      const accountAge = Date.now() - creationDate.getTime();
-
-      logger.info(
-        `Account age for ${user.displayName}: ${accountAge}ms (created: ${creationDate.toISOString()})`
-      );
-      return accountAge;
-    } catch (error) {
-      logger.error('Error getting account age:', error);
-      return Infinity; // Assume old account on error to avoid false positives
-    }
-  }
-
-  enableSilentMode() {
-    if (!this.silentMode) {
-      this.silentMode = true;
-      logger.info('Entering silent mode for follow announcements');
-
-      // Clear existing timeout if any
-      if (this.silentModeTimeout) {
-        clearTimeout(this.silentModeTimeout);
-      }
-
-      // Set timeout to disable silent mode
-      this.silentModeTimeout = setTimeout(() => {
-        this.silentMode = false;
-        this.followRateWindow.clear();
-        logger.info('Exiting silent mode for follow announcements');
-      }, this.config.silentModeDuration);
-    }
-  }
-
-  isSilentMode() {
-    return this.silentMode;
-  }
-
-  getSuspiciousReason(userLogin, accountAge) {
-    if (this.isRateExceeded()) {
-      return 'Follow rate exceeded';
-    }
-    if (this.hasSuspiciousUsername(userLogin)) {
-      return 'Suspicious username pattern';
-    }
-    if (accountAge < this.config.minAccountAge) {
-      return 'New account';
-    }
-    return 'Unknown';
-  }
-
-  getSuspiciousFollowers() {
-    const followers = Array.from(this.suspiciousFollowers.entries()).map(([userId, data]) => ({
-      userId,
-      ...data,
-      timestamp: new Date(data.timestamp).toISOString(),
-      accountAge: `${Math.round(data.accountAge / (1000 * 60 * 60))} hours`,
-    }));
-
-    return followers.sort((a, b) => b.timestamp - a.timestamp);
-  }
-
-  clearSuspiciousFollowers() {
-    const count = this.suspiciousFollowers.size;
-    this.suspiciousFollowers.clear();
-    return count;
-  }
-}
-
-// Export singleton instance
-export default new FollowProtection();
->>>>>>> origin/master

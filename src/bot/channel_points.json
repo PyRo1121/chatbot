@@ -1,30 +1,10 @@
 {
-  "Highlight My Message": {
+  "rewards": {},
+  "redemptions": {},
+  "settings": {
     "enabled": true,
-    "cost": 500,
-    "userCooldown": 300,
-    "handler": "highlightMessage"
+    "cooldownPeriod": 300,
+    "maxPendingRedemptions": 100
   },
-  "Create Stream Marker": {
-    "enabled": true,
-    "cost": 1000,
-    "userCooldown": 60,
-    "handler": "createMarker"
-  },
-  "Create Clip": {
-    "enabled": true,
-    "cost": 1500,
-    "userCooldown": 120,
-    "handler": "createClip"
-  },
-  "Custom AI Response": {
-    "enabled": true,
-    "cost": 2000,
-    "userCooldown": 300,
-    "handler": "generateAIResponse"
-  }
-<<<<<<< HEAD
+  "lastUpdated": "2025-02-01T19:06:14.000Z"
 }
-=======
-}
->>>>>>> origin/master

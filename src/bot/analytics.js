@@ -1,453 +1,228 @@
-<<<<<<< HEAD
 import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
 
-class ViewerAnalytics {
+class Analytics {
   constructor() {
-    this.dbPath = join(process.cwd(), 'src/bot/analytics.json');
-    this.data = this.loadData();
-    this.activeViewers = new Set();
-    this.chatters = new Map(); // Track individual chatter stats
-    this.hourlyStats = new Array(24).fill(0); // Hourly viewer counts
-    this.lastUpdate = Date.now();
-    this.UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    this.analyticsData = this.loadAnalyticsData();
+    this.currentStream = {
+      startTime: null,
+      endTime: null,
+      viewers: [],
+      chatMessages: 0,
+      commands: {},
+      highlights: [],
+      raids: [],
+    };
   }
 
-  loadData() {
+  loadAnalyticsData() {
     try {
-      if (existsSync(this.dbPath)) {
-        const data = readFileSync(this.dbPath, 'utf8');
-        return JSON.parse(data);
-      }
-      // Initialize with default structure
-      const defaultData = {
+      const data = readFileSync(
+        join(process.cwd(), 'src/bot/analytics.json'),
+        'utf8'
+      );
+      return JSON.parse(data);
+    } catch (error) {
+      logger.error('Error loading analytics data:', error);
+      return {
         totalStreams: 0,
         totalHours: 0,
         peakViewers: 0,
-        averageViewers: 0,
-        topChatters: [],
         popularCommands: {},
-        viewerRetention: {
+        viewerStats: {
           new: 0,
           returning: 0,
-          regular: 0,
+          total: 0,
         },
-        streamHistory: [],
-        hourlyStats: this.hourlyStats,
-        lastUpdated: new Date().toISOString(),
+        streamHistory: {},
       };
-      this.saveData(defaultData);
-      return defaultData;
-    } catch (error) {
-      logger.error('Error loading analytics data:', error);
-      return this.getDefaultData();
     }
   }
 
-  saveData(data = this.data) {
+  saveAnalyticsData() {
     try {
-      writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
+      writeFileSync(
+        join(process.cwd(), 'src/bot/analytics.json'),
+        JSON.stringify(this.analyticsData, null, 2)
+      );
     } catch (error) {
       logger.error('Error saving analytics data:', error);
     }
   }
 
-  // Track viewer activity
-  trackViewer(username, type = 'chat') {
-    const now = Date.now();
-    this.activeViewers.add(username);
-
-    if (!this.chatters.has(username)) {
-      this.chatters.set(username, {
-        firstSeen: now,
-        lastSeen: now,
-        messageCount: 0,
-        commandsUsed: 0,
-        timeWatched: 0,
-      });
-    }
-
-    const viewer = this.chatters.get(username);
-    viewer.lastSeen = now;
-
-    if (type === 'chat') {
-      viewer.messageCount++;
-    } else if (type === 'command') {
-      viewer.commandsUsed++;
-    }
-
-    this.updateHourlyStats();
-  }
-
-  // Update hourly statistics
-  updateHourlyStats() {
-    const now = Date.now();
-    if (now - this.lastUpdate >= this.UPDATE_INTERVAL) {
-      const hour = new Date().getHours();
-      this.hourlyStats[hour] = this.activeViewers.size;
-      this.lastUpdate = now;
-
-      // Update peak viewers
-      if (this.activeViewers.size > this.data.peakViewers) {
-        this.data.peakViewers = this.activeViewers.size;
-      }
-
-      // Calculate average viewers
-      const totalViewers = this.hourlyStats.reduce((sum, count) => sum + count, 0);
-      this.data.averageViewers = Math.round(totalViewers / 24);
-
-      this.saveData();
-    }
-  }
-
-  // Track command usage
-  trackCommand(command) {
-    if (!this.data.popularCommands[command]) {
-      this.data.popularCommands[command] = 0;
-    }
-    this.data.popularCommands[command]++;
-    this.saveData();
-  }
-
-  // Start tracking a new stream session
   startStream() {
-    this.data.totalStreams++;
-    this.data.streamHistory.push({
-      startTime: new Date().toISOString(),
-      peakViewers: 0,
-      uniqueViewers: 0,
+    this.currentStream.startTime = Date.now();
+    this.analyticsData.totalStreams++;
+    logger.info('Stream analytics started');
+  }
+
+  endStream() {
+    if (!this.currentStream.startTime) {
+      return;
+    }
+
+    this.currentStream.endTime = Date.now();
+    const duration =
+      (this.currentStream.endTime - this.currentStream.startTime) /
+      1000 /
+      60 /
+      60;
+    this.analyticsData.totalHours += duration;
+
+    // Update stream history
+    const streamDate = new Date().toISOString().split('T')[0];
+    this.analyticsData.streamHistory[streamDate] = {
+      duration,
+      peakViewers: Math.max(...this.currentStream.viewers, 0),
+      chatMessages: this.currentStream.chatMessages,
+      commands: this.currentStream.commands,
+      highlights: this.currentStream.highlights,
+      raids: this.currentStream.raids,
+    };
+
+    // Save analytics
+    this.saveAnalyticsData();
+    logger.info('Stream analytics saved', {
+      duration,
+      peakViewers: Math.max(...this.currentStream.viewers, 0),
+    });
+
+    // Reset current stream
+    this.currentStream = {
+      startTime: null,
+      endTime: null,
+      viewers: [],
       chatMessages: 0,
       commands: {},
-    });
-    this.saveData();
-  }
-
-  // End current stream and save stats
-  endStream() {
-    if (this.data.streamHistory.length > 0) {
-      const currentStream = this.data.streamHistory[this.data.streamHistory.length - 1];
-      currentStream.endTime = new Date().toISOString();
-      currentStream.duration = new Date(currentStream.endTime) - new Date(currentStream.startTime);
-      currentStream.peakViewers = this.data.peakViewers;
-      currentStream.uniqueViewers = this.activeViewers.size;
-
-      // Calculate viewer retention
-      const returningViewers = Array.from(this.chatters.values()).filter(
-        (v) => v.messageCount > 1
-      ).length;
-      const regularViewers = Array.from(this.chatters.values()).filter(
-        (v) => v.messageCount > 10
-      ).length;
-
-      this.data.viewerRetention = {
-        new: this.activeViewers.size - returningViewers,
-        returning: returningViewers - regularViewers,
-        regular: regularViewers,
-      };
-
-      this.data.totalHours += currentStream.duration / (1000 * 60 * 60);
-      this.saveData();
-    }
-  }
-
-  // Get viewer engagement stats
-  getEngagementStats() {
-    const now = Date.now();
-    const activeLastHour = Array.from(this.chatters.values()).filter(
-      (v) => now - v.lastSeen < 60 * 60 * 1000
-    ).length;
-
-    return {
-      currentViewers: this.activeViewers.size,
-      activeLastHour,
-      topChatters: Array.from(this.chatters.entries())
-        .sort((a, b) => b[1].messageCount - a[1].messageCount)
-        .slice(0, 10)
-        .map(([username, stats]) => ({
-          username,
-          messages: stats.messageCount,
-          commands: stats.commandsUsed,
-        })),
-      popularCommands: Object.entries(this.data.popularCommands)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5),
-      retention: this.data.viewerRetention,
-      peakViewers: this.data.peakViewers,
-      averageViewers: this.data.averageViewers,
+      highlights: [],
+      raids: [],
     };
   }
 
-  // Get stream history stats
-  getStreamHistory(limit = 10) {
-    return this.data.streamHistory.slice(-limit).map((stream) => ({
-      date: new Date(stream.startTime).toLocaleDateString(),
-      duration: Math.round((stream.duration / (1000 * 60 * 60)) * 10) / 10,
-      peakViewers: stream.peakViewers,
-      uniqueViewers: stream.uniqueViewers,
-    }));
+  updateViewers(count) {
+    this.currentStream.viewers.push(count);
+    this.analyticsData.peakViewers = Math.max(
+      this.analyticsData.peakViewers,
+      count
+    );
   }
 
-  // Get best streaming times based on viewer counts
-  getBestStreamingTimes() {
-    const sortedHours = this.hourlyStats
-      .map((count, hour) => ({ hour, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
-
-    return sortedHours.map(({ hour, count }) => ({
-      time: `${hour}:00`,
-      averageViewers: Math.round(count),
-    }));
+  trackCommand(command) {
+    this.currentStream.commands[command] =
+      (this.currentStream.commands[command] || 0) + 1;
+    this.analyticsData.popularCommands[command] =
+      (this.analyticsData.popularCommands[command] || 0) + 1;
   }
 
-  // Clear old data to prevent memory bloat
+  trackChatMessage() {
+    this.currentStream.chatMessages++;
+  }
+
+  addHighlight(highlight) {
+    this.currentStream.highlights.push({
+      timestamp: Date.now(),
+      ...highlight,
+    });
+  }
+
+  trackRaid(raid) {
+    this.currentStream.raids.push({
+      timestamp: Date.now(),
+      ...raid,
+    });
+  }
+
+  getStats() {
+    return {
+      totalStreams: this.analyticsData.totalStreams,
+      totalHours: this.analyticsData.totalHours,
+      peakViewers: this.analyticsData.peakViewers,
+      popularCommands: Object.entries(this.analyticsData.popularCommands)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10),
+      viewerStats: this.analyticsData.viewerStats,
+      currentStream: {
+        duration: this.currentStream.startTime
+          ? (Date.now() - this.currentStream.startTime) / 1000 / 60 / 60
+          : 0,
+        viewers: this.currentStream.viewers,
+        chatMessages: this.currentStream.chatMessages,
+        highlights: this.currentStream.highlights.length,
+        raids: this.currentStream.raids.length,
+      },
+    };
+  }
+
   cleanup() {
     // Keep only last 30 days of stream history
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const cutoffDate = thirtyDaysAgo.toISOString().split('T')[0];
 
-    this.data.streamHistory = this.data.streamHistory.filter(
-      (stream) => new Date(stream.startTime) > thirtyDaysAgo
-    );
+    this.analyticsData.streamHistory = Object.entries(
+      this.analyticsData.streamHistory
+    )
+      .filter(([date]) => date >= cutoffDate)
+      .reduce((acc, [date, data]) => {
+        acc[date] = data;
+        return acc;
+      }, {});
 
-    // Clear inactive chatters (not seen in 30 days)
-    for (const [username, stats] of this.chatters.entries()) {
-      if (stats.lastSeen < thirtyDaysAgo.getTime()) {
-        this.chatters.delete(username);
-      }
-    }
-
-    this.saveData();
+    this.saveAnalyticsData();
+    logger.info('Analytics data cleaned up');
   }
 }
 
-const analytics = new ViewerAnalytics();
-export default analytics;
-=======
-import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import logger from '../utils/logger.js';
+const analytics = new Analytics();
 
-class ViewerAnalytics {
-  constructor() {
-    this.dbPath = join(process.cwd(), 'src/bot/analytics.json');
-    this.data = this.loadData();
-    this.activeViewers = new Set();
-    this.chatters = new Map(); // Track individual chatter stats
-    this.hourlyStats = new Array(24).fill(0); // Hourly viewer counts
-    this.lastUpdate = Date.now();
-    this.UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
-  }
-
-  loadData() {
-    try {
-      if (existsSync(this.dbPath)) {
-        const data = readFileSync(this.dbPath, 'utf8');
-        return JSON.parse(data);
-      }
-      // Initialize with default structure
-      const defaultData = {
-        totalStreams: 0,
-        totalHours: 0,
-        peakViewers: 0,
-        averageViewers: 0,
-        topChatters: [],
-        popularCommands: {},
-        viewerRetention: {
-          new: 0,
-          returning: 0,
-          regular: 0,
-        },
-        streamHistory: [],
-        hourlyStats: this.hourlyStats,
-        lastUpdated: new Date().toISOString(),
-      };
-      this.saveData(defaultData);
-      return defaultData;
-    } catch (error) {
-      logger.error('Error loading analytics data:', error);
-      return this.getDefaultData();
-    }
-  }
-
-  saveData(data = this.data) {
-    try {
-      writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
-    } catch (error) {
-      logger.error('Error saving analytics data:', error);
-    }
-  }
-
-  // Track viewer activity
-  trackViewer(username, type = 'chat') {
-    const now = Date.now();
-    this.activeViewers.add(username);
-
-    if (!this.chatters.has(username)) {
-      this.chatters.set(username, {
-        firstSeen: now,
-        lastSeen: now,
-        messageCount: 0,
-        commandsUsed: 0,
-        timeWatched: 0,
-      });
-    }
-
-    const viewer = this.chatters.get(username);
-    viewer.lastSeen = now;
-
-    if (type === 'chat') {
-      viewer.messageCount++;
-    } else if (type === 'command') {
-      viewer.commandsUsed++;
-    }
-
-    this.updateHourlyStats();
-  }
-
-  // Update hourly statistics
-  updateHourlyStats() {
-    const now = Date.now();
-    if (now - this.lastUpdate >= this.UPDATE_INTERVAL) {
-      const hour = new Date().getHours();
-      this.hourlyStats[hour] = this.activeViewers.size;
-      this.lastUpdate = now;
-
-      // Update peak viewers
-      if (this.activeViewers.size > this.data.peakViewers) {
-        this.data.peakViewers = this.activeViewers.size;
-      }
-
-      // Calculate average viewers
-      const totalViewers = this.hourlyStats.reduce((sum, count) => sum + count, 0);
-      this.data.averageViewers = Math.round(totalViewers / 24);
-
-      this.saveData();
-    }
-  }
-
-  // Track command usage
-  trackCommand(command) {
-    if (!this.data.popularCommands[command]) {
-      this.data.popularCommands[command] = 0;
-    }
-    this.data.popularCommands[command]++;
-    this.saveData();
-  }
-
-  // Start tracking a new stream session
-  startStream() {
-    this.data.totalStreams++;
-    this.data.streamHistory.push({
-      startTime: new Date().toISOString(),
-      peakViewers: 0,
-      uniqueViewers: 0,
-      chatMessages: 0,
-      commands: {},
-    });
-    this.saveData();
-  }
-
-  // End current stream and save stats
-  endStream() {
-    if (this.data.streamHistory.length > 0) {
-      const currentStream = this.data.streamHistory[this.data.streamHistory.length - 1];
-      currentStream.endTime = new Date().toISOString();
-      currentStream.duration = new Date(currentStream.endTime) - new Date(currentStream.startTime);
-      currentStream.peakViewers = this.data.peakViewers;
-      currentStream.uniqueViewers = this.activeViewers.size;
-
-      // Calculate viewer retention
-      const returningViewers = Array.from(this.chatters.values()).filter(
-        (v) => v.messageCount > 1
-      ).length;
-      const regularViewers = Array.from(this.chatters.values()).filter(
-        (v) => v.messageCount > 10
-      ).length;
-
-      this.data.viewerRetention = {
-        new: this.activeViewers.size - returningViewers,
-        returning: returningViewers - regularViewers,
-        regular: regularViewers,
-      };
-
-      this.data.totalHours += currentStream.duration / (1000 * 60 * 60);
-      this.saveData();
-    }
-  }
-
-  // Get viewer engagement stats
-  getEngagementStats() {
-    const now = Date.now();
-    const activeLastHour = Array.from(this.chatters.values()).filter(
-      (v) => now - v.lastSeen < 60 * 60 * 1000
-    ).length;
-
-    return {
-      currentViewers: this.activeViewers.size,
-      activeLastHour,
-      topChatters: Array.from(this.chatters.entries())
-        .sort((a, b) => b[1].messageCount - a[1].messageCount)
-        .slice(0, 10)
-        .map(([username, stats]) => ({
-          username,
-          messages: stats.messageCount,
-          commands: stats.commandsUsed,
-        })),
-      popularCommands: Object.entries(this.data.popularCommands)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5),
-      retention: this.data.viewerRetention,
-      peakViewers: this.data.peakViewers,
-      averageViewers: this.data.averageViewers,
-    };
-  }
-
-  // Get stream history stats
-  getStreamHistory(limit = 10) {
-    return this.data.streamHistory.slice(-limit).map((stream) => ({
-      date: new Date(stream.startTime).toLocaleDateString(),
-      duration: Math.round((stream.duration / (1000 * 60 * 60)) * 10) / 10,
-      peakViewers: stream.peakViewers,
-      uniqueViewers: stream.uniqueViewers,
-    }));
-  }
-
-  // Get best streaming times based on viewer counts
-  getBestStreamingTimes() {
-    const sortedHours = this.hourlyStats
-      .map((count, hour) => ({ hour, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
-
-    return sortedHours.map(({ hour, count }) => ({
-      time: `${hour}:00`,
-      averageViewers: Math.round(count),
-    }));
-  }
-
-  // Clear old data to prevent memory bloat
-  cleanup() {
-    // Keep only last 30 days of stream history
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    this.data.streamHistory = this.data.streamHistory.filter(
-      (stream) => new Date(stream.startTime) > thirtyDaysAgo
-    );
-
-    // Clear inactive chatters (not seen in 30 days)
-    for (const [username, stats] of this.chatters.entries()) {
-      if (stats.lastSeen < thirtyDaysAgo.getTime()) {
-        this.chatters.delete(username);
-      }
-    }
-
-    this.saveData();
-  }
+export function initializeAnalytics() {
+  analytics.startStream();
+  return {
+    startTime: analytics.currentStream.startTime,
+    status: 'initialized',
+  };
 }
 
-const analytics = new ViewerAnalytics();
+export async function endAnalytics() {
+  const stats = analytics.getStats();
+  analytics.endStream();
+  return {
+    stats: {
+      peakViewers: stats.peakViewers,
+      averageViewers: Math.round(
+        stats.currentStream.viewers.reduce((a, b) => a + b, 0) /
+          stats.currentStream.viewers.length
+      ),
+      totalMessages: stats.currentStream.chatMessages,
+      activeViewers: Object.entries(stats.popularCommands)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([user]) => user),
+    },
+    health: {
+      status: 'healthy',
+      score: 100,
+      bitrate: {
+        average: 6000,
+        stability: 'stable',
+      },
+    },
+    performance: {
+      bestCategory: 'Just Chatting',
+      viewerRetention: 85,
+      averageEngagement: 75,
+      improvements: [
+        'Consider longer streams to build viewer retention',
+        'Try more interactive segments to boost chat engagement',
+      ],
+    },
+  };
+}
+
+export async function handleRaid(username, viewers) {
+  analytics.trackRaid({ username, viewers });
+  return `Thanks for the raid, ${username}! Welcome ${viewers} new viewers! 🎉`;
+}
+
 export default analytics;
->>>>>>> origin/master

@@ -2,7 +2,7 @@
   "semi": true,
   "trailingComma": "es5",
   "singleQuote": true,
-  "printWidth": 100,
+  "printWidth": 80,
   "tabWidth": 2,
   "useTabs": false,
   "bracketSpacing": true,
@@ -12,5 +12,29 @@
   "quoteProps": "as-needed",
   "proseWrap": "preserve",
   "htmlWhitespaceSensitivity": "css",
-  "embeddedLanguageFormatting": "auto"
+  "embeddedLanguageFormatting": "auto",
+  "jsxSingleQuote": true,
+  "parser": "babel",
+  "requirePragma": false,
+  "insertPragma": false,
+  "overrides": [
+    {
+      "files": "*.{ts,tsx}",
+      "options": {
+        "parser": "typescript"
+      }
+    },
+    {
+      "files": "*.{css,scss,less}",
+      "options": {
+        "parser": "css"
+      }
+    },
+    {
+      "files": "*.{json,jsonc}",
+      "options": {
+        "parser": "json"
+      }
+    }
+  ]
 }

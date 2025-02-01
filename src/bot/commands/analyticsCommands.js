@@ -55,7 +55,9 @@ export const analyticsCommands = {
   '!highlight': async (description = '') => {
     try {
       const result = await engagementFeatures.createHighlight(description);
-      return result.success ? `Created highlight: ${result.title}` : 'Failed to create highlight.';
+      return result.success
+        ? `Created highlight: ${result.title}`
+        : 'Failed to create highlight.';
     } catch (error) {
       logger.error('Error creating highlight:', error);
       return 'Unable to create highlight at this time.';
@@ -84,7 +86,10 @@ export const analyticsCommands = {
   '!title': async (description = '') => {
     try {
       const currentCategory = contentOptimization.getCurrentCategory();
-      return await contentOptimization.generateStreamTitle(currentCategory, description);
+      return await contentOptimization.generateStreamTitle(
+        currentCategory,
+        description
+      );
     } catch (error) {
       logger.error('Error generating title:', error);
       return 'Unable to generate stream title at this time.';
@@ -104,7 +109,10 @@ export const analyticsCommands = {
     try {
       const currentCategory = contentOptimization.getCurrentCategory();
       const currentTitle = contentOptimization.getCurrentTitle();
-      return await contentOptimization.getTagRecommendations(currentCategory, currentTitle);
+      return await contentOptimization.getTagRecommendations(
+        currentCategory,
+        currentTitle
+      );
     } catch (error) {
       logger.error('Error getting tag recommendations:', error);
       return 'Unable to get tag recommendations at this time.';
@@ -118,10 +126,13 @@ export const analyticsCommands = {
     }
     try {
       // Remove @ symbol if present
-      username = username.replace('@', '');
+      const cleanUsername = username.replace('@', '');
       // Get channel info (you'll need to implement this using Twitch API)
-      const channelInfo = await getChannelInfo(username);
-      return await communityFeatures.generateEnhancedShoutout(username, channelInfo);
+      const channelInfo = await getChannelInfo(cleanUsername);
+      return await communityFeatures.generateEnhancedShoutout(
+        username,
+        channelInfo
+      );
     } catch (error) {
       logger.error('Error generating shoutout:', error);
       return `Check out @${username}! They're awesome!`;
@@ -132,7 +143,10 @@ export const analyticsCommands = {
     try {
       const currentCategory = contentOptimization.getCurrentCategory();
       const viewerCount = await getCurrentViewerCount(); // Implement this using Twitch API
-      return await communityFeatures.getRaidSuggestions(currentCategory, viewerCount);
+      return await communityFeatures.getRaidSuggestions(
+        currentCategory,
+        viewerCount
+      );
     } catch (error) {
       logger.error('Error getting raid suggestions:', error);
       return 'Unable to get raid suggestions at this time.';
@@ -159,21 +173,48 @@ export const analyticsCommands = {
   },
 };
 
-// Helper function to get channel info (implement using Twitch API)
+let twitchClient;
+
+export function initializeAnalytics(client) {
+  twitchClient = client;
+}
+
+// Helper function to get channel info using Twurple
 async function getChannelInfo(username = '') {
-  // TODO: Implement using Twitch API
-  return {
-    username,
-    lastStream: new Date(),
-    category: 'Unknown',
-    title: 'Unknown',
-  };
+  try {
+    const user = await twitchClient.twitchApi.users.getUserByName(username);
+    if (!user) return null;
+
+    const channel = await twitchClient.twitchApi.channels.getChannelInfo(user.id);
+    const stream = await twitchClient.twitchApi.streams.getStreamByUserId(user.id);
+
+    return {
+      username: user.displayName,
+      lastStream: stream?.startDate || null,
+      category: channel.gameName || 'Unknown',
+      title: channel.title || 'Unknown',
+      id: user.id,
+      profileImage: user.profilePictureUrl,
+      description: channel.description || ''
+    };
+  } catch (error) {
+    logger.error('Error getting channel info:', error);
+    return null;
+  }
 }
 
-// Helper function to get current viewer count (implement using Twitch API)
+// Helper function to get current viewer count using Twurple
 async function getCurrentViewerCount() {
-  // TODO: Implement using Twitch API
-  return 0;
+  try {
+    const stream = await twitchClient.twitchApi.streams.getStreamByUserId(twitchClient.configuration.userId);
+    return stream?.viewerCount || 0;
+  } catch (error) {
+    logger.error('Error getting viewer count:', error);
+    return 0;
+  }
 }
 
-export default analyticsCommands;
+export default {
+  ...analyticsCommands,
+  initializeAnalytics
+};

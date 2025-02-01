@@ -15,7 +15,8 @@ class AIOverlaySystem {
   }
 
   updateMoodState() {
-    const avg = this.moodHistory.reduce((a, b) => a + b, 0) / this.moodHistory.length;
+    const avg =
+      this.moodHistory.reduce((a, b) => a + b, 0) / this.moodHistory.length;
     if (avg > 0) {
       this.currentMood = 'positive';
     } else if (avg < 0) {

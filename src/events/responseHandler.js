@@ -1,155 +1,102 @@
-import logger from '../utils/logger.js';
-<<<<<<< HEAD
-import { generateResponse } from '../utils/openai.js';
-=======
 import { generateResponse } from '../utils/perplexity.js';
->>>>>>> origin/master
+import logger from '../utils/logger.js';
 import spotify from '../spotify/spotify.js';
 
-export async function handleMessage(twitchClient, channel, tags, message) {
-  // Handle Spotify commands
-  if (message.startsWith('!nowplaying')) {
-    const track = await spotify.getCurrentTrack();
-    if (track) {
-      twitchClient.say(channel, `🎵 Now Playing: ${track.name} by ${track.artist}`);
-    } else {
-      twitchClient.say(channel, 'No track is currently playing.');
-    }
-    return;
+class ResponseHandler {
+  constructor() {
+    this.responsePatterns = new Map();
+    this.initializePatterns();
   }
 
-  if (message.startsWith('!request') || message.startsWith('!songrequest')) {
-    const command = message.startsWith('!request') ? '!request' : '!songrequest';
-    const query = message.slice(command.length).trim();
-    if (!query) {
-      twitchClient.say(channel, 'Please specify a song to request!');
-      return;
-    }
-
-    const track = await spotify.searchTrack(query);
-    if (!track) {
-      twitchClient.say(channel, 'Could not find that song.');
-      return;
-    }
-
-    if (track.error) {
-      twitchClient.say(channel, track.message);
-      return;
-    }
-
-    const success = await spotify.addToQueue(track.uri);
-    if (success) {
-      twitchClient.say(channel, `🎵 Added to queue: ${track.name} by ${track.artists[0].name}`);
-    } else {
-      twitchClient.say(channel, 'Failed to add song to queue.');
-    }
-    return;
-  }
-
-  if (message.startsWith('!queue')) {
-    const queue = spotify.getQueue();
-    if (queue.length === 0) {
-      twitchClient.say(channel, 'The queue is empty.');
-    } else {
-      twitchClient.say(channel, `🎵 Queue: ${queue.length} songs`);
-    }
-    return;
-  }
-
-  if (message.trim().toLowerCase().startsWith('!commands')) {
-    const commands = [
-      '!nowplaying - Shows the currently playing track',
-      '!request <song/artist> - Request a song by name, artist, or both to be added to the queue',
-      '!queue - Shows the current queue status',
-      '!commands - Lists all available commands',
-    ];
-    twitchClient.say(channel, `🔥🐷 Available commands: ${commands.join(' | ')} 🔥🐷`);
-    return;
-  }
-
-  // AI-generated responses to keep chat engaging
-  try {
-    const response = await generateResponse(message);
-    if (response) {
-      twitchClient.say(channel, response);
-      logger.info(`Responded to ${tags.username}: ${response}`);
-    }
-  } catch (error) {
-    logger.error('Error generating AI response:', error);
-  }
-}
-
-export async function handleFollow(twitchClient, channel, username) {
-  try {
-    const response = await generateResponse(`New follower: ${username}`);
-    if (response) {
-      twitchClient.say(channel, response);
-      logger.info(`Responded to follow from ${username}: ${response}`);
-    }
-  } catch (error) {
-    logger.error('Error handling follow:', error);
-  }
-}
-
-export async function handleSub(twitchClient, channel, username, method, message) {
-  try {
-    const response = await generateResponse(
-      `New sub: ${username}${message ? ` saying: ${message}` : ''}`
+  initializePatterns() {
+    // Add basic response patterns
+    this.responsePatterns.set(/thank.*bot/i, (message) =>
+      this.generateThankYouResponse(message)
     );
-    if (response) {
-      twitchClient.say(channel, response);
-      logger.info(`Responded to sub from ${username} using ${method}: ${response}`);
+    this.responsePatterns.set(
+      /good.*bot/i,
+      () => '🤖 💚 Thank you! I try my best to help!'
+    );
+    this.responsePatterns.set(
+      /bad.*bot/i,
+      () => "🤖 I apologize for any issues. I'm always trying to improve!"
+    );
+    this.responsePatterns.set(
+      /what.*commands/i,
+      () => 'Type !help to see all available commands!'
+    );
+  }
+
+  async handleMessage(message, username) {
+    try {
+      // Check for song requests
+      if (
+        message.toLowerCase().startsWith('!sr ') ||
+        message.toLowerCase().startsWith('!songrequest ')
+      ) {
+        return await this.handleSongRequest(message, username);
+      }
+
+      // Check for custom patterns
+      for (const [pattern, handler] of this.responsePatterns) {
+        if (pattern.test(message)) {
+          return await handler(message);
+        }
+      }
+
+      // Generate response for direct mentions
+      if (
+        message
+          .toLowerCase()
+          .includes(process.env.BOT_USERNAME?.toLowerCase() || '')
+      ) {
+        return await this.generateChatResponse(message);
+      }
+
+      return null;
+    } catch (error) {
+      logger.error('Error handling message:', error);
+      return null;
     }
-  } catch (error) {
-    logger.error('Error handling sub:', error);
   }
-}
 
-export async function handleRaid(twitchClient, channel, username, viewers) {
-  try {
-    const response = await generateResponse(`Raid from ${username} with ${viewers} viewers`);
-    if (response) {
-      twitchClient.say(channel, response);
-      logger.info(`Responded to raid from ${username} with ${viewers} viewers: ${response}`);
+  async handleSongRequest(message, username) {
+    try {
+      const query = message.split(' ').slice(1).join(' ');
+      const result = await spotify.handleSongRequest(query, username);
+      return result;
+    } catch (error) {
+      logger.error('Error handling song request:', error);
+      return 'Sorry, there was an error processing your song request.';
     }
-  } catch (error) {
-    logger.error('Error handling raid:', error);
+  }
+
+  async generateThankYouResponse(message) {
+    try {
+      const prompt = `Generate a friendly and appreciative response to this thank you message: "${message}". 
+      Keep it concise (max 100 characters) and use emojis appropriately.`;
+
+      const response = await generateResponse(prompt);
+      return response || "🤖 You're welcome! Happy to help! 💚";
+    } catch (error) {
+      logger.error('Error generating thank you response:', error);
+      return "🤖 You're welcome! Happy to help! 💚";
+    }
+  }
+
+  async generateChatResponse(message) {
+    try {
+      const prompt = `Generate a friendly and engaging response to this Twitch chat message: "${message}".
+      Keep it concise (max 200 characters) and appropriate for stream chat.
+      Use emojis where appropriate.`;
+
+      const response = await generateResponse(prompt);
+      return response || 'Thanks for chatting with me! 🤖';
+    } catch (error) {
+      logger.error('Error generating chat response:', error);
+      return 'Thanks for chatting with me! 🤖';
+    }
   }
 }
 
-export async function generateCheekyResponse(username, eventType, eventData) {
-  // Wait for any potential async operations
-  await new Promise((resolve) => setTimeout(resolve, 100));
-
-  const baseResponses = {
-    sub: [
-      `🔥🐷 ${username} just subscribed${eventData?.method ? ` with ${eventData.method}` : ''}! Oink oink! 🔥🐷`,
-      `🔥🐷 ${username} joined the pig pen${eventData?.message ? ` saying "${eventData.message}"` : ''}! 🔥🐷`,
-      `🔥🐷 ${username} is now part of the fire pig family! 🔥🐷`,
-    ],
-    resub: [
-      `🔥🐷 ${username} is back for ${eventData?.months || 'another'} month${eventData?.months > 1 ? 's' : ''}! Oink oink! 🔥🐷`,
-      `🔥🐷 ${username} keeps the fire burning${eventData?.message ? ` and says "${eventData.message}"` : ''}! 🔥🐷`,
-      `🔥🐷 ${username} is still here roasting with us! 🔥🐷`,
-    ],
-    raid: [
-      `🔥🐷 ${username} is raiding with ${eventData?.viewers || 'an army of'} viewer${eventData?.viewers !== 1 ? 's' : ''}! Oink oink! 🔥🐷`,
-      `🔥🐷 ${username} brought the heat with ${eventData?.viewers || 'their'} raiders! 🔥🐷`,
-      `🔥🐷 ${username} is here to roast with us! Welcome raiders! 🔥🐷`,
-    ],
-    follow: [
-      `🔥🐷 ${username} just followed! Oink oink! 🔥🐷`,
-      `🔥🐷 ${username} joined the fire pig squad! 🔥🐷`,
-      `🔥🐷 ${username} is now part of the pig pen! 🔥🐷`,
-    ],
-  };
-
-  const responses = baseResponses[eventType];
-  if (!responses) {
-    logger.warn(`Unknown event type: ${eventType}`);
-    return `🔥🐷 Thanks for the support, ${username}! 🔥🐷`;
-  }
-
-  const randomIndex = Math.floor(Math.random() * responses.length);
-  return responses[randomIndex];
-}
+export default new ResponseHandler();

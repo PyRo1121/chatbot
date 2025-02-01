@@ -1,63 +1,61 @@
-<<<<<<< HEAD
-import viewerManager from '../viewerManager.js';
+import { generateResponse } from '../../utils/perplexity.js';
+import logger from '../../utils/logger.js';
 
-export const handleShoutout = {
-  name: 'shoutout',
-  description: 'Give a shoutout to another streamer',
-  usage: '!shoutout <username>',
-  async execute(client, channel, tags, args) {
-    const username = args[0]?.replace('@', '').toLowerCase();
+export async function handleShoutout(twitchClient, channel, user, args) {
+  if (!args || args.length === 0) {
+    return 'Please specify a user to shoutout';
+  }
 
-    if (!username) {
-      return client.say(
-        channel,
-        'Please specify a username to shoutout! Usage: !shoutout <username>'
-      );
+  const targetUser = args[0].replace('@', '');
+
+  try {
+    // Get channel info from Twitch API
+    const channelInfo =
+      await twitchClient.twitchApi.users.getUserByName(targetUser);
+    if (!channelInfo) {
+      return `Hey everyone! Check out @${targetUser} over at twitch.tv/${targetUser}! They're awesome! 🎮`;
     }
 
-    // Don't allow self-shoutouts
-    if (username === tags.username.toLowerCase()) {
-      return client.say(channel, "Nice try, but you can't shoutout yourself!");
-    }
+    // Get their stream info
+    const stream = await twitchClient.twitchApi.streams.getStreamByUserId(
+      channelInfo.id
+    );
+    const channelData = {
+      name: targetUser,
+      displayName: channelInfo.displayName,
+      lastGame: stream?.gameName || 'various games',
+      isLive: !!stream,
+      currentGame: stream?.gameName,
+      title: stream?.title,
+      description: channelInfo.description || 'awesome content',
+    };
 
-    try {
-      const message = await viewerManager.generateShoutout(username);
-      return client.say(channel, message);
-    } catch (error) {
-      console.error('Error executing shoutout command:', error);
-      return client.say(channel, `Check out @${username}! They're awesome!`);
-    }
-  },
-};
-=======
-import viewerManager from '../viewerManager.js';
+    // Create a witty prompt using their actual data
+    const prompt = `Create a funny and witty Twitch shoutout for ${channelData.displayName} that includes these details in a natural way:
+    - They ${channelData.isLive ? `are live playing ${channelData.currentGame}` : `were last seen playing ${channelData.lastGame}`}
+    - Their channel description: "${channelData.description}"
+    - Stream title (if live): "${channelData.title || ''}"
 
-export const handleShoutout = {
-  name: 'shoutout',
-  description: 'Give a shoutout to another streamer',
-  usage: '!shoutout <username>',
-  async execute(client, channel, tags, args) {
-    const username = args[0]?.replace('@', '').toLowerCase();
+    Make it humorous and witty but friendly, around 300-400 characters. Include their URL (twitch.tv/${targetUser}) and some fitting emojis.
+    Focus on being entertaining while highlighting their actual content.
+    
+    Example style: "Hold onto your keyboards, chat! The legendary [name] is here, fresh from [funny reference to their game/content]! When they're not [witty comment about their description], they're busy [humorous take on their stream title/content]. Don't miss out - catch the action at [url]! 🎮 ✨"`;
 
-    if (!username) {
-      return client.say(
-        channel,
-        'Please specify a username to shoutout! Usage: !shoutout <username>'
-      );
-    }
+    const response = await generateResponse(prompt);
 
-    // Don't allow self-shoutouts
-    if (username === tags.username.toLowerCase()) {
-      return client.say(channel, "Nice try, but you can't shoutout yourself!");
-    }
+    // Clean up any potential markdown or formatting
+    const cleanResponse = response
+      ?.replace(/[*_`#"'-]/g, '') // Remove markdown characters and quotes
+      ?.replace(/\n/g, ' ') // Replace newlines with spaces
+      ?.replace(/\s+/g, ' ') // Normalize spaces
+      ?.trim();
 
-    try {
-      const message = await viewerManager.generateShoutout(username);
-      return client.say(channel, message);
-    } catch (error) {
-      console.error('Error executing shoutout command:', error);
-      return client.say(channel, `Check out @${username}! They're awesome!`);
-    }
-  },
-};
->>>>>>> origin/master
+    return (
+      cleanResponse ||
+      `Hey everyone! Check out @${targetUser} over at twitch.tv/${targetUser}! They're awesome! 🎮`
+    );
+  } catch (error) {
+    logger.error('Error generating shoutout:', error);
+    return `Hey everyone! Check out @${targetUser} over at twitch.tv/${targetUser}! They're awesome! 🎮`;
+  }
+}

@@ -1,376 +1,392 @@
-import SpotifyWebApi from 'spotify-web-api-node';
-import logger from '../utils/logger.js';
-<<<<<<< HEAD
-import { generateResponse, analyzeAudioFromUrl } from '../utils/openai.js';
-=======
 import { generateResponse } from '../utils/perplexity.js';
->>>>>>> origin/master
+import logger from '../utils/logger.js';
 import songLearning from './songLearning.js';
+import spotifyAuth from '../auth/spotifyAuth.js';
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
-// Helper function for retrying operations
-function retryOperation(operation, maxAttempts = 5, baseDelay = 2000) {
-  const attempt = async (attemptNumber) => {
-    try {
-      return await operation();
-    } catch (error) {
-      if (attemptNumber >= maxAttempts) {
-        throw error;
-      }
-      const delay = baseDelay * Math.pow(2, attemptNumber - 1);
-      logger.info(`Attempt ${attemptNumber} failed, retrying in ${delay}ms...`);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      return attempt(attemptNumber + 1);
-    }
-  };
-
-  return attempt(1);
-}
-
-class SpotifyClient {
+class SpotifyManager {
   constructor() {
-    this.queue = [];
-    this.currentTrack = null;
-    this.api = new SpotifyWebApi({
-      clientId: process.env.SPOTIFY_CLIENT_ID,
-      clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-      redirectUri: process.env.SPOTIFY_REDIRECT_URI,
-      refreshToken: process.env.SPOTIFY_REFRESH_TOKEN,
-    });
-
-    if (process.env.SPOTIFY_REFRESH_TOKEN) {
-      this.refreshUserAccessToken();
-      setInterval(() => this.refreshUserAccessToken(), 3500 * 1000); // Refresh every 58 minutes
-    }
+    this.songQueue = this.loadSongQueue();
+    this.currentSong = null;
+    this.skipVotes = new Map();
+    this.voteThreshold = 3;
   }
 
-  async refreshUserAccessToken() {
+  loadSongQueue() {
     try {
-      const data = await this.api.refreshAccessToken();
-      this.api.setAccessToken(data.body['access_token']);
-      logger.info('Spotify user access token refreshed');
-    } catch (error) {
-      logger.error('Error refreshing Spotify user token:', error);
-    }
-  }
+      const data = readFileSync(
+        join(process.cwd(), 'src/spotify/song_queue.json'),
+        'utf8'
+      );
+      const parsed = JSON.parse(data);
 
-  getAuthorizationUrl() {
-    const scopes = [
-      'user-read-currently-playing',
-      'user-read-playback-state',
-      'user-modify-playback-state',
-      'user-read-private',
-      'user-read-email',
-      'playlist-read-private',
-      'playlist-read-collaborative',
-      'playlist-modify-public',
-      'playlist-modify-private',
-    ];
-    return this.api.createAuthorizeURL(scopes, 'state');
-  }
-
-  async authorize(code) {
-    try {
-      const data = await this.api.authorizationCodeGrant(code);
-      this.api.setAccessToken(data.body['access_token']);
-      this.api.setRefreshToken(data.body['refresh_token']);
-      return data.body;
-    } catch (error) {
-      logger.error('Error during Spotify authorization:', error);
-      throw error;
-    }
-  }
-
-  async getCurrentTrack() {
-    try {
-      const response = await this.api.getMyCurrentPlayingTrack();
-      if (!response.body || !response.body.item) {
-        return null;
+      // If the file contains just an array, migrate it to the new structure
+      if (Array.isArray(parsed)) {
+        return {
+          queue: parsed,
+          history: [],
+          settings: {
+            maxQueueLength: 50,
+            userSongLimit: 3,
+            duplicateDelay: 3600, // 1 hour in seconds
+          },
+        };
       }
 
-      const track = response.body.item;
-      this.currentTrack = {
-        name: track.name,
-        artist: track.artists.map((a) => a.name).join(', '),
-        album: track.album.name,
-        duration: track.duration_ms,
-        progress: response.body.progress_ms,
-        is_playing: response.body.is_playing,
-        url: track.external_urls.spotify,
+      // Ensure all required properties exist
+      return {
+        queue: parsed.queue || [],
+        history: parsed.history || [],
+        settings: {
+          maxQueueLength: parsed.settings?.maxQueueLength || 50,
+          userSongLimit: parsed.settings?.userSongLimit || 3,
+          duplicateDelay: parsed.settings?.duplicateDelay || 3600,
+        },
       };
-      return this.currentTrack;
     } catch (error) {
-      logger.error('Error getting current track:', error);
-      return null;
+      logger.error('Error loading song queue:', error);
+      return {
+        queue: [],
+        history: [],
+        settings: {
+          maxQueueLength: 50,
+          userSongLimit: 3,
+          duplicateDelay: 3600, // 1 hour in seconds
+        },
+      };
     }
   }
 
-  // Funny rejection messages
-  rejectionMessages = [
-    'Nice try, but that song is too spicy for this chat! 🌶️',
-    'That request made my circuits tingle... in a bad way! ⚡',
-    "I'm a bot, not a fool! Try again with something less... problematic 😅",
-    "Even my AI brain knows that's not appropriate! 🤖",
-    'That song request just got yeeted into the void 🕳️',
-    "I'd play that... if I wanted to get banned! 😬",
-  ];
-
-  getRandomRejection() {
-    return this.rejectionMessages[Math.floor(Math.random() * this.rejectionMessages.length)];
-  }
-
-  async isContentAppropriate(text) {
+  saveSongQueue() {
     try {
-      const prompt = `Analyze this text for ONLY these two specific criteria:
-1. Explicitly racist content/slurs (NOT regular rap lyrics or mentions of race)
-2. Known troll/meme songs (ONLY obvious ones like Rick Roll, Baby Shark, etc.)
-
-Text to analyze: "${text}"
-
-IMPORTANT:
-- DO allow all rap music (including explicit content)
-- DO allow songs about violence, drugs, or adult themes
-- DO allow any real song that isn't explicitly racist
-- ONLY block obvious troll songs or explicitly racist content
-
-Respond ONLY with "true" if it should be allowed (which is most cases) or "false" if it contains explicit racism or is a known troll song.`;
-
-      const response = await generateResponse(prompt);
-      return response?.toLowerCase()?.trim() === 'true';
+      writeFileSync(
+        join(process.cwd(), 'src/spotify/song_queue.json'),
+        JSON.stringify(this.songQueue, null, 2)
+      );
     } catch (error) {
-      logger.error('Error analyzing content:', error);
-      return true; // Default to allowing if analysis fails
+      logger.error('Error saving song queue:', error);
     }
   }
 
   async searchTrack(query) {
-    try {
-      // Check if query is appropriate
-      if (!(await this.isContentAppropriate(query))) {
-        songLearning.recordRejectedSong(query, '', 'inappropriate_content');
-        return {
-          error: true,
-          message: this.getRandomRejection(),
-          reason: 'inappropriate_content',
-        };
-      }
+    return spotifyAuth.retryOperation(async (api) => {
+      const response = await api.searchTracks(query);
 
-      // Parse query to extract song name and artist
-      let songName, artistName;
-      if (query.toLowerCase().includes(' by ')) {
-        const queryParts = query.toLowerCase().split(' by ');
-        songName = queryParts[0].trim();
-        artistName = queryParts[1]?.trim() || '';
-      } else {
-        // Try to parse song and artist from space-separated query
-        const words = query.toLowerCase().split(' ');
-        const artistIndex = words.findIndex((word) => word === 'by' || word === 'from');
-        if (artistIndex !== -1) {
-          songName = words.slice(0, artistIndex).join(' ').trim();
-          artistName = words
-            .slice(artistIndex + 1)
-            .join(' ')
-            .trim();
-        } else {
-          songName = query.toLowerCase().trim();
-          artistName = '';
-        }
-      }
-
-      // Search with both the full query and a more specific query
-      const [response1, response2] = await Promise.all([
-        this.api.searchTracks(`${songName} ${artistName}`, { limit: 25 }),
-        this.api.searchTracks(`"${songName}" artist:${artistName}`, { limit: 25 }),
-      ]);
-
-      // Combine and deduplicate results
-      const allTracks = [...response1.body.tracks.items];
-      response2.body.tracks.items.forEach((track) => {
-        if (!allTracks.find((t) => t.id === track.id)) {
-          allTracks.push(track);
-        }
-      });
-
-      if (!allTracks.length) {
+      if (!response.body.tracks?.items?.length) {
         return null;
       }
 
-      // Filter and score tracks based on match quality and learning data
-      const tracks = allTracks
-        .filter((track) => {
-          const trackName = track.name;
-          const trackArtistName = track.artists[0].name;
-          const albumName = track.album.name;
-
-          // Check if it's a karaoke version using learning system
-          if (songLearning.isLikelyKaraoke(trackName, trackArtistName, albumName)) {
-            songLearning.recordRejectedSong(trackName, trackArtistName, 'karaoke_version');
-            return false;
-          }
-
-          // Check if it's a known troll song
-          if (songLearning.isLikelyTrollSong(trackName, trackArtistName)) {
-            songLearning.recordRejectedSong(trackName, trackArtistName, 'troll_song');
-            return false;
-          }
-
-          return true;
-        })
-        .map((track) => {
-          let score = 0;
-          const trackName = track.name.toLowerCase();
-          const trackArtist = track.artists[0].name.toLowerCase();
-
-          // Exact matches get highest score
-          if (trackName === songName) {
-            score += 100;
-          }
-          if (trackArtist === artistName) {
-            score += 100;
-          }
-
-          // Partial matches get lower scores
-          if (trackName.includes(songName)) {
-            score += 50;
-          }
-          if (artistName && trackArtist.includes(artistName)) {
-            score += 50;
-          }
-
-          // Bonus points for exact word matches
-          const songWords = songName.split(' ');
-          const trackWords = trackName.split(' ');
-          songWords.forEach((word) => {
-            if (trackWords.includes(word)) {
-              score += 10;
-            }
-          });
-
-          // Add bonus points based on song history
-          const status = songLearning.getSongStatus(track.name, track.artists[0].name);
-          score += status.approvalCount * 5; // Bonus points for previously approved songs
-
-          return { track, score };
-        })
-        .sort((a, b) => b.score - a.score);
-
-      const originalTrack = tracks.length > 0 ? tracks[0].track : allTracks[0];
-
-      // Check track name and artist
-      const trackText = `${originalTrack.name} ${originalTrack.artists.map((a) => a.name).join(' ')}`;
-
-      if (!(await this.isContentAppropriate(trackText))) {
-        songLearning.recordRejectedSong(
-          originalTrack.name,
-          originalTrack.artists[0].name,
-          'inappropriate_content'
-        );
-        return {
-          error: true,
-          message: this.getRandomRejection(),
-          reason: 'inappropriate_content',
-        };
-      }
-
-      // If the track has a preview URL, analyze the audio content
-      if (originalTrack.preview_url) {
-        try {
-          const audioAnalysis = await analyzeAudioFromUrl(originalTrack.preview_url);
-          if (audioAnalysis.error) {
-            logger.error('Audio analysis error:', audioAnalysis.message);
-          } else if (!audioAnalysis.isAppropriate) {
-            logger.info('Audio analysis found inappropriate content:', audioAnalysis.analysis);
-            songLearning.recordRejectedSong(
-              originalTrack.name,
-              originalTrack.artists[0].name,
-              'audio_check_failed'
-            );
-            return {
-              error: true,
-              message: "That doesn't sound like the real song. Nice try! 🎵🚫",
-              reason: 'audio_check_failed',
-            };
-          }
-          logger.info('Audio analysis passed:', {
-            transcript: audioAnalysis.transcript,
-            analysis: audioAnalysis.analysis,
-          });
-        } catch (error) {
-          logger.error('Error analyzing audio preview:', error);
-          // If audio analysis fails, fall back to text-based check which already passed
-        }
-      }
-
-      // Record this as an approved song
-      songLearning.recordApprovedSong(originalTrack.name, originalTrack.artists[0].name);
-      return originalTrack;
-    } catch (error) {
-      logger.error('Error searching track:', error);
-      return null;
-    }
-  }
-
-  async addToQueue(trackUri) {
-    try {
-      // Get available devices with retry logic
-      const devices = await retryOperation(async () => {
-        const deviceList = await this.api.getMyDevices();
-        if (!deviceList.body.devices.length) {
-          throw new Error('No Spotify devices found');
-        }
-        return deviceList;
-      });
-
-      // Find active device or use the first available one
-      const activeDevice =
-        devices.body.devices.find((device) => device.is_active) || devices.body.devices[0];
-      logger.info(`Using Spotify device: ${activeDevice.name} (${activeDevice.type})`);
-
-      // Transfer playback and verify device is active
-      await retryOperation(async () => {
-        // Transfer playback
-        await this.api.transferMyPlayback([activeDevice.id], { play: false });
-
-        // Verify device is active
-        const verifyDevices = await this.api.getMyDevices();
-        const deviceActive = verifyDevices.body.devices.some(
-          (device) => device.id === activeDevice.id && device.is_active
-        );
-
-        if (!deviceActive) {
-          throw new Error('Device not active after transfer');
-        }
-
-        logger.info('Successfully transferred playback and verified device is active');
-      });
-
-      // Wait a moment for the transfer to fully take effect
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      // Add to queue with retry logic
-      await retryOperation(async () => {
-        await this.api.addToQueue(trackUri);
-        this.queue.push(trackUri);
-        logger.info(`Successfully added track to queue: ${trackUri}`);
-      });
-
-      return { success: true };
-    } catch (error) {
-      logger.error('Unexpected error in addToQueue:', error);
+      const track = response.body.tracks.items[0];
       return {
-        success: false,
-        error: error.message || 'Unexpected error',
+        id: track.id,
+        name: track.name,
+        artist: track.artists[0].name,
+        uri: track.uri,
+        genres: track.artists[0].genres || [],
+        popularity: track.popularity,
       };
+    });
+  }
+
+  async handleSongRequest(query, username) {
+    try {
+      // Clean and validate song name
+      let cleanQuery = query
+        .trim()
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/[^\w\s\-'",.!?]/g, '');
+
+      if (cleanQuery.length === 0) {
+        return `@${username}, please provide a valid song name.`;
+      }
+
+      // Check if user has reached their song limit
+      const userSongs = this.songQueue.queue.filter(
+        (song) => song.requestedBy === username
+      ).length;
+      if (userSongs >= this.songQueue.settings.userSongLimit) {
+        return `@${username}, you've reached your song request limit (${this.songQueue.settings.userSongLimit} songs)!`;
+      }
+
+      // Check if song was recently played
+      const recentlyPlayed = this.songQueue.history.some(
+        (song) =>
+          song.query.toLowerCase() === cleanQuery.toLowerCase() &&
+          Date.now() - song.timestamp <
+            this.songQueue.settings.duplicateDelay * 1000
+      );
+      if (recentlyPlayed) {
+        return `@${username}, that song was played recently! Please wait before requesting it again.`;
+      }
+
+      // Check queue length
+      if (
+        this.songQueue.queue.length >= this.songQueue.settings.maxQueueLength
+      ) {
+        return `@${username}, the song queue is full! Please try again later.`;
+      }
+
+      // Check for karaoke/troll patterns before searching
+      if (songLearning.isKaraokeVersion(cleanQuery)) {
+        songLearning.addRejectedSong(cleanQuery, 'karaoke_version');
+        return `@${username}, please request the original version of the song, not a karaoke version!`;
+      }
+
+      if (songLearning.isTrollSong(cleanQuery)) {
+        songLearning.addRejectedSong(cleanQuery, 'troll_song');
+        return `@${username}, that song is not allowed (marked as potential troll song).`;
+      }
+
+      // Use Perplexity API to validate and potentially improve the song request
+      const prompt = `Analyze this song request: "${cleanQuery}"
+      1. Is this a valid song request? (yes/no)
+      2. If yes, what's the most likely song and artist being requested?
+      3. Are there any potential issues with this request?
+      
+      Respond in this format:
+      valid: yes/no
+      song: Song Name - Artist Name
+      issues: any issues or none`;
+
+      const analysis = await generateResponse(prompt);
+      if (!analysis) {
+        logger.error('Failed to get Perplexity API response');
+      } else {
+        const lines = analysis.split('\n');
+        const isValid = lines
+          .find((l) => l.startsWith('valid:'))
+          ?.includes('yes');
+        const suggestedSong = lines
+          .find((l) => l.startsWith('song:'))
+          ?.replace('song:', '')
+          .trim();
+        const issues = lines
+          .find((l) => l.startsWith('issues:'))
+          ?.replace('issues:', '')
+          .trim();
+
+        if (!isValid) {
+          songLearning.addRejectedSong(cleanQuery, 'invalid_request');
+          return `@${username}, that doesn't seem to be a valid song request. ${issues || 'Please try again with a specific song.'}`;
+        }
+
+        if (suggestedSong && suggestedSong !== cleanQuery) {
+          // Use the suggested song if it's different from the original query
+          cleanQuery = suggestedSong;
+        }
+      }
+
+      // Search for the track on Spotify
+      const track = await this.searchTrack(cleanQuery).catch((error) => {
+        logger.error('Error searching for track:', error);
+        return null;
+      });
+
+      if (!track) {
+        songLearning.addRejectedSong(cleanQuery, 'not_found');
+        return `@${username}, couldn't find that song on Spotify. Please try a different search!`;
+      }
+
+      // Add song to queue
+      const songRequest = {
+        query: cleanQuery,
+        trackInfo: track,
+        requestedBy: username,
+        timestamp: Date.now(),
+      };
+
+      this.songQueue.queue.push(songRequest);
+      this.saveSongQueue();
+
+      // Learn from request with track info
+      await songLearning.learnFromRequest(cleanQuery, username, track);
+
+      // Add to Spotify queue
+      try {
+        await spotifyAuth.retryOperation(async (api) => {
+          // Get available devices
+          const devices = await api.getMyDevices();
+          if (!devices.body.devices.length) {
+            throw new Error(
+              'No Spotify devices found. Please open Spotify on any device.'
+            );
+          }
+
+          // Find active device or use the first available one
+          let activeDevice = devices.body.devices.find((d) => d.is_active);
+          if (!activeDevice) {
+            // Try to activate the first device
+            activeDevice = devices.body.devices[0];
+            await api.transferMyPlayback([activeDevice.id]);
+            // Wait a moment for the device to activate
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+
+          // Now try to add to queue
+          await api.addToQueue(track.uri);
+        });
+      } catch (error) {
+        logger.error('Error adding to Spotify queue:', error);
+        if (error.message.includes('No Spotify devices found')) {
+          return `@${username}, added "${track.name} - ${track.artist}" to the queue, but couldn't add to Spotify - please open Spotify on any device first!`;
+        }
+        // For other errors, don't return error - we've added it to our queue successfully
+      }
+
+      return `@${username}, added "${track.name} - ${track.artist}" to the queue! Position: ${this.songQueue.queue.length}`;
+    } catch (error) {
+      logger.error('Error handling song request:', error);
+      return `@${username}, there was an error processing your song request. Please try again later.`;
     }
   }
 
-  getQueue() {
-    return this.queue;
+  async generateSongSuggestion(context) {
+    try {
+      // Get recent songs with full track info
+      const recentSongs = this.songQueue.history
+        .slice(-5)
+        .map((s) =>
+          s.trackInfo ? `${s.trackInfo.name} - ${s.trackInfo.artist}` : s.query
+        );
+
+      const prompt = `Based on these recently played songs and chat activity, suggest a song that would fit the stream's mood:
+      Recent Songs: ${recentSongs.join(', ')}
+      Stream Context: ${context}
+      
+      Respond with just the song name and artist, e.g. "Song Name - Artist"`;
+
+      const suggestion = await generateResponse(prompt);
+      if (!suggestion) {
+        return 'No suggestion available';
+      }
+
+      // Verify the suggestion exists on Spotify
+      const track = await this.searchTrack(suggestion).catch(() => null);
+      if (!track) {
+        // Try one more time with a different prompt
+        const retryPrompt = `Suggest a different song similar to: ${recentSongs[0]}. 
+        Respond with just the song name and artist.`;
+
+        const retrySuggestion = await generateResponse(retryPrompt);
+        if (!retrySuggestion) {
+          return 'No suggestion available';
+        }
+
+        const retryTrack = await this.searchTrack(retrySuggestion).catch(
+          () => null
+        );
+        if (!retryTrack) {
+          return 'No suggestion available';
+        }
+
+        return `${retryTrack.name} - ${retryTrack.artist}`;
+      }
+
+      return `${track.name} - ${track.artist}`;
+    } catch (error) {
+      logger.error('Error generating song suggestion:', error);
+      return 'No suggestion available';
+    }
   }
 
-  clearQueue() {
-    this.queue = [];
+  async voteToSkip(username) {
+    try {
+      if (!this.currentSong) {
+        return 'No song is currently playing!';
+      }
+
+      if (this.skipVotes.has(username)) {
+        return `@${username}, you've already voted to skip this song!`;
+      }
+
+      this.skipVotes.set(username, true);
+      const votes = this.skipVotes.size;
+
+      if (votes >= this.voteThreshold) {
+        try {
+          await spotifyAuth.retryOperation(async (api) => {
+            await api.skipToNext();
+          });
+          this.skipVotes.clear();
+          return 'Skip vote passed! Skipping current song...';
+        } catch (error) {
+          logger.error('Error skipping track:', error);
+          return 'Error skipping track. Please try again.';
+        }
+      }
+
+      return `Skip vote registered! ${votes}/${this.voteThreshold} votes needed to skip.`;
+    } catch (error) {
+      logger.error('Error processing skip vote:', error);
+      return 'Error processing skip vote. Please try again.';
+    }
+  }
+
+  async clearQueue() {
+    this.songQueue.queue = [];
+    this.saveSongQueue();
+    return 'Song queue cleared!';
+  }
+
+  async removeSong(index, username) {
+    try {
+      const songIndex = parseInt(index) - 1;
+      if (
+        isNaN(songIndex) ||
+        songIndex < 0 ||
+        songIndex >= this.songQueue.queue.length
+      ) {
+        return 'Invalid song number!';
+      }
+
+      const song = this.songQueue.queue[songIndex];
+      if (song.requestedBy !== username) {
+        return 'You can only remove songs you requested!';
+      }
+
+      this.songQueue.queue.splice(songIndex, 1);
+      this.saveSongQueue();
+      return `Removed "${song.trackInfo ? `${song.trackInfo.name} - ${song.trackInfo.artist}` : song.query}" from the queue!`;
+    } catch (error) {
+      logger.error('Error removing song:', error);
+      return 'Error removing song. Please try again.';
+    }
+  }
+
+  getQueueStatus() {
+    if (this.songQueue.queue.length === 0) {
+      return 'The song queue is empty!';
+    }
+
+    const nextSongs = this.songQueue.queue
+      .slice(0, 3)
+      .map((song, i) => {
+        const songName = song.trackInfo
+          ? `${song.trackInfo.name} - ${song.trackInfo.artist}`
+          : song.query;
+        return `${i + 1}. ${songName} (${song.requestedBy})`;
+      })
+      .join(' | ');
+
+    return `Queue (${this.songQueue.queue.length}/${this.songQueue.settings.maxQueueLength} songs): ${nextSongs}`;
+  }
+
+  async initialize() {
+    try {
+      await spotifyAuth.initialize();
+      logger.info('Spotify integration initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize Spotify integration:', error);
+      throw error;
+    }
+  }
+
+  cleanup() {
+    spotifyAuth.cleanup();
   }
 }
 
-const spotify = new SpotifyClient();
+const spotify = new SpotifyManager();
 export default spotify;

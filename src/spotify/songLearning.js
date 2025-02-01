@@ -1,323 +1,274 @@
-<<<<<<< HEAD
 import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
+import { generateResponse } from '../utils/perplexity.js';
 
 class SongLearning {
   constructor() {
-    this.dbPath = join(process.cwd(), 'src/spotify/song_learning.json');
-    this.data = this.loadData();
+    this.learningData = this.loadLearningData();
+    this.initializePatterns();
   }
 
-  loadData() {
+  loadLearningData() {
     try {
-      if (existsSync(this.dbPath)) {
-        const data = readFileSync(this.dbPath, 'utf8');
-        return JSON.parse(data);
-      }
-      // Initialize with default structure
-      const defaultData = {
-        approvedSongs: {}, // Track successful song requests
-        rejectedSongs: {}, // Track rejected songs
-        karaokePatterns: [
-          // Common patterns for karaoke versions
-          'karaoke version',
-          'instrumental version',
-          'backing track',
-          'originally performed by',
-          'in the style of',
-          'tribute to',
-          'cover version',
-          'made famous by',
-          'as made popular by',
-          'remix backing track',
-          'instrumental cover',
-          'sing-along version',
-          'without vocals',
-          'minus one',
-          'backing track',
-          'instrumental only',
-        ],
-        trollPatterns: [
-          // Known troll song patterns
-          'rick roll',
-          'rick astley never gonna',
-          'baby shark',
-          'nyan cat',
-          'troll song',
-          'meme song',
-          'epic sax guy',
-          'sandstorm darude',
-          'john cena theme',
-          'rickroll',
-        ],
+      const data = readFileSync(
+        join(process.cwd(), 'src/spotify/song_learning.json'),
+        'utf8'
+      );
+      const parsed = JSON.parse(data);
+
+      // Ensure all required properties exist
+      return {
+        songPatterns: parsed.songPatterns || {},
+        userPreferences: parsed.userPreferences || {},
+        approvedSongs: parsed.approvedSongs || {},
+        rejectedSongs: parsed.rejectedSongs || {},
+        karaokePatterns: parsed.karaokePatterns || [],
+        trollPatterns: parsed.trollPatterns || [],
+        lastUpdated: parsed.lastUpdated || new Date().toISOString(),
       };
-      this.saveData(defaultData);
-      return defaultData;
     } catch (error) {
       logger.error('Error loading song learning data:', error);
       return {
+        songPatterns: {},
+        userPreferences: {},
         approvedSongs: {},
         rejectedSongs: {},
         karaokePatterns: [],
         trollPatterns: [],
+        lastUpdated: new Date().toISOString(),
       };
     }
   }
 
-  saveData(data = this.data) {
+  saveLearningData() {
     try {
-      writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
+      this.learningData.lastUpdated = new Date().toISOString();
+      writeFileSync(
+        join(process.cwd(), 'src/spotify/song_learning.json'),
+        JSON.stringify(this.learningData, null, 2)
+      );
     } catch (error) {
       logger.error('Error saving song learning data:', error);
     }
   }
 
-  // Record a successful song request
-  recordApprovedSong(songName, artistName) {
-    const key = `${songName.toLowerCase()}|${artistName.toLowerCase()}`;
-    this.data.approvedSongs[key] = (this.data.approvedSongs[key] || 0) + 1;
-    this.saveData();
+  initializePatterns() {
+    // Preserve existing patterns and add any missing ones
+    const defaultKaraokePatterns = [
+      'karaoke version',
+      'instrumental version',
+      'backing track',
+      'originally performed by',
+      'in the style of',
+      'tribute to',
+      'cover version',
+      'made famous by',
+      'as made popular by',
+      'remix backing track',
+      'instrumental cover',
+      'sing-along version',
+      'without vocals',
+      'minus one',
+      'backing track',
+      'instrumental only',
+    ];
+
+    const defaultTrollPatterns = [
+      'rick roll',
+      'rick astley never gonna',
+      'baby shark',
+      'nyan cat',
+      'troll song',
+      'meme song',
+      'epic sax guy',
+      'sandstorm darude',
+      'john cena theme',
+      'rickroll',
+    ];
+
+    // Merge existing patterns with defaults
+    this.learningData.karaokePatterns = Array.from(
+      new Set([
+        ...defaultKaraokePatterns,
+        ...(this.learningData.karaokePatterns || []),
+      ])
+    );
+
+    this.learningData.trollPatterns = Array.from(
+      new Set([
+        ...defaultTrollPatterns,
+        ...(this.learningData.trollPatterns || []),
+      ])
+    );
+
+    this.saveLearningData();
   }
 
-  // Record a rejected song
-  recordRejectedSong(songName, artistName, reason) {
-    const key = `${songName.toLowerCase()}|${artistName.toLowerCase()}`;
-    if (!this.data.rejectedSongs[key]) {
-      this.data.rejectedSongs[key] = {
+  async learnFromRequest(query, username, trackInfo = null) {
+    try {
+      // Normalize query
+      const normalizedQuery = query.toLowerCase();
+      const songKey = trackInfo
+        ? `${trackInfo.name}|${trackInfo.artist}`.toLowerCase()
+        : normalizedQuery;
+
+      // Update song patterns
+      this.learningData.songPatterns[songKey] =
+        (this.learningData.songPatterns[songKey] || 0) + 1;
+
+      // Add to approved songs if it's a valid track
+      if (trackInfo) {
+        this.learningData.approvedSongs[songKey] =
+          (this.learningData.approvedSongs[songKey] || 0) + 1;
+      }
+
+      // Update user preferences
+      if (!this.learningData.userPreferences[username]) {
+        this.learningData.userPreferences[username] = {
+          requestedSongs: [],
+          genres: {},
+          artists: {},
+          lastRequest: null,
+        };
+      }
+
+      const userPrefs = this.learningData.userPreferences[username];
+      userPrefs.requestedSongs.push({
+        query: songKey,
+        trackInfo,
+        timestamp: Date.now(),
+      });
+
+      // Keep only last 50 requests
+      if (userPrefs.requestedSongs.length > 50) {
+        userPrefs.requestedSongs = userPrefs.requestedSongs.slice(-50);
+      }
+
+      userPrefs.lastRequest = Date.now();
+
+      // Update artist stats
+      if (trackInfo) {
+        const artist = trackInfo.artist.toLowerCase();
+        userPrefs.artists[artist] = (userPrefs.artists[artist] || 0) + 1;
+      } else {
+        // Try to extract artist from query
+        const songParts = normalizedQuery
+          .split(' - ')
+          .map((part) => part.trim());
+        if (songParts.length > 1) {
+          const artist = songParts[1];
+          userPrefs.artists[artist] = (userPrefs.artists[artist] || 0) + 1;
+        }
+      }
+
+      // Save after every request to ensure accurate tracking
+      this.saveLearningData();
+    } catch (error) {
+      logger.error('Error learning from request:', error);
+    }
+  }
+
+  async generateRecommendation(username) {
+    try {
+      const userPrefs = this.learningData.userPreferences[username];
+      if (!userPrefs || userPrefs.requestedSongs.length === 0) {
+        return null;
+      }
+
+      const recentSongs = userPrefs.requestedSongs
+        .slice(-5)
+        .map((s) =>
+          s.trackInfo ? `${s.trackInfo.name} - ${s.trackInfo.artist}` : s.query
+        );
+
+      const topArtists = Object.entries(userPrefs.artists)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3)
+        .map(([artist]) => artist);
+
+      const prompt = `Based on this user's song request history, suggest a song they might like:
+      Recent Requests: ${recentSongs.join(', ')}
+      Favorite Artists: ${topArtists.join(', ')}
+      
+      Respond with just the song name and artist, e.g. "Song Name - Artist"`;
+
+      const recommendation = await generateResponse(prompt);
+      return recommendation;
+    } catch (error) {
+      logger.error('Error generating recommendation:', error);
+      return null;
+    }
+  }
+
+  isKaraokeVersion(query) {
+    return this.learningData.karaokePatterns.some((pattern) =>
+      query.toLowerCase().includes(pattern)
+    );
+  }
+
+  isTrollSong(query) {
+    return this.learningData.trollPatterns.some((pattern) =>
+      query.toLowerCase().includes(pattern)
+    );
+  }
+
+  addRejectedSong(query, reason) {
+    const key = query.toLowerCase();
+    if (!this.learningData.rejectedSongs[key]) {
+      this.learningData.rejectedSongs[key] = {
         count: 0,
         reasons: {},
       };
     }
-    this.data.rejectedSongs[key].count++;
-    this.data.rejectedSongs[key].reasons[reason] =
-      (this.data.rejectedSongs[key].reasons[reason] || 0) + 1;
-    this.saveData();
+
+    this.learningData.rejectedSongs[key].count++;
+    this.learningData.rejectedSongs[key].reasons[reason] =
+      (this.learningData.rejectedSongs[key].reasons[reason] || 0) + 1;
+
+    this.saveLearningData();
   }
 
-  // Check if a song is likely to be a karaoke version
-  isLikelyKaraoke(trackName, artistName, albumName) {
-    const textToCheck = `${trackName} ${artistName} ${albumName}`.toLowerCase();
+  getSongStats() {
+    const approvedTotal = Object.values(this.learningData.approvedSongs).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+    const rejectedTotal = Object.values(this.learningData.rejectedSongs).reduce(
+      (sum, data) => sum + data.count,
+      0
+    );
 
-    // Check against known karaoke patterns
-    for (const pattern of this.data.karaokePatterns) {
-      if (textToCheck.includes(pattern.toLowerCase())) {
-        return true;
-      }
-    }
+    const topApproved = Object.entries(this.learningData.approvedSongs)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([song, count]) => ({ song, count }));
 
-    // Check for suspicious artist names
-    const artistNameLower = artistName.toLowerCase();
-    if (
-      artistNameLower.includes('karaoke') ||
-      artistNameLower.includes('tribute') ||
-      artistNameLower.includes('studio band') ||
-      artistNameLower.includes('cover band') ||
-      artistNameLower.includes('performed by')
-    ) {
-      return true;
-    }
+    const topRejected = Object.entries(this.learningData.rejectedSongs)
+      .sort(([, a], [, b]) => b.count - a.count)
+      .slice(0, 5)
+      .map(([song, data]) => ({
+        song,
+        count: data.count,
+        reasons: data.reasons,
+      }));
 
-    return false;
-  }
-
-  // Check if a song is likely to be a troll song based on learning data
-  isLikelyTrollSong(songName, artistName) {
-    const key = `${songName.toLowerCase()}|${artistName.toLowerCase()}`;
-    const textToCheck = `${songName} ${artistName}`.toLowerCase();
-
-    // Check against known troll patterns
-    for (const pattern of this.data.trollPatterns) {
-      if (textToCheck.includes(pattern.toLowerCase())) {
-        return true;
-      }
-    }
-
-    // Check rejection history
-    if (this.data.rejectedSongs[key]) {
-      const rejectionCount = this.data.rejectedSongs[key].count;
-      const approvalCount = this.data.approvedSongs[key] || 0;
-
-      // If a song has been rejected multiple times more than approved
-      if (rejectionCount > approvalCount * 2 && rejectionCount > 3) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  // Get song status based on learning data
-  getSongStatus(songName, artistName) {
-    const key = `${songName.toLowerCase()}|${artistName.toLowerCase()}`;
     return {
-      approvalCount: this.data.approvedSongs[key] || 0,
-      rejections: this.data.rejectedSongs[key] || null,
+      totalRequests: approvedTotal + rejectedTotal,
+      approvedSongs: {
+        total: approvedTotal,
+        unique: Object.keys(this.learningData.approvedSongs).length,
+        top: topApproved,
+      },
+      rejectedSongs: {
+        total: rejectedTotal,
+        unique: Object.keys(this.learningData.rejectedSongs).length,
+        top: topRejected,
+      },
+      lastUpdated: this.learningData.lastUpdated,
     };
   }
 }
 
 const songLearning = new SongLearning();
 export default songLearning;
-=======
-import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import logger from '../utils/logger.js';
-
-class SongLearning {
-  constructor() {
-    this.dbPath = join(process.cwd(), 'src/spotify/song_learning.json');
-    this.data = this.loadData();
-  }
-
-  loadData() {
-    try {
-      if (existsSync(this.dbPath)) {
-        const data = readFileSync(this.dbPath, 'utf8');
-        return JSON.parse(data);
-      }
-      // Initialize with default structure
-      const defaultData = {
-        approvedSongs: {}, // Track successful song requests
-        rejectedSongs: {}, // Track rejected songs
-        karaokePatterns: [
-          // Common patterns for karaoke versions
-          'karaoke version',
-          'instrumental version',
-          'backing track',
-          'originally performed by',
-          'in the style of',
-          'tribute to',
-          'cover version',
-          'made famous by',
-          'as made popular by',
-          'remix backing track',
-          'instrumental cover',
-          'sing-along version',
-          'without vocals',
-          'minus one',
-          'backing track',
-          'instrumental only',
-        ],
-        trollPatterns: [
-          // Known troll song patterns
-          'rick roll',
-          'rick astley never gonna',
-          'baby shark',
-          'nyan cat',
-          'troll song',
-          'meme song',
-          'epic sax guy',
-          'sandstorm darude',
-          'john cena theme',
-          'rickroll',
-        ],
-      };
-      this.saveData(defaultData);
-      return defaultData;
-    } catch (error) {
-      logger.error('Error loading song learning data:', error);
-      return {
-        approvedSongs: {},
-        rejectedSongs: {},
-        karaokePatterns: [],
-        trollPatterns: [],
-      };
-    }
-  }
-
-  saveData(data = this.data) {
-    try {
-      writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
-    } catch (error) {
-      logger.error('Error saving song learning data:', error);
-    }
-  }
-
-  // Record a successful song request
-  recordApprovedSong(songName, artistName) {
-    const key = `${songName.toLowerCase()}|${artistName.toLowerCase()}`;
-    this.data.approvedSongs[key] = (this.data.approvedSongs[key] || 0) + 1;
-    this.saveData();
-  }
-
-  // Record a rejected song
-  recordRejectedSong(songName, artistName, reason) {
-    const key = `${songName.toLowerCase()}|${artistName.toLowerCase()}`;
-    if (!this.data.rejectedSongs[key]) {
-      this.data.rejectedSongs[key] = {
-        count: 0,
-        reasons: {},
-      };
-    }
-    this.data.rejectedSongs[key].count++;
-    this.data.rejectedSongs[key].reasons[reason] =
-      (this.data.rejectedSongs[key].reasons[reason] || 0) + 1;
-    this.saveData();
-  }
-
-  // Check if a song is likely to be a karaoke version
-  isLikelyKaraoke(trackName, artistName, albumName) {
-    const textToCheck = `${trackName} ${artistName} ${albumName}`.toLowerCase();
-
-    // Check against known karaoke patterns
-    for (const pattern of this.data.karaokePatterns) {
-      if (textToCheck.includes(pattern.toLowerCase())) {
-        return true;
-      }
-    }
-
-    // Check for suspicious artist names
-    const artistNameLower = artistName.toLowerCase();
-    if (
-      artistNameLower.includes('karaoke') ||
-      artistNameLower.includes('tribute') ||
-      artistNameLower.includes('studio band') ||
-      artistNameLower.includes('cover band') ||
-      artistNameLower.includes('performed by')
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
-  // Check if a song is likely to be a troll song based on learning data
-  isLikelyTrollSong(songName, artistName) {
-    const key = `${songName.toLowerCase()}|${artistName.toLowerCase()}`;
-    const textToCheck = `${songName} ${artistName}`.toLowerCase();
-
-    // Check against known troll patterns
-    for (const pattern of this.data.trollPatterns) {
-      if (textToCheck.includes(pattern.toLowerCase())) {
-        return true;
-      }
-    }
-
-    // Check rejection history
-    if (this.data.rejectedSongs[key]) {
-      const rejectionCount = this.data.rejectedSongs[key].count;
-      const approvalCount = this.data.approvedSongs[key] || 0;
-
-      // If a song has been rejected multiple times more than approved
-      if (rejectionCount > approvalCount * 2 && rejectionCount > 3) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  // Get song status based on learning data
-  getSongStatus(songName, artistName) {
-    const key = `${songName.toLowerCase()}|${artistName.toLowerCase()}`;
-    return {
-      approvalCount: this.data.approvedSongs[key] || 0,
-      rejections: this.data.rejectedSongs[key] || null,
-    };
-  }
-}
-
-const songLearning = new SongLearning();
-export default songLearning;
->>>>>>> origin/master

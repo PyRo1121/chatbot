@@ -1,125 +1,96 @@
-<<<<<<< HEAD
-import { handleRoast } from './roast.js';
 import { handlePing } from './ping.js';
-import { handleShoutout } from './shoutout.js';
-import { startTrivia, handleTriviaAnswer, endTrivia } from './trivia.js';
-import { handleStreamInsights } from './streamInsights.js';
-import { viewerCommands, handleRaid, trackViewer } from './viewer.js';
-import { analyticsCommands, initializeAnalytics, endAnalytics } from './analytics.js';
-import { clipManagementCommands } from './clipManagement.js';
-import { moderationCommands, moderateMessage, assessRaid } from './moderation.js';
+import { handleLurk } from './lurk.js';
+import { handleRoast } from './roast.js';
+import { handleClip, handleHighlights } from './clips.js';
 import {
-  handleListQueue,
-  handleClearQueue,
-  handleRemoveFromQueue,
-  handleSongRequest,
-  processSongQueue,
-  songQueue,
-} from './queue.js';
-import { clipCommands, handleChatActivity } from './clips.js';
-import { streamCommands, streamEventHandlers } from '../streamManager.js';
-import { followProtectionCommands } from './followProtection.js';
-import setupCompetitorCommands from './competitor.js';
-
-// Export existing commands
-export {
-  handleRoast,
-  handlePing,
-  handleShoutout,
+  handleTitle,
+  handleCategory,
+  handleUptime,
+  handleMilestone,
+} from './streamInsights.js';
+import {
+  handleSuspiciousFollowers,
+  handleClearSuspicious,
+  handleFollowSettings,
+  handleFollowStats,
+  handleFollowCheck,
+  handleFollowMode,
+} from './followProtection.js';
+import {
+  handleRecommendations,
+  handleViewerStats,
+  handleLoyalty,
+  handleTopViewers,
+  handleRaids,
+  handleHealth,
+  handleStreamPerformance,
+  handleBestTimes,
+  handleTopCategories,
+} from './analytics.js';
+import {
+  handleCreateClip,
+  handleClipsByCategory,
+  handleClipsByTag,
+  handleRecentClips,
+  handleTopClips,
+  handleClipStats,
+  handleSuggestCompilation,
+  handleAnalyzeClip,
+} from './clipManagement.js';
+import {
+  handleModStats,
+  handleUserHistory,
+  handleTrust,
+  handleUntrust,
+  handleRaidHistory,
+  handleAnalyzeChat,
+  handleWarn,
+  moderateMessage,
+} from './moderation.js';
+import { handleShoutout } from './shoutout.js';
+import {
   startTrivia,
   handleTriviaAnswer,
   endTrivia,
-  handleListQueue,
-  handleClearQueue,
-  handleRemoveFromQueue,
-  handleSongRequest,
-  processSongQueue,
-  songQueue,
-  handleStreamInsights,
-  handleChatActivity,
-  streamEventHandlers,
-};
-
-// Export new clip commands
-export const handleClip = clipCommands.clip;
-export const handleHighlights = clipCommands.highlights;
-
-// Export moderation commands
-export const handleModStats = moderationCommands.modstats;
-export const handleUserHistory = moderationCommands.userhistory;
-export const handleTrust = moderationCommands.trust;
-export const handleUntrust = moderationCommands.untrust;
-export const handleRaidHistory = moderationCommands.raidhistory;
-export const handleAnalyzeChat = moderationCommands.analyzechat;
-export const handleWarn = moderationCommands.warn;
-export { moderateMessage, assessRaid };
-
-// Export clip management commands
-export const handleCreateClip = clipManagementCommands.createclip;
-export const handleClipsByCategory = clipManagementCommands.clipsbycategory;
-export const handleClipsByTag = clipManagementCommands.clipsbytag;
-export const handleRecentClips = clipManagementCommands.recentclips;
-export const handleTopClips = clipManagementCommands.topclips;
-export const handleClipStats = clipManagementCommands.clipstats;
-export const handleSuggestCompilation = clipManagementCommands.suggestcompilation;
-export const handleAnalyzeClip = clipManagementCommands.analyzeclip;
-
-// Export analytics commands
-export const handleHealth = analyticsCommands.health;
-export const handleStreamPerformance = analyticsCommands.performance;
-export const handleBestTimes = analyticsCommands.besttimes;
-export const handleTopCategories = analyticsCommands.topcategories;
-export { initializeAnalytics, endAnalytics };
-
-// Export viewer commands
-export const handleViewerStats = viewerCommands.stats;
-export const handleLoyalty = viewerCommands.loyalty;
-export const handleTopViewers = viewerCommands.topviewers;
-export const handleRaids = viewerCommands.raids;
-export { handleRaid, trackViewer };
-
-// Export stream commands
-export const handleTitle = streamCommands.title;
-export const handleCategory = streamCommands.category;
-export const handleUptime = streamCommands.uptime;
-export const handleMilestone = streamCommands.milestone;
-export const handleRecommendations = streamCommands.recommendations;
-
-// Export follow protection commands
-export const handleSuspiciousFollowers = followProtectionCommands.suspicious;
-export const handleClearSuspicious = followProtectionCommands.clear;
-export const handleFollowSettings = followProtectionCommands.settings;
-
-// Export competitor commands
-export const competitorCommands = setupCompetitorCommands;
-
-export const commandList =
-  '!ping, !songrequest, !queue, !queueclear, !queueremove, !roast, !trivia, !wordchain, !minigame [scramble|riddle], !insights (broadcaster only), !clip [title], !highlights [days], !title [new title], !category [game], !uptime, !milestone [description], !recommendations, !chatinsights, !followprotection (mods only), !suspicious (broadcaster only), !clearsuspicious (broadcaster only), !followsettings (broadcaster only), !viewerstats, !loyalty, !topviewers, !raids, !health, !performance, !besttimes, !topcategories, !createclip [title], !clipsbycategory [category], !clipsbytag [tag], !recentclips [days], !topclips, !clipstats, !suggestcompilation, !analyzeclip [clipId], !modstats (mods only), !userhistory [username] (mods only), !trust [username] (mods only), !untrust [username] (mods only), !raidhistory (mods only), !analyzechat (mods only), !warn [username] [reason] (mods only), !track [channel] (broadcaster only), !untrack [channel] (broadcaster only), !insights (broadcaster only), !suggestions (broadcaster only), !tracked (broadcaster only), !shoutout [username], !trivia';
-=======
-import { handlePing } from './ping.js';
-import { handleRoast } from './roast.js';
+  listCategories,
+} from './trivia.js';
+import { competitorCommands } from './competitor.js';
 import {
+  handleSongRequest,
   handleListQueue,
   handleClearQueue,
   handleRemoveFromQueue,
-  handleSongRequest,
 } from './queue.js';
-import { handleAddCommand, handleRemoveCommand } from './customCommands.js';
 import {
-  handleStartTrivia,
+  handleAddCommand,
+  handleRemoveCommand,
+  handleListCommands,
+  handleUserCommands,
+  handleModCommands,
+} from './customCommands.js';
+import {
   handleStartWordChain,
   handleStartMiniGame,
   handleAnswer,
 } from './games.js';
-import { handleStreamInsights } from './streamInsights.js';
-import { detectHighlight, streamEventHandlers } from '../streamManager.js';
-import analyticsCommands from './analyticsCommands.js';
-import streamHandlers from './streamHandlers.js';
-import logger from '../../utils/logger.js';
-
-// Export all stream-related handlers
-export const {
+import { viewerCommands } from './viewer.js';
+import { analyticsCommands } from './analyticsCommands.js';
+import {
   handleChatActivity,
+  handleStreamHealth,
+  handleStreamStats,
+  handleStreamPerformance as handleStreamPerformanceStats,
+} from './streamHandlers.js';
+import { streamEventHandlers } from '../streamManager.js';
+import advancedModeration from '../advancedModeration.js';
+
+// Export all commands
+export {
+  handlePing,
+  handleLurk,
+  handleRoast,
+  handleChatActivity,
+  streamEventHandlers,
   handleClip,
   handleHighlights,
   handleTitle,
@@ -129,19 +100,18 @@ export const {
   handleSuspiciousFollowers,
   handleClearSuspicious,
   handleFollowSettings,
+  handleFollowStats,
+  handleFollowCheck,
+  handleFollowMode,
   handleRecommendations,
   handleViewerStats,
   handleLoyalty,
   handleTopViewers,
   handleRaids,
-  handleRaid,
-  trackViewer,
   handleHealth,
   handleStreamPerformance,
   handleBestTimes,
   handleTopCategories,
-  initializeAnalytics,
-  endAnalytics,
   handleCreateClip,
   handleClipsByCategory,
   handleClipsByTag,
@@ -158,110 +128,106 @@ export const {
   handleAnalyzeChat,
   handleWarn,
   moderateMessage,
-  assessRaid,
+  advancedModeration,
   competitorCommands,
   handleShoutout,
   startTrivia,
   handleTriviaAnswer,
   endTrivia,
-} = streamHandlers;
-
-const commands = {
-  // Existing commands
-  '!roast': async (twitchClient, channel, targetUser) => {
-    const result = await handleRoast(twitchClient, channel, targetUser);
-    return result;
-  },
-
-  // Analytics Commands
-  '!peak': async () => analyticsCommands['!peak'](),
-  '!growth': async () => analyticsCommands['!growth'](),
-  '!trending': async () => analyticsCommands['!trending'](),
-  '!insights': async () => analyticsCommands['!insights'](),
-
-  // Engagement Commands
-  '!recap': async () => analyticsCommands['!recap'](),
-  '!highlight': async (description) => analyticsCommands['!highlight'](description),
-  '!vibe': async () => analyticsCommands['!vibe'](),
-
-  // Content Optimization Commands
-  '!category': async () => analyticsCommands['!category'](),
-  '!title': async (description) => analyticsCommands['!title'](description),
-  '!schedule': async () => analyticsCommands['!schedule'](),
-  '!tags': async () => analyticsCommands['!tags'](),
-
-  // Community Commands
-  '!shoutout': async (username) => analyticsCommands['!shoutout'](username),
-  '!raid': async () => analyticsCommands['!raid'](),
-  '!collab': async () => analyticsCommands['!collab'](),
-  '!network': async () => analyticsCommands['!network'](),
-
-  // Help command to list available commands
-  '!help': async () => {
-    return `Available commands:
-    Stream Analytics: !peak, !growth, !trending, !insights
-    Engagement: !recap, !highlight, !vibe
-    Content: !category, !title, !schedule, !tags
-    Community: !shoutout, !raid, !collab, !network
-    Fun: !roast @username`;
-  },
-};
-
-// Create command list for help message
-export const commandList = Object.keys(commands).join(', ');
-
-// Process command
-export async function processCommand(twitchClient, channel, tags, message) {
-  try {
-    const args = message.trim().split(' ');
-    const command = args[0].toLowerCase();
-    const commandHandler = commands[command];
-
-    if (commandHandler) {
-      // Extract target user for commands that need it
-      const targetUser = args[1] ? args[1].replace('@', '') : null;
-      // Get description for commands that need it
-      const description = args.slice(1).join(' ');
-
-      // Execute command
-      const response = await commandHandler(twitchClient, channel, targetUser, description);
-
-      if (response) {
-        if (typeof response === 'object' && response.message) {
-          return response.message;
-        }
-        return response;
-      }
-    }
-    return null;
-  } catch (error) {
-    logger.error('Error processing command:', error);
-    return 'An error occurred while processing the command.';
-  }
-}
-
-// Export all required handlers
-export {
-  handlePing,
-  handleRoast,
+  listCategories,
+  handleSongRequest,
   handleListQueue,
   handleClearQueue,
   handleRemoveFromQueue,
-  handleSongRequest,
   handleAddCommand,
   handleRemoveCommand,
-  handleStartTrivia,
+  handleListCommands,
+  handleUserCommands,
+  handleModCommands,
   handleStartWordChain,
   handleStartMiniGame,
-  handleAnswer as handleGameAnswer,
-  handleStreamInsights,
-  detectHighlight,
-  streamEventHandlers,
+  handleAnswer,
+  viewerCommands,
+  analyticsCommands,
+  handleStreamHealth,
+  handleStreamStats,
+  handleStreamPerformanceStats,
 };
 
-export default {
-  processCommand,
-  commands,
-  commandList,
-};
->>>>>>> origin/master
+// List of available commands for !help
+export const commandList = [
+  '!ping - Check if bot is online',
+  "!lurk - Let chat know you're lurking in a funny way",
+  '!roast [@user] - Get a friendly roast',
+  '!clip [title] - Create a clip',
+  '!highlights [days] - Show recent highlights',
+  '!title [new title] - Change stream title (mods only)',
+  '!category [game] - Change stream category (mods only)',
+  '!uptime - Show stream uptime',
+  '!milestone [description] - Add stream milestone (mods only)',
+  '!suspicious - Show suspicious followers (broadcaster only)',
+  '!clearsuspicious - Clear suspicious followers list (broadcaster only)',
+  '!followsettings - Configure follow protection (broadcaster only)',
+  '!recommendations - Get stream recommendations',
+  '!chatinsights - Show chat analytics',
+  '!viewerstats - Show viewer statistics',
+  '!loyalty - Show loyalty program stats',
+  '!topviewers - Show top chatters',
+  '!raids - Show recent raids',
+  '!health - Show stream health',
+  '!performance - Show stream performance',
+  '!besttimes - Show best streaming times',
+  '!topcategories - Show top performing categories',
+  '!createclip [title] - Create a new clip',
+  '!clipsbycategory [category] - Show clips by category',
+  '!clipsbytag [tag] - Show clips by tag',
+  '!recentclips [days] - Show recent clips',
+  '!topclips - Show most viewed clips',
+  '!clipstats - Show clip statistics',
+  '!suggestcompilation - Get clip compilation suggestions',
+  '!analyzeclip [clipId] - Analyze a specific clip',
+  '!modstats - Show moderation statistics (mods only)',
+  '!userhistory [username] - Show user history (mods only)',
+  '!trust [username] - Add user to trusted list (mods only)',
+  '!untrust [username] - Remove user from trusted list (mods only)',
+  '!raidhistory - Show raid history (mods only)',
+  '!analyzechat - Show chat analysis (mods only)',
+  '!warn [username] [reason] - Warn a user (mods only)',
+  '!track [channel] - Track competitor channel (broadcaster only)',
+  '!untrack [channel] - Stop tracking channel (broadcaster only)',
+  '!insights - Show competitor insights (broadcaster only)',
+  '!suggestions - Get content suggestions (broadcaster only)',
+  '!tracked - List tracked channels (broadcaster only)',
+  '!shoutout [@user] - Give someone a shoutout (mods only)',
+  '!trivia [category] - Start a trivia game (mods only)',
+  '!categories - List available trivia categories',
+  '!answer [A/B/C/D] - Submit your answer for the current trivia question',
+  '!endtrivia - End current trivia game and show final scores (mods only)',
+  '!songrequest [song name] - Request a song to be played',
+  '!queue - Show current song queue',
+  '!clearqueue - Clear the song queue (mods only)',
+  '!queueremove [position] - Remove a song from the queue',
+  '!addcom [command] [response] - Add a custom command (mods only)',
+  '!delcom [command] - Remove a custom command (mods only)',
+  '!commands - List all custom commands',
+  '!wordchain - Start a word chain game (mods only)',
+  '!minigame [scramble|riddle] - Start a mini game (mods only)',
+  '!stats - Show viewer statistics',
+  '!loyalty - Show loyalty distribution',
+  '!topviewers - Show top viewers',
+  '!raids - Show recent raids',
+  '!peak - Show peak viewers',
+  '!growth - Show growth stats',
+  '!trending - Show trending segments',
+  '!recap - Generate stream recap',
+  '!vibe - Get chat vibe',
+  '!schedule - Get schedule recommendations',
+  '!tags - Get tag recommendations',
+  '!collab - Find collaboration partners (broadcaster only)',
+  '!network - Get networking effectiveness',
+  '!followstats - Show follow statistics',
+  '!followcheck [username] - Check specific follower',
+  '!followmode [on/off] - Configure follow mode (mods only)',
+  '!streamstats - Show stream statistics',
+  '!streamhealth - Show stream health',
+];

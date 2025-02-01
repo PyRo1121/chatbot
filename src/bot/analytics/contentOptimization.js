@@ -90,7 +90,10 @@ export async function getScheduleRecommendations() {
     'You are a schedule optimization assistant. Provide data-driven streaming schedule recommendations to maximize viewer engagement.';
 
   const recommendations = await generateResponse(prompt, systemPrompt);
-  return recommendations || 'Unable to generate schedule recommendations at this time.';
+  return (
+    recommendations ||
+    'Unable to generate schedule recommendations at this time.'
+  );
 }
 
 // Get tag recommendations
@@ -107,7 +110,9 @@ export async function getTagRecommendations(category, title = '') {
     'You are a tag optimization assistant. Suggest relevant, discoverable tags that will help the stream reach its target audience. Focus on a mix of broad and niche tags.';
 
   const recommendations = await generateResponse(prompt, systemPrompt);
-  return recommendations || 'Unable to generate tag recommendations at this time.';
+  return (
+    recommendations || 'Unable to generate tag recommendations at this time.'
+  );
 }
 
 // Update current category
@@ -138,7 +143,12 @@ export function updateCurrentTags(tags) {
 }
 
 // Update schedule performance
-export function updateSchedulePerformance(startTime, endTime, averageViewers, peakViewers) {
+export function updateSchedulePerformance(
+  startTime,
+  endTime,
+  averageViewers,
+  peakViewers
+) {
   optimizationData.schedule.history.push({
     startTime,
     endTime,

@@ -1,1 +1,49 @@
-[]
+{
+  "queue": [
+    {
+      "query": "locked up by akon",
+      "trackInfo": {
+        "id": "2EQIvY0mfuA67PRxKOFuOA",
+        "name": "Locked Up (made popular by Akon) [backing version]",
+        "artist": "Party Tyme",
+        "uri": "spotify:track:2EQIvY0mfuA67PRxKOFuOA",
+        "genres": [],
+        "popularity": 0
+      },
+      "requestedBy": "pyro1121",
+      "timestamp": 1738442690376
+    },
+    {
+      "query": "Locked Up - Akon",
+      "trackInfo": {
+        "id": "0YUrjFy4qFKOO5NhM9tYdV",
+        "name": "Locked Up",
+        "artist": "Akon",
+        "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
+        "genres": [],
+        "popularity": 64
+      },
+      "requestedBy": "pyro1121",
+      "timestamp": 1738442930587
+    },
+    {
+      "query": "Locked Up - Akon",
+      "trackInfo": {
+        "id": "0YUrjFy4qFKOO5NhM9tYdV",
+        "name": "Locked Up",
+        "artist": "Akon",
+        "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
+        "genres": [],
+        "popularity": 64
+      },
+      "requestedBy": "pyro1121",
+      "timestamp": 1738442989393
+    }
+  ],
+  "history": [],
+  "settings": {
+    "maxQueueLength": 50,
+    "userSongLimit": 3,
+    "duplicateDelay": 3600
+  }
+}

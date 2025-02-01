@@ -12,8 +12,16 @@ module.exports = {
     favoriteGames: ['Valorant', 'Minecraft', 'Factorio'],
     contentFocus: 'Coding tutorials and game development',
     communityValues: ['Supportive', 'Inclusive', 'Fun-loving'],
-    catchphrases: ["Let's get coding!", 'Debugging is life!', 'Another day, another bug to squash'],
-    traditions: ['Friday Night Code & Chill', 'Monthly Game Jam Challenges', 'Viewer Code Reviews'],
+    catchphrases: [
+      "Let's get coding!",
+      'Debugging is life!',
+      'Another day, another bug to squash',
+    ],
+    traditions: [
+      'Friday Night Code & Chill',
+      'Monthly Game Jam Challenges',
+      'Viewer Code Reviews',
+    ],
     socialLinks: {
       twitter: '@TheCodingStreamer',
       discord: 'discord.gg/codingstream',
