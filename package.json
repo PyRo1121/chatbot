@@ -1,0 +1,76 @@
+{
+  "type": "module",
+  "name": "firepigbot",
+  "version": "1.0.0",
+  "description": "Twitch chat bot with AI capabilities",
+  "author": "PyRo1121",
+  "main": "index.js",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.js --detectOpenHandles",
+    "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.js --watch",
+    "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.js --coverage",
+    "test:ci": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.js --ci --coverage",
+    "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
+    "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,md}\"",
+    "check": "pnpm run lint && pnpm run format:check",
+    "fix": "pnpm run lint:fix && pnpm run format",
+    "clean": "rimraf dist coverage",
+    "build": "pnpm clean && node build.js",
+    "security": "pnpm audit && pnpm dlx better-npm-audit",
+    "prepare": "husky install",
+    "validate": "pnpm run test:ci && pnpm run check && pnpm run security"
+  },
+  "dependencies": {
+    "@babel/eslint-parser": "^7.26.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.26.3",
+    "@babel/preset-env": "^7.26.7",
+    "@babel/preset-react": "^7.26.3",
+    "@google/generative-ai": "^0.21.0",
+    "@twurple/api": "^7.2.1",
+    "@twurple/auth": "^7.2.1",
+    "@twurple/chat": "^7.2.1",
+    "@twurple/eventsub-http": "^7.2.1",
+    "@twurple/eventsub-ws": "^7.2.1",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "lru-cache": "^11.0.2",
+    "node-cache": "^5.1.2",
+    "spotify-web-api-node": "^5.0.2",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.1",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-jest": "^28.11.0",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  }
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Overlay</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: transparent;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #overlay-content {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay-content">
+        <!-- Content will be injected here by the bot -->
+    </div>
+
+    <script>
+        // WebSocket connection to receive updates
+        const ws = new WebSocket('ws://localhost:3000');
+        ws.onmessage = function(event) {
+            document.getElementById('overlay-content').innerHTML = event.data;
+        };
+    </script>
+</body>
+</html>

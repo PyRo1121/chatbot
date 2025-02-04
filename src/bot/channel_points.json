@@ -1,0 +1,10 @@
+{
+  "rewards": {},
+  "redemptions": {},
+  "settings": {
+    "enabled": true,
+    "cooldownPeriod": 300,
+    "maxPendingRedemptions": 100
+  },
+  "lastUpdated": "2025-02-01T19:06:14.000Z"
+}

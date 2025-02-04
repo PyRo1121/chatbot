@@ -1,0 +1,103 @@
+{
+  "milestones": [],
+  "categories": [],
+  "streamHistory": [
+    {
+      "startTime": "2025-01-24T01:34:34.181Z",
+      "endTime": "2025-01-24T01:34:44.529Z",
+      "duration": "0h 0m",
+      "milestones": []
+    },
+    {
+      "startTime": "2025-01-24T01:35:29.480Z",
+      "endTime": "2025-01-24T01:52:52.078Z",
+      "duration": "0h 17m",
+      "milestones": []
+    },
+    {
+      "startTime": "2025-01-24T02:25:03.228Z",
+      "endTime": "2025-01-24T02:32:07.469Z",
+      "duration": "0h 7m",
+      "milestones": [],
+      "analytics": {
+        "totalInteractions": 1,
+        "topTopics": [
+          {
+            "topic": "!followprotection",
+            "count": 3
+          },
+          {
+            "topic": "!recommendations",
+            "count": 2
+          },
+          {
+            "topic": "!suspicious",
+            "count": 1
+          }
+        ],
+        "chatMood": {
+          "current": {
+            "sentiment": "Negative",
+            "energy": "Medium"
+          },
+          "distribution": [
+            {
+              "mood": "Positive",
+              "count": 1
+            },
+            {
+              "mood": "Negative",
+              "count": 1
+            }
+          ]
+        },
+        "highlights": []
+      }
+    }
+  ],
+  "viewerEngagement": {
+    "16": {
+      "averageViewers": 0,
+      "chatActivity": 7,
+      "samples": 1
+    },
+    "18": {
+      "averageViewers": 0,
+      "chatActivity": null,
+      "samples": 4
+    },
+    "20": {
+      "averageViewers": 0,
+      "chatActivity": 1.5,
+      "samples": 2
+    },
+    "21": {
+      "averageViewers": 0,
+      "chatActivity": 1,
+      "samples": 1
+    },
+    "23": {
+      "averageViewers": 0,
+      "chatActivity": 7,
+      "samples": 1
+    }
+  },
+  "contentAnalytics": {
+    "successfulTitles": [],
+    "popularCategories": [],
+    "peakTimes": {},
+    "highlights": []
+  },
+  "viewerStats": {
+    "peak": 16,
+    "average": null,
+    "retention": 0
+  },
+  "performance": {
+    "categories": {},
+    "titles": {},
+    "times": {}
+  },
+  "totalStreams": 158,
+  "totalHours": 21.06172083333333
+}

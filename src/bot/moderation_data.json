@@ -1,0 +1,19 @@
+{
+  "spamPatterns": [
+    "repeated command usage",
+    "queue management commands",
+    "command usage",
+    "queue management command"
+  ],
+  "bannedWords": [],
+  "userWarnings": {},
+  "raidHistory": [],
+  "moderationActions": [],
+  "trustedUsers": [],
+  "spamStats": {
+    "detectedSpam": 2,
+    "falsePositives": 0,
+    "successfulRaids": 0,
+    "blockedRaids": 0
+  }
+}

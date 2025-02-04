@@ -1,0 +1,42 @@
+{
+  "totalStreams": 283,
+  "totalHours": 8.37132083333333,
+  "peakViewers": 1,
+  "popularCommands": {
+    "!roast": 51,
+    "!besttime": 1,
+    "!commands": 1,
+    "!songrequest": 9,
+    "!queueclear": 5,
+    "!spice": 1,
+    "!track": 13,
+    "!points": 3
+  },
+  "viewerStats": {
+    "new": 1,
+    "returning": 0,
+    "total": 1
+  },
+  "streamHistory": {
+    "2025-01-31": {
+      "duration": 72915,
+      "peakViewers": 1,
+      "chatMessages": 156,
+      "commands": {
+        "!roast": 12,
+        "!points": 2,
+        "!track": 3
+      },
+      "highlights": [],
+      "raids": []
+    },
+    "2025-02-01": {
+      "duration": 0.11449055555555555,
+      "peakViewers": 0,
+      "chatMessages": 0,
+      "commands": {},
+      "highlights": [],
+      "raids": []
+    }
+  }
+}

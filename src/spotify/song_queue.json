@@ -1,0 +1,23 @@
+{
+  "queue": [
+    {
+      "query": "Locked Up - Akon",
+      "trackInfo": {
+        "id": "0YUrjFy4qFKOO5NhM9tYdV",
+        "name": "Locked Up",
+        "artist": "Akon",
+        "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
+        "genres": [],
+        "popularity": 64
+      },
+      "requestedBy": "pyro1121",
+      "timestamp": 1738657996370
+    }
+  ],
+  "history": [],
+  "settings": {
+    "maxQueueLength": 50,
+    "userSongLimit": 999999,
+    "duplicateDelay": 3600
+  }
+}

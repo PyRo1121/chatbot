@@ -1,0 +1,102 @@
+{
+  "userInteractions": {
+    "pyro1121": {
+      "successCount": 7,
+      "categories": {
+        "question": 7
+      },
+      "messages": null,
+      "interactions": null,
+      "lastActive": "2025-02-03T17:53:23.155Z"
+    }
+  },
+  "keywords": {
+    "!recommendations": 1,
+    "!insights": 1,
+    "!track": 3,
+    "@gh0streaper13": 1,
+    "gh0streaper13": 1,
+    "xbonafidekingx": 1,
+    "@firepigbot": 1,
+    "firebot": 1,
+    "good": 1,
+    "twitch": 1,
+    "tool?": 1,
+    "what": 1,
+    "does": 1
+  },
+  "timePatterns": {
+    "20": 1,
+    "21": 1,
+    "22": 2,
+    "23": 3
+  },
+  "messagePatterns": [],
+  "chatPatterns": {
+    "topics": {
+      "!recommendations": 2,
+      "!followprotection": 3,
+      "!suspicious": 1,
+      "!roast": 4,
+      "@pokemoncommunitygame": 2,
+      "!insights": 1,
+      "!track": 12,
+      "@gh0streaper13": 1,
+      "gh0streaper13": 3,
+      "arrowhyphy": 1,
+      "killianghost_tgk": 1,
+      "foxtrot_juliet_gaming": 1,
+      "mudd_cricket": 1,
+      "xbonafidekingx": 1,
+      "pinenutz": 1,
+      "voiceid": 1,
+      "doughslife": 1,
+      "@firepigbot": 3,
+      "firebot": 1,
+      "good": 1,
+      "twitch": 1,
+      "tool?": 1,
+      "what": 1,
+      "does": 1,
+      "nice": 1,
+      "shut": 1,
+      "@pokeinfobot": 1,
+      "@firepigbot, who do": 1
+    },
+    "engagement": {},
+    "sentiment": {
+      "Positive": 3,
+      "Negative": 2,
+      "Neutral": 4
+    },
+    "userStyles": {
+      "pyro1121": "informative"
+    }
+  },
+  "responses": {
+    "greetings": [
+      "What's cookin', good lookin'? 🔥",
+      "Hey chat, missed me? I've been practicing my dad jokes! 👋",
+      "I'm back! Did anyone notice I was gone? No? Just as planned! 😎"
+    ],
+    "reactions": [
+      "That's what she said! ...wait, can I say that? 👀",
+      "Weird flex but ok! 💪",
+      "Chat moving so fast no one will notice I'm actually a potato 🥔"
+    ],
+    "jokes": [
+      "Why don't bots tell dad jokes? Because they have data banks instead! 🤖",
+      "I'm not saying I'm Batman, but has anyone ever seen me and Batman in the same room? 🦇",
+      "I'm so good at sleeping, I can do it with my processors closed! 😴"
+    ],
+    "hype": [
+      "LETS GOOOOO! 🚀",
+      "Chat's energy is over 9000! 💥",
+      "You're all breathtaking! Yes, even you lurkers! 👻"
+    ],
+    ", who do you think will win the superbowl": [
+      "Hey chat! Chiefs vs Eagles rematch? My crystal ball's a bit hazy, but I'm leaning towards the Chiefs. Mahomes is on fire! But don't count out those Eagles - they might just swoop in and surprise us all! Who's your pick?"
+    ],
+    "@firepigbot, who do you think will win the superbowl": "Hey chat! Chiefs vs Eagles rematch? My crystal ball's a bit hazy, but I'm leaning towards the Chiefs. Mahomes is on fire! But don't count out those Eagles - they might just swoop in and surprise us all! Who's your pick?"
+  }
+}

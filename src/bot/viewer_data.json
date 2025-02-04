@@ -1,0 +1,350 @@
+{
+  "viewers": {
+    "pyro1121": {
+      "firstSeen": "2025-01-24T03:28:14.035Z",
+      "visits": 105,
+      "lastSeen": "2025-02-04T07:55:03.856Z",
+      "watchtime": 0,
+      "milestones": [
+        {
+          "level": "Regular",
+          "achievedAt": "2025-01-24T04:51:20.344Z",
+          "visits": 5
+        },
+        {
+          "level": "Loyal Viewer",
+          "achievedAt": "2025-01-24T05:02:01.615Z",
+          "visits": 15
+        },
+        {
+          "level": "Dedicated Fan",
+          "achievedAt": "2025-02-01T00:04:21.496Z",
+          "visits": 30
+        }
+      ],
+      "points": 81
+    },
+    "undefined": {
+      "firstSeen": "2025-02-01T18:12:38.125Z",
+      "visits": 2,
+      "lastSeen": "2025-02-01T18:12:45.715Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "firepigbot": {
+      "firstSeen": "2025-02-03T20:27:44.072Z",
+      "visits": 1,
+      "lastSeen": "2025-02-03T20:27:44.072Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "pokeinfobot": {
+      "firstSeen": "2025-02-03T22:00:47.964Z",
+      "visits": 57,
+      "lastSeen": "2025-02-04T04:23:36.427Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "doughslife": {
+      "firstSeen": "2025-02-03T22:56:46.991Z",
+      "visits": 14,
+      "lastSeen": "2025-02-04T02:00:56.052Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "ardenbr0wn": {
+      "firstSeen": "2025-02-03T23:00:29.854Z",
+      "visits": 2,
+      "lastSeen": "2025-02-03T23:00:37.926Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "gh0streaper13": {
+      "firstSeen": "2025-02-03T23:23:01.088Z",
+      "visits": 277,
+      "lastSeen": "2025-02-04T04:00:19.973Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "pokemoncommunitygame": {
+      "firstSeen": "2025-02-03T23:25:21.097Z",
+      "visits": 23,
+      "lastSeen": "2025-02-04T04:10:31.510Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "itsreallylynx": {
+      "firstSeen": "2025-02-03T23:30:12.016Z",
+      "visits": 5,
+      "lastSeen": "2025-02-03T23:53:59.121Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "levian21vt": {
+      "firstSeen": "2025-02-03T23:33:43.437Z",
+      "visits": 3,
+      "lastSeen": "2025-02-03T23:34:34.330Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "phillycheeze16": {
+      "firstSeen": "2025-02-03T23:37:55.974Z",
+      "visits": 5,
+      "lastSeen": "2025-02-03T23:41:26.580Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "char1ynn": {
+      "firstSeen": "2025-02-03T23:53:40.552Z",
+      "visits": 150,
+      "lastSeen": "2025-02-04T03:42:38.459Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "aidanxplayz": {
+      "firstSeen": "2025-02-03T23:55:46.109Z",
+      "visits": 1,
+      "lastSeen": "2025-02-03T23:55:46.109Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "sos_rampag3zz": {
+      "firstSeen": "2025-02-04T00:17:14.423Z",
+      "visits": 3,
+      "lastSeen": "2025-02-04T00:19:07.290Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "walturs": {
+      "firstSeen": "2025-02-04T00:21:50.555Z",
+      "visits": 40,
+      "lastSeen": "2025-02-04T01:49:51.575Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "xoMedusaxo": {
+      "firstSeen": "2025-02-04T00:24:49.864Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T00:24:49.864Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "xomedusaxo": {
+      "firstSeen": "2025-02-04T00:24:59.764Z",
+      "visits": 3,
+      "lastSeen": "2025-02-04T00:26:18.481Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "tyediedmom": {
+      "firstSeen": "2025-02-04T00:32:27.813Z",
+      "visits": 8,
+      "lastSeen": "2025-02-04T00:36:15.458Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "crusadeling": {
+      "firstSeen": "2025-02-04T01:07:16.336Z",
+      "visits": 5,
+      "lastSeen": "2025-02-04T01:26:38.549Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "blackjezus227": {
+      "firstSeen": "2025-02-04T01:11:32.174Z",
+      "visits": 4,
+      "lastSeen": "2025-02-04T01:12:52.129Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "austin45679": {
+      "firstSeen": "2025-02-04T01:11:56.739Z",
+      "visits": 5,
+      "lastSeen": "2025-02-04T01:13:35.474Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "BlackJezus227": {
+      "firstSeen": "2025-02-04T01:12:08.965Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T01:12:08.965Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "Haurun": {
+      "firstSeen": "2025-02-04T01:56:27.671Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T01:56:27.671Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "haurun": {
+      "firstSeen": "2025-02-04T01:56:45.712Z",
+      "visits": 11,
+      "lastSeen": "2025-02-04T03:20:23.266Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "xnekonanox": {
+      "firstSeen": "2025-02-04T01:59:02.033Z",
+      "visits": 3,
+      "lastSeen": "2025-02-04T02:00:39.516Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "skullzzhype": {
+      "firstSeen": "2025-02-04T02:05:04.080Z",
+      "visits": 3,
+      "lastSeen": "2025-02-04T02:06:25.949Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "mannytheman86": {
+      "firstSeen": "2025-02-04T02:29:46.137Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T02:29:46.137Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "arrowhyphy": {
+      "firstSeen": "2025-02-04T02:50:08.281Z",
+      "visits": 8,
+      "lastSeen": "2025-02-04T03:49:45.950Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "currytoastt": {
+      "firstSeen": "2025-02-04T02:51:29.050Z",
+      "visits": 14,
+      "lastSeen": "2025-02-04T03:00:25.039Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "pinenutz": {
+      "firstSeen": "2025-02-04T03:06:23.399Z",
+      "visits": 3,
+      "lastSeen": "2025-02-04T03:23:45.484Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "kaydubz36": {
+      "firstSeen": "2025-02-04T03:11:06.162Z",
+      "visits": 19,
+      "lastSeen": "2025-02-04T03:19:10.346Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "jedi1412": {
+      "firstSeen": "2025-02-04T03:18:56.274Z",
+      "visits": 2,
+      "lastSeen": "2025-02-04T03:19:16.273Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "rayveenyt": {
+      "firstSeen": "2025-02-04T03:19:12.122Z",
+      "visits": 19,
+      "lastSeen": "2025-02-04T03:38:33.348Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "jaceotgames_tlc": {
+      "firstSeen": "2025-02-04T03:32:34.213Z",
+      "visits": 2,
+      "lastSeen": "2025-02-04T03:33:50.235Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "dragon_rida516": {
+      "firstSeen": "2025-02-04T03:37:36.297Z",
+      "visits": 10,
+      "lastSeen": "2025-02-04T03:42:27.862Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "aMAYzingUnix": {
+      "firstSeen": "2025-02-04T03:38:02.631Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T03:38:02.631Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "diehard_vig": {
+      "firstSeen": "2025-02-04T03:38:06.945Z",
+      "visits": 15,
+      "lastSeen": "2025-02-04T04:00:10.857Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "broknking": {
+      "firstSeen": "2025-02-04T03:38:20.764Z",
+      "visits": 2,
+      "lastSeen": "2025-02-04T03:39:24.884Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "amayzingunix": {
+      "firstSeen": "2025-02-04T03:38:45.850Z",
+      "visits": 4,
+      "lastSeen": "2025-02-04T03:45:46.759Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "slayaa": {
+      "firstSeen": "2025-02-04T03:43:26.951Z",
+      "visits": 4,
+      "lastSeen": "2025-02-04T03:44:23.884Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "Slayaa": {
+      "firstSeen": "2025-02-04T03:44:03.783Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T03:44:03.783Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "camknow": {
+      "firstSeen": "2025-02-04T03:45:01.082Z",
+      "visits": 6,
+      "lastSeen": "2025-02-04T03:46:56.410Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "sery_bot": {
+      "firstSeen": "2025-02-04T04:00:15.204Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T04:00:15.204Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "TangledKiddo": {
+      "firstSeen": "2025-02-04T04:08:19.086Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T04:08:19.086Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    }
+  },
+  "raids": [],
+  "milestones": [],
+  "viewerStats": {
+    "totalUnique": 44,
+    "returningRate": 0.7727272727272727,
+    "loyaltyDistribution": {
+      "New Friend": 44,
+      "Regular": 0,
+      "Loyal Viewer": 0,
+      "Dedicated Fan": 0,
+      "Stream Veteran": 0
+    }
+  }
+}
