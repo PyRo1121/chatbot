@@ -1,5 +1,6 @@
-import { generateResponse } from '../../utils/gemini.js';
+import { generateResponse } from '../../utils/deepseek.js';
 import logger from '../../utils/logger.js';
+import { viewerManager } from '../viewerManager.js';
 
 export async function handleShoutout(twitchClient, channel, user, args) {
   if (!args || args.length === 0) {
@@ -27,32 +28,68 @@ export async function handleShoutout(twitchClient, channel, user, args) {
       description: channelInfo.description || 'awesome content',
     };
 
+    // Get viewer history summaries
+    const targetHistorySummary = viewerManager.getViewerHistorySummary(targetUser);
+
     // Create a witty prompt using their actual data
-    const prompt = `Create a funny and witty Twitch shoutout for ${channelData.displayName} that includes these details in a natural way:
-    - They ${channelData.isLive ? `are live playing ${channelData.currentGame}` : `were last seen playing ${channelData.lastGame}`}
-    - Their channel description: "${channelData.description}"
-    - Stream title (if live): "${channelData.title || ''}"
+    const prompt = `Create an engaging Twitch shoutout with EXACTLY 350 characters:
 
-    Make it humorous and witty but friendly, around 300-400 characters. Include their URL (twitch.tv/${targetUser}) and some fitting emojis.
-    Focus on being entertaining while highlighting their actual content.
-    
-    Example style: "Hold onto your keyboards, chat! The legendary [name] is here, fresh from [funny reference to their game/content]! When they're not [witty comment about their description], they're busy [humorous take on their stream title/content]. Don't miss out - catch the action at [url]! 🎮 ✨"`;
+STREAMER DETAILS:
+- Name: ${channelData.displayName}
+- Current: ${channelData.isLive ? `Live playing ${channelData.currentGame}` : `Last seen playing ${channelData.lastGame}`}
+- Style: ${channelData.description || 'awesome content'}
 
-    const response = await generateResponse(prompt);
+YOUR TASK:
+Write a shoutout in exactly this order:
+1. Greeting (75 chars)
+2. Streamer description & games (300 chars)
+3. End exactly with: "Check them out at twitch.tv/${targetUser}!" (50 chars)
 
-    // Clean up any potential markdown or formatting
-    const cleanResponse = response
-      ?.replace(/[*_`#"'-]/g, '') // Remove markdown characters and quotes
-      ?.replace(/\n/g, ' ') // Replace newlines with spaces
-      ?.replace(/\s+/g, ' ') // Normalize spaces
-      ?.trim();
+REQUIRED:
+- Must mention their games
+- Must describe their style
+- Must include personality traits
+- Must end with the exact URL format
+- No trailing sentences
+- check for proper grammar and punctuation
+- Complete thoughts only
+- Every detail matters
+
+Note: Count your characters carefully and hit exactly 350 total.`;
+
+const response = await generateResponse(prompt).catch(e => {
+  logger.error('Gemini API error during shoutout:', e, { prompt });
+  throw e;
+});
+
+// Clean and validate response
+let cleanResponse = response
+  ?.replace(/\.{2,}|…/g, '.') // Remove ellipsis
+  ?.replace(/\s+/g, ' ') // Normalize spaces
+  ?.trim();
+
+if (!cleanResponse?.includes(`twitch.tv/${targetUser}`)) {
+  throw new Error('Shoutout missing Twitch URL');
+}
+
+// Clean up any potential markdown or formatting
+cleanResponse = cleanResponse
+  ?.replace(/[*_`#"'-]/g, '') // Remove markdown characters and quotes
+  ?.replace(/\n/g, ' ') // Replace newlines with spaces
+  ?.replace(/\s+/g, ' ') // Normalize spaces
+  ?.trim();
+
+    // Enforce character limit
+    if (cleanResponse && cleanResponse.length > 400) {
+      cleanResponse = cleanResponse.substring(0, 400) + '...';
+    }
 
     return (
       cleanResponse ||
       `Hey everyone! Check out @${targetUser} over at twitch.tv/${targetUser}! They're awesome! 🎮`
     );
   } catch (error) {
-    logger.error('Error generating shoutout:', error);
+    logger.error('Error generating shoutout:', error, { targetUser, channelData });
     return `Hey everyone! Check out @${targetUser} over at twitch.tv/${targetUser}! They're awesome! 🎮`;
   }
 }

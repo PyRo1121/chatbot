@@ -1,4 +1,4 @@
-import { analyzeSentiment } from '../utils/gemini.js';
+import { analyzeSentiment } from '../utils/deepseek.js';
 import logger from '../utils/logger.js';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -25,6 +25,22 @@ class AdvancedModeration {
           falsePositives: 0,
           lastUpdated: new Date().toISOString(),
         },
+        stats: {
+          timeouts: 0,
+          bans: 0,
+          warnings: 0,
+          deletedMessages: 0,
+        },
+        userHistory: {},
+        trustedUsers: [],
+        raidHistory: [],
+        chatAnalysis: {
+          messagesPerMinute: 0,
+          uniqueChatters: 0,
+          emoteUsage: 0,
+          spamDetected: 0,
+        },
+        lastUpdated: new Date().toISOString(),
       };
     }
   }
@@ -170,6 +186,15 @@ class AdvancedModeration {
     }
   }
 
+  getRaidHistory() {
+    try {
+      return this.moderationData.raidHistory || [];
+    } catch (error) {
+      logger.error('Error getting raid history:', error);
+      return [];
+    }
+  }
+
   shadowbanUser(username) {
     this.shadowbannedUsers.add(username.toLowerCase());
     logger.info(`User shadowbanned: ${username}`);
@@ -236,8 +261,47 @@ class AdvancedModeration {
       lastUpdated: this.moderationData.spamStats.lastUpdated,
     };
   }
+
+  async getUserHistory(username) {
+    return this.moderationData.userHistory[username] || null;
+  }
+
+  async trustUser(username) {
+    if (!this.moderationData.trustedUsers.includes(username)) {
+      this.moderationData.trustedUsers.push(username);
+      this.saveModerationData();
+    }
+  }
+
+  async untrustUser(username) {
+    this.moderationData.trustedUsers = this.moderationData.trustedUsers.filter(
+      (u) => u !== username
+    );
+    this.saveModerationData();
+  }
+
+  async getChatAnalysis() {
+    return this.moderationData.chatAnalysis;
+  }
+
+  async warnUser(username, reason) {
+    if (!this.moderationData.userHistory[username]) {
+      this.moderationData.userHistory[username] = {
+        timeouts: 0,
+        warnings: 0,
+        lastAction: null,
+      };
+    }
+    this.moderationData.userHistory[username].warnings++;
+    this.moderationData.userHistory[username].lastAction = {
+      type: 'warning',
+      reason,
+      timestamp: new Date().toISOString(),
+    };
+    this.moderationData.stats.warnings++;
+    this.saveModerationData();
+  }
 }
 
-const advancedModeration = new AdvancedModeration();
-export const assessRaid = advancedModeration.assessRaid.bind(advancedModeration);
-export default advancedModeration;
+// Export a single instance without manual bindings
+export default new AdvancedModeration();

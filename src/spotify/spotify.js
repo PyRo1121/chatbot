@@ -1,9 +1,10 @@
-import { generateResponse } from '../utils/gemini.js';
+import { generateResponse } from '../utils/deepseek.js';
 import logger from '../utils/logger.js';
 import songLearning from './songLearning.js';
 import spotifyAuth from '../auth/spotifyAuth.js';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import stringSimilarity from 'string-similarity';
 
 class SpotifyManager {
   constructor() {
@@ -12,6 +13,8 @@ class SpotifyManager {
     this.skipVotes = new Map();
     this.voteThreshold = 3;
     this.playlistId = process.env.SPOTIFY_PLAYLIST_ID;
+    this.searchCache = new Map(); // Add search cache
+    this.CACHE_TTL = 3600000; // 1 hour in milliseconds
   }
 
   loadSongQueue() {
@@ -84,35 +87,97 @@ class SpotifyManager {
     }
   }
 
+  normalizeTitle(title) {
+    return title
+      .toLowerCase()
+      .replace(/['"]/g, '') // Remove quotes
+      .replace(/\(.*?\)/g, '') // Remove content in parentheses
+      .replace(/\[.*?\]/g, '') // Remove content in brackets
+      .replace(/feat\.?|ft\.?/i, '') // Remove feat./ft.
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   async searchTrack(query) {
+    // Check cache first
+    const cacheKey = query.toLowerCase();
+    const cached = this.searchCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.result;
+    }
+
     return spotifyAuth.retryOperation(async (api) => {
-      // Parse artist from query if it contains 'by' or '-'
-      let artist = null;
-      let title = query;
+      // Try different search strategies
+      let searchResults = [];
+      const normalizedQuery = this.normalizeTitle(query);
 
-      if (query.includes(' by ')) {
-        [title, artist] = query.split(' by ').map((s) => s.trim());
-      } else if (query.includes(' - ')) {
-        [title, artist] = query.split(' - ').map((s) => s.trim());
+      // Strategy 1: Direct search with original query
+      let response = await api.searchTracks(query);
+      searchResults = response.body.tracks?.items || [];
+
+      // Strategy 2: Try normalized query if no results
+      if (!searchResults.length) {
+        response = await api.searchTracks(normalizedQuery);
+        searchResults = response.body.tracks?.items || [];
       }
 
-      // If we have artist info, search with both title and artist
-      const searchQuery = artist ? `track:${title} artist:${artist}` : query;
-      const response = await api.searchTracks(searchQuery);
-
-      if (!response.body.tracks?.items?.length) {
-        return null;
+      // Strategy 3: Try artist-based search
+      if (!searchResults.length) {
+        const artistMatches = query.match(/(?:by|-)?\s*([^-]+)$/i);
+        if (artistMatches) {
+          const artist = artistMatches[1].trim();
+          const title = query.replace(new RegExp(`(?:by|-)?\s*${artist}$`, 'i'), '').trim();
+          response = await api.searchTracks(`track:${title} artist:${artist}`);
+          searchResults = response.body.tracks?.items || [];
+        }
       }
 
-      const track = response.body.tracks.items[0];
-      return {
-        id: track.id,
-        name: track.name,
-        artist: track.artists[0].name,
-        uri: track.uri,
-        genres: track.artists[0].genres || [],
-        popularity: track.popularity,
-      };
+      // Strategy 4: Try splitting on common delimiters
+      if (!searchResults.length) {
+        const parts = query.split(/[-–—:|]/); // Add more delimiters as needed
+        if (parts.length > 1) {
+          const [title, artist] = parts.map((p) => p.trim());
+          response = await api.searchTracks(`${title} ${artist}`);
+          searchResults = response.body.tracks?.items || [];
+        }
+      }
+
+      if (searchResults.length > 0) {
+        // Use fuzzy matching with normalized titles
+        const searchStrings = searchResults.map((track) =>
+          this.normalizeTitle(`${track.name} ${track.artists[0].name}`)
+        );
+
+        const matches = stringSimilarity.findBestMatch(normalizedQuery, searchStrings);
+
+        if (matches.bestMatch.rating > 0.3) {
+          const track = searchResults[matches.bestMatchIndex];
+          const result = {
+            id: track.id,
+            name: track.name,
+            artist: track.artists[0].name,
+            uri: track.uri,
+            genres: track.artists[0].genres || [],
+            popularity: track.popularity,
+          };
+
+          // Cache the result
+          this.searchCache.set(cacheKey, {
+            result,
+            timestamp: Date.now(),
+          });
+
+          return result;
+        }
+      }
+
+      // Cache null result to prevent repeated failed searches
+      this.searchCache.set(cacheKey, {
+        result: null,
+        timestamp: Date.now(),
+      });
+
+      return null;
     });
   }
 

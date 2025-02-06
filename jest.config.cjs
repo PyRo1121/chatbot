@@ -1,7 +1,7 @@
-export default {
+module.exports = {
   testEnvironment: 'node',
   transform: {
-    '^.+\\.js$': ['babel-jest', { configFile: './.babelrc' }]
+    '^.+\\.[m]?js$': ['babel-jest', { configFile: './.babelrc' }]
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)$': '$1'
@@ -23,7 +23,7 @@ export default {
     '!**/node_modules/**'
   ],
   setupFiles: [
-    './jest.setup.js'
+    './jest.setup.mjs'
   ],
   testTimeout: 10000,
   injectGlobals: true,
@@ -44,7 +44,8 @@ export default {
     'jsx',
     'ts',
     'tsx',
-    'node'
+    'node',
+    'mjs'
   ],
   verbose: true,
   bail: 1,

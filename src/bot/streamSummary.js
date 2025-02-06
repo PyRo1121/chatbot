@@ -155,10 +155,15 @@ class StreamSummary {
 
     // Analyze each segment for key moments
     const moments = [];
-    for (const segment of segments) {
-      const analysis = await aiService.analyzeMessage(segment.join(' '), 'summary');
-      if (analysis && analysis.sentiment > 0.5) {
-        moments.push(`• ${this.summarizeSegment(segment)}`);
+    for (let i = 0; i < segments.length; i += 2) {
+      // Sample every other segment
+      const segment = segments[i];
+      if (segment) {
+        // Check if segment exists (to avoid errors if segments.length is odd)
+        const analysis = await aiService.analyzeMessage(segment.join(' '), 'summary');
+        if (analysis && analysis.sentiment > 0.5) {
+          moments.push(`• ${this.summarizeSegment(segment)}`);
+        }
       }
     }
 

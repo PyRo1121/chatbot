@@ -1,6 +1,6 @@
 import advancedModeration from '../advancedModeration.js';
 import logger from '../../utils/logger.js';
-import { generateResponse } from '../../utils/gemini.js';
+import { generateResponse } from '../../utils/deepseek.js';
 
 export async function handleModStats(client, channel, user) {
   try {
@@ -63,9 +63,10 @@ export async function handleUntrust(client, channel, user, args) {
 }
 
 export async function handleRaidHistory(client, channel, user) {
+  
   try {
     const history = await advancedModeration.getRaidHistory();
-    if (history.length === 0) {
+    if (!Array.isArray(history) || history.length === 0) {
       return 'No raid history available!';
     }
 
@@ -84,10 +85,10 @@ export async function handleAnalyzeChat(client, channel, user) {
   try {
     const analysis = await advancedModeration.getChatAnalysis();
     const prompt = `Analyze this chat data:
-    Messages per minute: ${analysis.messagesPerMinute}
-    Unique chatters: ${analysis.uniqueChatters}
-    Emote usage: ${analysis.emoteUsage}%
-    Spam detected: ${analysis.spamDetected}
+    Messages per minute: ${analysis?.messagesPerMinute || 0}
+    Unique chatters: ${analysis?.uniqueChatters || 0}
+    Emote usage: ${analysis?.emoteUsage || 0}%
+    Spam detected: ${analysis?.spamDetected || 0}
     
     Provide a brief analysis of chat health and moderation needs.
     Keep it concise, max 200 characters.`;

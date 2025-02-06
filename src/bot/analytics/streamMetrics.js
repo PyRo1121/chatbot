@@ -1,4 +1,4 @@
-import { generateResponse } from '../../utils/gemini.js';
+import { generateResponse } from '../../utils/deepseek.js';
 import logger from '../../utils/logger.js';
 
 let twitchClient;

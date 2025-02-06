@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import logger from '../../utils/logger.js';
-import { generateResponse } from '../../utils/gemini.js';
+import { generateResponse } from '../../utils/deepseek.js';
 import enhancedAnalytics from '../enhancedAnalytics.js';
 import spotifyAuth from '../../auth/spotifyAuth.js';
 import chatInteraction from '../chatInteraction.js';
@@ -45,6 +45,7 @@ export async function handleStreamEnd(client, channel, user) {
     const summary = await streamSummary.generateEndOfStreamSummary();
     await chatInteraction.endStream();
     welcomeManager.clearStreamMemory(); // Clear greetings memory at stream end
+    await client.say(channel, summary);
     return summary;
   } catch (error) {
     logger.error('Error handling stream end:', error);

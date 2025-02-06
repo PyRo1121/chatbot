@@ -1,4 +1,4 @@
-import { generateResponse } from './gemini.js';
+import { generateResponse } from './deepseek.js';
 import logger from './logger.js';
 
 // Cache for generated questions

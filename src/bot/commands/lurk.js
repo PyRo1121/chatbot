@@ -1,5 +1,5 @@
 import logger from '../../utils/logger.js';
-import { generateResponse } from '../../utils/gemini.js';
+import { generateResponse } from '../../utils/deepseek.js';
 
 export async function handleLurk(client, channel, user) {
   try {

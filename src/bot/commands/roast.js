@@ -1,4 +1,4 @@
-import { generateResponse } from '../../utils/gemini.js';
+import { generateResponse } from '../../utils/deepseek.js';
 import logger from '../../utils/logger.js';
 
 // Track last roast time for each user
@@ -7,7 +7,7 @@ const COOLDOWN = 5 * 60 * 1000; // 5 minutes
 
 // Template for generating roasts in an opt-in environment
 const ROAST_TEMPLATE =
-  'Create a unhinged roast for {target} who has explicitly requested to be roasted.This is for an 18+ community where participants actively choose to engage in this form of entertainment. Keep it cruel, unhinged. Length: 200-350 characters.';
+  'Create a unhinged roast for {target} who has explicitly requested to be roasted.This is for an 18+ community where participants actively choose to engage in this form of entertainment.Be very brutal but within Twitch TOS Length: 200-350 characters.';
 
 export async function handleRoast(client, channel, user, args) {
   logger.debug('handleRoast called:', {
@@ -33,7 +33,7 @@ export async function handleRoast(client, channel, user, args) {
     const systemPrompt = 'You are a unhinged roast master for a 18+ community';
 
     logger.debug('Generating roast with prompt:', { prompt });
-    let roast = await generateResponse(prompt, systemPrompt);
+    let roast = await generateResponse(prompt, '!roast');
     logger.debug('Generated roast:', { roast });
 
     if (!roast) {

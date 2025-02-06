@@ -1,99 +1,21 @@
 {
   "songPatterns": {
-    "locked up (made popular by akon) [backing version]|party tyme": 1,
-    "locked up|akon": 7,
-    "redrum|21 savage": 1,
-    "a bar song (tipsy)|shaboozey": 1,
-    "when the darkness comes|jeris johnson": 1,
-    "punching bag|set it off": 1,
-    "two weeks|all that remains": 1,
-    "josie|steely dan": 1,
-    "her eyes|fame on fire": 1,
-    "popular monster|falling in reverse": 1,
-    "scarlet cross|black veil brides": 1,
-    "p*rnstar|nessa barrett": 1,
-    "alcohaulin' ass|hellyeah": 1,
-    "caress me down|sublime": 1,
-    "monster|skillet": 1,
-    "still fly|the devil wears prada": 1,
-    "gangsta's paradise|falling in reverse": 1,
-    "paralyzed|sueco": 1,
-    "six feet deep|royale lynn": 1,
-    "outlaw (feat. luke combs)|upchurch": 2,
-    "bella ciao - música original de la serie la casa de papel/ money heist|manu pilas": 1,
-    "pyro|kings of leon": 4,
-    "beast and the harlot|midnite string quartet": 1,
-    "pos|sueco": 1,
-    "beast and the harlot|avenged sevenfold": 1,
-    "sos (feat. travis barker)|sueco": 1,
-    "the hell song|sum 41": 1,
-    "waking the demon|bullet for my valentine": 1,
-    "wings of a butterfly|him": 1,
-    "it's everyday bro|jake paul": 2,
-    "limits|bad omens": 1
+    "redrum|21 savage": 3
   },
   "userPreferences": {
     "pyro1121": {
       "requestedSongs": [
         {
-          "query": "locked up (made popular by akon) [backing version]|party tyme",
+          "query": "redrum|21 savage",
           "trackInfo": {
-            "id": "2EQIvY0mfuA67PRxKOFuOA",
-            "name": "Locked Up (made popular by Akon) [backing version]",
-            "artist": "Party Tyme",
-            "uri": "spotify:track:2EQIvY0mfuA67PRxKOFuOA",
+            "id": "52eIcoLUM25zbQupAZYoFh",
+            "name": "redrum",
+            "artist": "21 Savage",
+            "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
             "genres": [],
-            "popularity": 0
+            "popularity": 81
           },
-          "timestamp": 1738442690376
-        },
-        {
-          "query": "locked up|akon",
-          "trackInfo": {
-            "id": "0YUrjFy4qFKOO5NhM9tYdV",
-            "name": "Locked Up",
-            "artist": "Akon",
-            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
-            "genres": [],
-            "popularity": 64
-          },
-          "timestamp": 1738442930588
-        },
-        {
-          "query": "locked up|akon",
-          "trackInfo": {
-            "id": "0YUrjFy4qFKOO5NhM9tYdV",
-            "name": "Locked Up",
-            "artist": "Akon",
-            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
-            "genres": [],
-            "popularity": 64
-          },
-          "timestamp": 1738442989394
-        },
-        {
-          "query": "locked up|akon",
-          "trackInfo": {
-            "id": "0YUrjFy4qFKOO5NhM9tYdV",
-            "name": "Locked Up",
-            "artist": "Akon",
-            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
-            "genres": [],
-            "popularity": 64
-          },
-          "timestamp": 1738609775885
-        },
-        {
-          "query": "locked up|akon",
-          "trackInfo": {
-            "id": "0YUrjFy4qFKOO5NhM9tYdV",
-            "name": "Locked Up",
-            "artist": "Akon",
-            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
-            "genres": [],
-            "popularity": 64
-          },
-          "timestamp": 1738619827661
+          "timestamp": 1738781338474
         },
         {
           "query": "redrum|21 savage",
@@ -105,577 +27,32 @@
             "genres": [],
             "popularity": 81
           },
-          "timestamp": 1738622639350
+          "timestamp": 1738785521565
         },
         {
-          "query": "a bar song (tipsy)|shaboozey",
+          "query": "redrum|21 savage",
           "trackInfo": {
-            "id": "2FQrifJ1N335Ljm3TjTVVf",
-            "name": "A Bar Song (Tipsy)",
-            "artist": "Shaboozey",
-            "uri": "spotify:track:2FQrifJ1N335Ljm3TjTVVf",
-            "genres": [],
-            "popularity": 85
-          },
-          "timestamp": 1738626515447
-        },
-        {
-          "query": "her eyes|fame on fire",
-          "trackInfo": {
-            "id": "4MW4jh7AO6ejHgMuyedExR",
-            "name": "Her Eyes",
-            "artist": "Fame on Fire",
-            "uri": "spotify:track:4MW4jh7AO6ejHgMuyedExR",
-            "genres": [],
-            "popularity": 42
-          },
-          "timestamp": 1738627680689
-        },
-        {
-          "query": "beast and the harlot|midnite string quartet",
-          "trackInfo": {
-            "id": "4HMOg6Tg00FtJK4UxCckYT",
-            "name": "Beast and the Harlot",
-            "artist": "Midnite String Quartet",
-            "uri": "spotify:track:4HMOg6Tg00FtJK4UxCckYT",
-            "genres": [],
-            "popularity": 1
-          },
-          "timestamp": 1738637377867
-        },
-        {
-          "query": "beast and the harlot|avenged sevenfold",
-          "trackInfo": {
-            "id": "6FVYwnVrnAEIRnY3bHJb46",
-            "name": "Beast and the Harlot",
-            "artist": "Avenged Sevenfold",
-            "uri": "spotify:track:6FVYwnVrnAEIRnY3bHJb46",
-            "genres": [],
-            "popularity": 62
-          },
-          "timestamp": 1738637680714
-        },
-        {
-          "query": "it's everyday bro|jake paul",
-          "trackInfo": {
-            "id": "4l62h4tiuUwn7eD6hxMlVQ",
-            "name": "It's Everyday Bro",
-            "artist": "Jake Paul",
-            "uri": "spotify:track:4l62h4tiuUwn7eD6hxMlVQ",
-            "genres": [],
-            "popularity": 44
-          },
-          "timestamp": 1738639930629
-        },
-        {
-          "query": "locked up|akon",
-          "trackInfo": {
-            "id": "0YUrjFy4qFKOO5NhM9tYdV",
-            "name": "Locked Up",
-            "artist": "Akon",
-            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
-            "genres": [],
-            "popularity": 64
-          },
-          "timestamp": 1738643175922
-        },
-        {
-          "query": "locked up|akon",
-          "trackInfo": {
-            "id": "0YUrjFy4qFKOO5NhM9tYdV",
-            "name": "Locked Up",
-            "artist": "Akon",
-            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
-            "genres": [],
-            "popularity": 64
-          },
-          "timestamp": 1738657860960
-        },
-        {
-          "query": "locked up|akon",
-          "trackInfo": {
-            "id": "0YUrjFy4qFKOO5NhM9tYdV",
-            "name": "Locked Up",
-            "artist": "Akon",
-            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
-            "genres": [],
-            "popularity": 64
-          },
-          "timestamp": 1738657996370
-        }
-      ],
-      "genres": {},
-      "artists": {
-        "party tyme": 1,
-        "akon": 7,
-        "21 savage": 1,
-        "shaboozey": 1,
-        "fame on fire": 1,
-        "midnite string quartet": 1,
-        "avenged sevenfold": 1,
-        "jake paul": 1
-      },
-      "lastRequest": 1738657996370
-    },
-    "gh0streaper13": {
-      "requestedSongs": [
-        {
-          "query": "when the darkness comes|jeris johnson",
-          "trackInfo": {
-            "id": "1D1Dheq2uzlRYjSc2ylOOR",
-            "name": "When The Darkness Comes",
-            "artist": "Jeris Johnson",
-            "uri": "spotify:track:1D1Dheq2uzlRYjSc2ylOOR",
-            "genres": [],
-            "popularity": 56
-          },
-          "timestamp": 1738626712822
-        },
-        {
-          "query": "punching bag|set it off",
-          "trackInfo": {
-            "id": "7fudux10sVIxILOocZaHrW",
-            "name": "Punching Bag",
-            "artist": "Set It Off",
-            "uri": "spotify:track:7fudux10sVIxILOocZaHrW",
-            "genres": [],
-            "popularity": 61
-          },
-          "timestamp": 1738627039832
-        },
-        {
-          "query": "two weeks|all that remains",
-          "trackInfo": {
-            "id": "0XT70Wk9pP8JZkmJhfntuL",
-            "name": "Two Weeks",
-            "artist": "All That Remains",
-            "uri": "spotify:track:0XT70Wk9pP8JZkmJhfntuL",
-            "genres": [],
-            "popularity": 60
-          },
-          "timestamp": 1738627560687
-        },
-        {
-          "query": "josie|steely dan",
-          "trackInfo": {
-            "id": "1QgLpUJsmrLG61KDVGT0Ux",
-            "name": "Josie",
-            "artist": "Steely Dan",
-            "uri": "spotify:track:1QgLpUJsmrLG61KDVGT0Ux",
-            "genres": [],
-            "popularity": 54
-          },
-          "timestamp": 1738627615977
-        },
-        {
-          "query": "popular monster|falling in reverse",
-          "trackInfo": {
-            "id": "4GssB27iJeqmfGxS94Tfij",
-            "name": "Popular Monster",
-            "artist": "Falling In Reverse",
-            "uri": "spotify:track:4GssB27iJeqmfGxS94Tfij",
-            "genres": [],
-            "popularity": 68
-          },
-          "timestamp": 1738627916924
-        },
-        {
-          "query": "scarlet cross|black veil brides",
-          "trackInfo": {
-            "id": "098MjOfQMOjxqKkoewErxV",
-            "name": "Scarlet Cross",
-            "artist": "Black Veil Brides",
-            "uri": "spotify:track:098MjOfQMOjxqKkoewErxV",
-            "genres": [],
-            "popularity": 54
-          },
-          "timestamp": 1738628718604
-        },
-        {
-          "query": "p*rnstar|nessa barrett",
-          "trackInfo": {
-            "id": "0IVAYMUDvpzFxIEuGc71SM",
-            "name": "P*RNSTAR",
-            "artist": "Nessa Barrett",
-            "uri": "spotify:track:0IVAYMUDvpzFxIEuGc71SM",
+            "id": "52eIcoLUM25zbQupAZYoFh",
+            "name": "redrum",
+            "artist": "21 Savage",
+            "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
             "genres": [],
             "popularity": 81
           },
-          "timestamp": 1738628972926
-        },
-        {
-          "query": "alcohaulin' ass|hellyeah",
-          "trackInfo": {
-            "id": "1OXzwmEPLq7cR6J6sbcLto",
-            "name": "Alcohaulin' Ass",
-            "artist": "HELLYEAH",
-            "uri": "spotify:track:1OXzwmEPLq7cR6J6sbcLto",
-            "genres": [],
-            "popularity": 45
-          },
-          "timestamp": 1738629125332
-        },
-        {
-          "query": "caress me down|sublime",
-          "trackInfo": {
-            "id": "2JKlf0IYz5oWsT3OCLyjpO",
-            "name": "Caress Me Down",
-            "artist": "Sublime",
-            "uri": "spotify:track:2JKlf0IYz5oWsT3OCLyjpO",
-            "genres": [],
-            "popularity": 61
-          },
-          "timestamp": 1738629165008
-        },
-        {
-          "query": "monster|skillet",
-          "trackInfo": {
-            "id": "2UREu1Y8CO4jXkbvqAtP7g",
-            "name": "Monster",
-            "artist": "Skillet",
-            "uri": "spotify:track:2UREu1Y8CO4jXkbvqAtP7g",
-            "genres": [],
-            "popularity": 77
-          },
-          "timestamp": 1738629266760
-        },
-        {
-          "query": "still fly|the devil wears prada",
-          "trackInfo": {
-            "id": "3In1CjNcgFKQmzpVwoLSQy",
-            "name": "Still Fly",
-            "artist": "The Devil Wears Prada",
-            "uri": "spotify:track:3In1CjNcgFKQmzpVwoLSQy",
-            "genres": [],
-            "popularity": 43
-          },
-          "timestamp": 1738633400035
-        },
-        {
-          "query": "gangsta's paradise|falling in reverse",
-          "trackInfo": {
-            "id": "5zXln9RP9AYK3eva2Lkj8w",
-            "name": "Gangsta's Paradise",
-            "artist": "Falling In Reverse",
-            "uri": "spotify:track:5zXln9RP9AYK3eva2Lkj8w",
-            "genres": [],
-            "popularity": 47
-          },
-          "timestamp": 1738633441888
-        },
-        {
-          "query": "paralyzed|sueco",
-          "trackInfo": {
-            "id": "7l4mdOTSYwOayDaHc3s0PV",
-            "name": "Paralyzed",
-            "artist": "Sueco",
-            "uri": "spotify:track:7l4mdOTSYwOayDaHc3s0PV",
-            "genres": [],
-            "popularity": 55
-          },
-          "timestamp": 1738633545636
-        },
-        {
-          "query": "six feet deep|royale lynn",
-          "trackInfo": {
-            "id": "6DeONxjl3gp2eiQq87nBoH",
-            "name": "Six Feet Deep",
-            "artist": "Royale Lynn",
-            "uri": "spotify:track:6DeONxjl3gp2eiQq87nBoH",
-            "genres": [],
-            "popularity": 53
-          },
-          "timestamp": 1738633708161
-        },
-        {
-          "query": "outlaw (feat. luke combs)|upchurch",
-          "trackInfo": {
-            "id": "0jqIg4wzcKfRNJOJxxgPyn",
-            "name": "Outlaw (feat. Luke Combs)",
-            "artist": "Upchurch",
-            "uri": "spotify:track:0jqIg4wzcKfRNJOJxxgPyn",
-            "genres": [],
-            "popularity": 50
-          },
-          "timestamp": 1738633868672
-        },
-        {
-          "query": "bella ciao - música original de la serie la casa de papel/ money heist|manu pilas",
-          "trackInfo": {
-            "id": "3lWzVNe1yFZlkeBBzUuZYu",
-            "name": "Bella Ciao - Música Original de la Serie la Casa de Papel/ Money Heist",
-            "artist": "Manu Pilas",
-            "uri": "spotify:track:3lWzVNe1yFZlkeBBzUuZYu",
-            "genres": [],
-            "popularity": 67
-          },
-          "timestamp": 1738634028875
-        },
-        {
-          "query": "pos|sueco",
-          "trackInfo": {
-            "id": "2dGj0K0iIrgb3ie1QSLtSL",
-            "name": "POS",
-            "artist": "Sueco",
-            "uri": "spotify:track:2dGj0K0iIrgb3ie1QSLtSL",
-            "genres": [],
-            "popularity": 54
-          },
-          "timestamp": 1738637447465
-        },
-        {
-          "query": "sos (feat. travis barker)|sueco",
-          "trackInfo": {
-            "id": "6CTHxxLGZEqLIWuaPWsDF9",
-            "name": "SOS (feat. Travis Barker)",
-            "artist": "Sueco",
-            "uri": "spotify:track:6CTHxxLGZEqLIWuaPWsDF9",
-            "genres": [],
-            "popularity": 45
-          },
-          "timestamp": 1738637716553
-        },
-        {
-          "query": "outlaw (feat. luke combs)|upchurch",
-          "trackInfo": {
-            "id": "0jqIg4wzcKfRNJOJxxgPyn",
-            "name": "Outlaw (feat. Luke Combs)",
-            "artist": "Upchurch",
-            "uri": "spotify:track:0jqIg4wzcKfRNJOJxxgPyn",
-            "genres": [],
-            "popularity": 50
-          },
-          "timestamp": 1738638134263
-        },
-        {
-          "query": "the hell song|sum 41",
-          "trackInfo": {
-            "id": "6hqt1z34Oz0OZtSfy62OFD",
-            "name": "The Hell Song",
-            "artist": "Sum 41",
-            "uri": "spotify:track:6hqt1z34Oz0OZtSfy62OFD",
-            "genres": [],
-            "popularity": 64
-          },
-          "timestamp": 1738639596877
-        },
-        {
-          "query": "waking the demon|bullet for my valentine",
-          "trackInfo": {
-            "id": "0k6wiMT26Wc3K4B2IiloUw",
-            "name": "Waking the Demon",
-            "artist": "Bullet For My Valentine",
-            "uri": "spotify:track:0k6wiMT26Wc3K4B2IiloUw",
-            "genres": [],
-            "popularity": 49
-          },
-          "timestamp": 1738639657032
-        },
-        {
-          "query": "wings of a butterfly|him",
-          "trackInfo": {
-            "id": "5WLjSDWo1VxEQzmsKpcBRe",
-            "name": "Wings of a Butterfly",
-            "artist": "HIM",
-            "uri": "spotify:track:5WLjSDWo1VxEQzmsKpcBRe",
-            "genres": [],
-            "popularity": 56
-          },
-          "timestamp": 1738639799537
-        },
-        {
-          "query": "it's everyday bro|jake paul",
-          "trackInfo": {
-            "id": "4l62h4tiuUwn7eD6hxMlVQ",
-            "name": "It's Everyday Bro",
-            "artist": "Jake Paul",
-            "uri": "spotify:track:4l62h4tiuUwn7eD6hxMlVQ",
-            "genres": [],
-            "popularity": 44
-          },
-          "timestamp": 1738639908311
-        },
-        {
-          "query": "limits|bad omens",
-          "trackInfo": {
-            "id": "1u3OxJiXoYFdA0Fmd9yURC",
-            "name": "Limits",
-            "artist": "Bad Omens",
-            "uri": "spotify:track:1u3OxJiXoYFdA0Fmd9yURC",
-            "genres": [],
-            "popularity": 65
-          },
-          "timestamp": 1738641079489
+          "timestamp": 1738791228467
         }
       ],
       "genres": {},
       "artists": {
-        "jeris johnson": 1,
-        "set it off": 1,
-        "all that remains": 1,
-        "steely dan": 1,
-        "falling in reverse": 2,
-        "black veil brides": 1,
-        "nessa barrett": 1,
-        "hellyeah": 1,
-        "sublime": 1,
-        "skillet": 1,
-        "the devil wears prada": 1,
-        "sueco": 3,
-        "royale lynn": 1,
-        "upchurch": 2,
-        "manu pilas": 1,
-        "sum 41": 1,
-        "bullet for my valentine": 1,
-        "him": 1,
-        "jake paul": 1,
-        "bad omens": 1
+        "21 savage": 3
       },
-      "lastRequest": 1738641079489
-    },
-    "[object Object]": {
-      "requestedSongs": [
-        {
-          "query": "pyro|kings of leon",
-          "trackInfo": {
-            "id": "0umDVf77ygI5RiVp9OvNDj",
-            "name": "Pyro",
-            "artist": "Kings of Leon",
-            "uri": "spotify:track:0umDVf77ygI5RiVp9OvNDj",
-            "genres": [],
-            "popularity": 71
-          },
-          "timestamp": 1738634787711
-        },
-        {
-          "query": "pyro|kings of leon",
-          "trackInfo": {
-            "id": "0umDVf77ygI5RiVp9OvNDj",
-            "name": "Pyro",
-            "artist": "Kings of Leon",
-            "uri": "spotify:track:0umDVf77ygI5RiVp9OvNDj",
-            "genres": [],
-            "popularity": 71
-          },
-          "timestamp": 1738635827662
-        },
-        {
-          "query": "pyro|kings of leon",
-          "trackInfo": {
-            "id": "0umDVf77ygI5RiVp9OvNDj",
-            "name": "Pyro",
-            "artist": "Kings of Leon",
-            "uri": "spotify:track:0umDVf77ygI5RiVp9OvNDj",
-            "genres": [],
-            "popularity": 71
-          },
-          "timestamp": 1738636672297
-        },
-        {
-          "query": "pyro|kings of leon",
-          "trackInfo": {
-            "id": "0umDVf77ygI5RiVp9OvNDj",
-            "name": "Pyro",
-            "artist": "Kings of Leon",
-            "uri": "spotify:track:0umDVf77ygI5RiVp9OvNDj",
-            "genres": [],
-            "popularity": 71
-          },
-          "timestamp": 1738636966668
-        }
-      ],
-      "genres": {},
-      "artists": {
-        "kings of leon": 4
-      },
-      "lastRequest": 1738636966668
+      "lastRequest": 1738791228467
     }
   },
   "approvedSongs": {
-    "sneaky|21 savage": 3,
-    "numb|linkin park": 1,
-    "locked up|akon": 11,
-    "redrum|21 savage": 3,
-    "locked up (made popular by akon) [backing version]|party tyme": 1,
-    "a bar song (tipsy)|shaboozey": 1,
-    "when the darkness comes|jeris johnson": 1,
-    "punching bag|set it off": 1,
-    "two weeks|all that remains": 1,
-    "josie|steely dan": 1,
-    "her eyes|fame on fire": 1,
-    "popular monster|falling in reverse": 1,
-    "scarlet cross|black veil brides": 1,
-    "p*rnstar|nessa barrett": 1,
-    "alcohaulin' ass|hellyeah": 1,
-    "caress me down|sublime": 1,
-    "monster|skillet": 1,
-    "still fly|the devil wears prada": 1,
-    "gangsta's paradise|falling in reverse": 1,
-    "paralyzed|sueco": 1,
-    "six feet deep|royale lynn": 1,
-    "outlaw (feat. luke combs)|upchurch": 2,
-    "bella ciao - música original de la serie la casa de papel/ money heist|manu pilas": 1,
-    "pyro|kings of leon": 4,
-    "beast and the harlot|midnite string quartet": 1,
-    "pos|sueco": 1,
-    "beast and the harlot|avenged sevenfold": 1,
-    "sos (feat. travis barker)|sueco": 1,
-    "the hell song|sum 41": 1,
-    "waking the demon|bullet for my valentine": 1,
-    "wings of a butterfly|him": 1,
-    "it's everyday bro|jake paul": 2,
-    "limits|bad omens": 1
+    "redrum|21 savage": 3
   },
-  "rejectedSongs": {
-    "redrum by 21savage|": {
-      "count": 1,
-      "reasons": {
-        "inappropriate_content": 1
-      }
-    },
-    "sandstorm darude": {
-      "count": 1,
-      "reasons": {
-        "troll_song": 1
-      }
-    },
-    "pyro1121": {
-      "count": 4,
-      "reasons": {
-        "invalid_request": 4
-      }
-    },
-    "thick of it - ksi featuring trippie redd": {
-      "count": 1,
-      "reasons": {
-        "not_found": 1
-      }
-    },
-    "it's everyday bro - jake paul featuring team 10": {
-      "count": 1,
-      "reasons": {
-        "not_found": 1
-      }
-    },
-    "locked up (remix) - akon ft. styles p": {
-      "count": 1,
-      "reasons": {
-        "not_found": 1
-      }
-    },
-    "redrum by 21savage": {
-      "count": 1,
-      "reasons": {
-        "invalid_request": 1
-      }
-    },
-    "locked up by akon": {
-      "count": 1,
-      "reasons": {
-        "invalid_request": 1
-      }
-    }
-  },
+  "rejectedSongs": {},
   "karaokePatterns": [
     "karaoke version",
     "instrumental version",
@@ -691,7 +68,17 @@
     "sing-along version",
     "without vocals",
     "minus one",
-    "instrumental only"
+    "instrumental only",
+    "midi version",
+    "karaoke style",
+    "sing along to",
+    "караоке",
+    "カラオケ",
+    "노래방",
+    "伴奏",
+    "playback",
+    "backing music",
+    "performance track"
   ],
   "trollPatterns": [
     "rick roll",
@@ -703,7 +90,20 @@
     "epic sax guy",
     "sandstorm darude",
     "john cena theme",
-    "rickroll"
+    "rickroll",
+    "ear rape",
+    "bassboosted",
+    "bass boosted",
+    "earrape",
+    "loud",
+    "cursed",
+    "distorted",
+    "deep fried",
+    "nightcore",
+    "10 hours",
+    "sparta remix",
+    "mlg",
+    "sound effect"
   ],
-  "lastUpdated": "2025-02-04T09:17:19.257Z"
+  "lastUpdated": "2025-02-06T02:56:23.702Z"
 }

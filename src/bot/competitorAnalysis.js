@@ -1,7 +1,8 @@
 import { join } from 'path';
 import { readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/gemini.js';
+import { generateResponse } from '../utils/deepseek.js';
+import competitorManager from './competitorManager.js';
 
 class CompetitorAnalysis {
   constructor() {

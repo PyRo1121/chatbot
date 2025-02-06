@@ -2,8 +2,8 @@
   "viewers": {
     "pyro1121": {
       "firstSeen": "2025-01-24T03:28:14.035Z",
-      "visits": 105,
-      "lastSeen": "2025-02-04T07:55:03.856Z",
+      "visits": 124,
+      "lastSeen": "2025-02-05T21:31:04.050Z",
       "watchtime": 0,
       "milestones": [
         {
@@ -33,22 +33,22 @@
     },
     "firepigbot": {
       "firstSeen": "2025-02-03T20:27:44.072Z",
-      "visits": 1,
-      "lastSeen": "2025-02-03T20:27:44.072Z",
+      "visits": 22,
+      "lastSeen": "2025-02-04T19:35:05.422Z",
       "watchtime": 0,
       "milestones": []
     },
     "pokeinfobot": {
       "firstSeen": "2025-02-03T22:00:47.964Z",
-      "visits": 57,
-      "lastSeen": "2025-02-04T04:23:36.427Z",
+      "visits": 82,
+      "lastSeen": "2025-02-05T01:39:24.176Z",
       "watchtime": 0,
       "milestones": []
     },
     "doughslife": {
       "firstSeen": "2025-02-03T22:56:46.991Z",
-      "visits": 14,
-      "lastSeen": "2025-02-04T02:00:56.052Z",
+      "visits": 19,
+      "lastSeen": "2025-02-05T01:27:36.248Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -61,15 +61,15 @@
     },
     "gh0streaper13": {
       "firstSeen": "2025-02-03T23:23:01.088Z",
-      "visits": 277,
-      "lastSeen": "2025-02-04T04:00:19.973Z",
+      "visits": 307,
+      "lastSeen": "2025-02-05T01:28:22.956Z",
       "watchtime": 0,
       "milestones": []
     },
     "pokemoncommunitygame": {
       "firstSeen": "2025-02-03T23:25:21.097Z",
-      "visits": 23,
-      "lastSeen": "2025-02-04T04:10:31.510Z",
+      "visits": 30,
+      "lastSeen": "2025-02-05T01:26:07.379Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -96,8 +96,8 @@
     },
     "char1ynn": {
       "firstSeen": "2025-02-03T23:53:40.552Z",
-      "visits": 150,
-      "lastSeen": "2025-02-04T03:42:38.459Z",
+      "visits": 153,
+      "lastSeen": "2025-02-05T21:20:37.280Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -117,8 +117,8 @@
     },
     "walturs": {
       "firstSeen": "2025-02-04T00:21:50.555Z",
-      "visits": 40,
-      "lastSeen": "2025-02-04T01:49:51.575Z",
+      "visits": 75,
+      "lastSeen": "2025-02-05T00:41:07.779Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -320,8 +320,8 @@
     },
     "sery_bot": {
       "firstSeen": "2025-02-04T04:00:15.204Z",
-      "visits": 1,
-      "lastSeen": "2025-02-04T04:00:15.204Z",
+      "visits": 4,
+      "lastSeen": "2025-02-05T01:31:49.067Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -332,15 +332,67 @@
       "watchtime": 0,
       "milestones": [],
       "points": 100
+    },
+    "S4V4GE_QUEEN": {
+      "firstSeen": "2025-02-04T21:14:11.835Z",
+      "visits": 1,
+      "lastSeen": "2025-02-04T21:14:11.835Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "geminimoon888": {
+      "firstSeen": "2025-02-04T23:29:15.161Z",
+      "visits": 10,
+      "lastSeen": "2025-02-04T23:31:42.676Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "tangledkiddo": {
+      "firstSeen": "2025-02-04T23:38:37.489Z",
+      "visits": 25,
+      "lastSeen": "2025-02-05T00:02:14.783Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "ak47toheaven": {
+      "firstSeen": "2025-02-04T23:38:38.999Z",
+      "visits": 44,
+      "lastSeen": "2025-02-05T00:08:00.881Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "s4v4ge_queen": {
+      "firstSeen": "2025-02-05T00:03:57.247Z",
+      "visits": 10,
+      "lastSeen": "2025-02-05T00:07:42.776Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "flame_hyenard": {
+      "firstSeen": "2025-02-05T00:29:34.540Z",
+      "visits": 3,
+      "lastSeen": "2025-02-05T00:48:04.000Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "xHLGxGHOSTx": {
+      "firstSeen": "2025-02-05T15:39:13.724Z",
+      "visits": 1,
+      "lastSeen": "2025-02-05T15:39:13.724Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
     }
   },
   "raids": [],
   "milestones": [],
   "viewerStats": {
-    "totalUnique": 44,
-    "returningRate": 0.7727272727272727,
+    "totalUnique": 51,
+    "returningRate": 0.803921568627451,
     "loyaltyDistribution": {
-      "New Friend": 44,
+      "New Friend": 51,
       "Regular": 0,
       "Loyal Viewer": 0,
       "Dedicated Fan": 0,

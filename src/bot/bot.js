@@ -208,7 +208,7 @@ async function initBot() {
         msg: JSON.stringify(msg),
       });
 
-      // Convert Twurple user object to expected format
+      // Convert  user object to expected format
       const userObj = {
         username: user,
         displayName: msg.userInfo.displayName,
@@ -1058,7 +1058,7 @@ function setupCleanupIntervals() {
   setInterval(
     () => {
       try {
-        competitorAnalysis.updateAllChannels();
+        competitorManager.updateAllChannels(twitchClient);
       } catch (error) {
         logger.error('Error updating competitor analysis:', error);
       }

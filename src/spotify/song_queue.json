@@ -1,17 +1,56 @@
 {
   "queue": [
     {
-      "query": "Locked Up - Akon",
+      "query": "Redrum - 21 Savage",
       "trackInfo": {
-        "id": "0YUrjFy4qFKOO5NhM9tYdV",
-        "name": "Locked Up",
-        "artist": "Akon",
-        "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
+        "id": "52eIcoLUM25zbQupAZYoFh",
+        "name": "redrum",
+        "artist": "21 Savage",
+        "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
         "genres": [],
-        "popularity": 64
+        "popularity": 81
       },
       "requestedBy": "pyro1121",
-      "timestamp": 1738657996370
+      "timestamp": 1738706182828
+    },
+    {
+      "query": "redrum - 21 Savage",
+      "trackInfo": {
+        "id": "52eIcoLUM25zbQupAZYoFh",
+        "name": "redrum",
+        "artist": "21 Savage",
+        "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
+        "genres": [],
+        "popularity": 81
+      },
+      "requestedBy": "pyro1121",
+      "timestamp": 1738781338474
+    },
+    {
+      "query": "Redrum - 21 Savage",
+      "trackInfo": {
+        "id": "52eIcoLUM25zbQupAZYoFh",
+        "name": "redrum",
+        "artist": "21 Savage",
+        "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
+        "genres": [],
+        "popularity": 81
+      },
+      "requestedBy": "pyro1121",
+      "timestamp": 1738785521565
+    },
+    {
+      "query": "Redrum - 21 Savage",
+      "trackInfo": {
+        "id": "52eIcoLUM25zbQupAZYoFh",
+        "name": "redrum",
+        "artist": "21 Savage",
+        "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
+        "genres": [],
+        "popularity": 81
+      },
+      "requestedBy": "pyro1121",
+      "timestamp": 1738791228467
     }
   ],
   "history": [],

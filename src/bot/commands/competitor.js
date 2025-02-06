@@ -1,6 +1,6 @@
 import logger from '../../utils/logger.js';
 import competitorAnalysis from '../competitorAnalysis.js';
-import { generateResponse } from '../../utils/gemini.js';
+import { generateResponse } from '../../utils/deepseek.js';
 
 export const competitorCommands = {
   handleTrack: async (client, channel, user, args) => {
@@ -46,6 +46,11 @@ export const competitorCommands = {
   handleSuggestions: async (client, channel, user) => {
     try {
       const suggestions = await competitorAnalysis.getSuggestions();
+      logger.debug('Response from competitorAnalysis.getSuggestions:', { suggestions });
+      if (!suggestions) {
+        logger.warn('competitorAnalysis.getSuggestions returned null suggestions');
+        return 'Unable to generate suggestions at this time.';
+      }
       return suggestions;
     } catch (error) {
       logger.error('Error getting suggestions:', error);

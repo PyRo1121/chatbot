@@ -1,6 +1,6 @@
 import logger from '../../utils/logger.js';
 import streamManager from '../streamManager.js';
-import { generateResponse } from '../../utils/gemini.js';
+import { generateResponse } from '../../utils/deepseek.js';
 
 export async function handleTitle(client, channel, user, args) {
   try {

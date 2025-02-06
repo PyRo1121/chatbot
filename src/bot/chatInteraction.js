@@ -42,6 +42,7 @@ class ChatInteraction {
     this.isStreamActive = false;
     this.currentCategory = null;
     this.initializeTwitchApi();
+    this.aiService = new aiService();
   }
 
   async initializeTwitchApi() {
@@ -150,7 +151,7 @@ class ChatInteraction {
       userStats.lastActive = new Date().toISOString();
 
       // Perform AI analysis
-      const messageAnalysis = await aiService.analyzeMessage(message, username);
+      const messageAnalysis = await this.aiService.analyzeMessage(message, username);
       if (messageAnalysis) {
         // Update sentiment history
         userStats.sentiment.history.push({
@@ -174,7 +175,7 @@ class ChatInteraction {
       }
 
       // Update content preferences
-      aiService.updateContentPreferences(username, message);
+      this.aiService.updateContentPreferences(username, message);
 
       // Learn from message patterns
       const pattern = this.findPattern(message);

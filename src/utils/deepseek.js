@@ -1,13 +1,21 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import logger from './logger.js';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const openai = new OpenAI({
+  baseURL: 'https://api.deepseek.com/v1',
+  apiKey: process.env.DEEPSEEK_API_KEY
+});
 
 export async function generateResponse(prompt, command = '') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'deepseek-chat',
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    return completion.choices[0].message.content;
   } catch (error) {
     logger.error('Error generating AI response:', error);
     return null;
@@ -36,7 +44,6 @@ export async function analyzeSentiment(message, command = '') {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-001' });
     const prompt = `Analyze this message for toxicity and emotions.
 Response requirements:
 - Respond with ONLY a valid JSON object
@@ -56,9 +63,14 @@ Response requirements:
 
 Message to analyze: "${message}"`;
 
-    const result = await model.generateContent(prompt);
-    const { response } = result;
-    const text = response.text().trim();
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'deepseek-chat',
+      temperature: 0.2,
+      max_tokens: 500
+    });
+
+    const text = completion.choices[0].message.content.trim();
 
     try {
       const sentimentData = JSON.parse(text);

@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/gemini.js';
+import { generateResponse } from '../utils/deepseek.js';
 import getClient from './twitchClient.js';
 
 class ViewerManager {
@@ -234,6 +234,28 @@ Keep it fun and personal! Message should be one short paragraph.`;
       logger.error('Error generating shoutout:', error);
       return `Check out @${username}! They're awesome!`;
     }
+  }
+  getViewerHistorySummary(username) {
+    const viewer = this.data.viewers[username];
+    if (!viewer) {
+      return null;
+    }
+
+    const level = this.getLoyaltyLevel(viewer.visits, username);
+    const summary = [];
+    summary.push(`${username} is a ${level.title} here`);
+    summary.push(
+      `They first visited on ${viewer.firstSeen.slice(0, 10)} and have visited ${viewer.visits} times`
+    );
+
+    if (viewer.milestones.length > 0) {
+      const lastMilestone = viewer.milestones[viewer.milestones.length - 1];
+      summary.push(
+        `Last milestone achieved: ${lastMilestone.level} on ${lastMilestone.achievedAt.slice(0, 10)}`
+      );
+    }
+
+    return summary.join('. ');
   }
 }
 

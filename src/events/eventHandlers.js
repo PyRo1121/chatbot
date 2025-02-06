@@ -1,4 +1,5 @@
 import responseHandler from './responseHandler.js';
+import advancedModeration from '../bot/advancedModeration.js';
 import logger from './utils/logger.js';
 import { client } from './bot.js';
 import { LRUCache } from 'lru-cache';
@@ -115,6 +116,7 @@ class EventHandlers {
 
   async handleRaid(channel, username, viewers) {
     await this.handleEvent('raid', channel, username, { viewers });
+    await advancedModeration.assessRaid(username, viewers);
   }
 
   async handleFollow(channel, username) {

@@ -1,7 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import winston from 'winston';
-import path from 'path';
-import logger from '../../utils/logger.js';
+import path from 'node:path';
 
 // Test constants
 const TEST_MESSAGE = 'Test message';

@@ -1,8 +1,10 @@
 import { ApiClient } from '@twurple/api';
+import { handleShoutout } from './commands/shoutout.js';
 import { ChatClient } from '@twurple/chat';
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import logger from '../utils/logger.js';
+import updateEnvFile from './updateEnvFile.js';
 import welcomeManager from './welcomeManager.js';
 
 class TwitchClient {
@@ -355,11 +357,11 @@ class TwitchClient {
 
     // Sub events
     this.client.on('sub', (channel, user, subInfo, msg) => {
-      logger.info(`${user} subscribed to ${channel}`);
+      // logger.info(`${user} subscribed to ${channel}`);
     });
 
     this.client.on('resub', (channel, user, subInfo, msg) => {
-      logger.info(`${user} resubscribed to ${channel} for ${subInfo.months} months`);
+      // logger.info(`${user} resubscribed to ${channel} for ${subInfo.months} months`);
     });
 
     // Bits events
@@ -418,23 +420,23 @@ class TwitchClient {
     });
   }
 
-  async handleReconnect(retryCount = 0, maxRetries = 5) {
+  async handleReconnect(retryCount = 0, maxRetries = 10) {
     if (retryCount >= maxRetries) {
       logger.error('Max reconnection attempts reached');
       return;
     }
 
-    const delay = Math.min(1000 * Math.pow(2, retryCount), 30000);
+    const delay = Math.min(2000 * Math.pow(2, retryCount), 30000);
     logger.info(
       `Attempting to reconnect in ${delay / 1000} seconds... (Attempt ${retryCount + 1}/${maxRetries})`
     );
     await new Promise((resolve) => setTimeout(resolve, delay));
 
     try {
-      await this.client.connect();
+      await this.client.connect(); logger.info('Successfully reconnected to Twitch chat');
       logger.info('Successfully reconnected to Twitch chat');
     } catch (error) {
-      logger.error(`Reconnection attempt ${retryCount + 1} failed:`, error);
+      logger.error(`Reconnection attempt ${retryCount + 1} failed: ${error.message} ${error.stack}`);
       await this.handleReconnect(retryCount + 1, maxRetries);
     }
   }
