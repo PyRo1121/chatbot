@@ -5,8 +5,31 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function generateResponse(prompt, command = '') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    const result = await model.generateContent(prompt);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-pro',
+      // Modify safety settings to be less restrictive but still acceptable
+      safetySettings: command === '!roast' ? [
+        {
+          category: 'HARASSMENT',
+          threshold: 'BLOCK_ONLY_HIGH'
+        },
+        {
+          category: 'HATE_SPEECH',
+          threshold: 'BLOCK_ONLY_HIGH'
+        },
+        {
+          category: 'DANGEROUS_CONTENT',
+          threshold: 'BLOCK_ONLY_HIGH'
+        }
+      ] : undefined
+    });
+
+    // For roasts, add a safety disclaimer
+    const finalPrompt = command === '!roast' 
+      ? `[Content Warning: Comedy Roast Content]\n${prompt}\n[Keep content appropriate for streaming]`
+      : prompt;
+
+    const result = await model.generateContent(finalPrompt);
     return result.response.text();
   } catch (error) {
     logger.error('Error generating AI response:', error);

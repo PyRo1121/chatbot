@@ -125,8 +125,12 @@ async function handleMessage(twitchClient, channel, user, message, self) {
     // Handle regular chat messages
     try {
       // Check for potential highlight moments
-      const currentViewers = streamManager.getStreamStats().currentStream.viewers;
-      const viewerCount = currentViewers.length > 0 ? currentViewers[currentViewers.length - 1] : 0;
+      const currentViewers =
+        streamManager.getStreamStats().currentStream.viewers;
+      const viewerCount =
+        currentViewers.length > 0
+          ? currentViewers[currentViewers.length - 1]
+          : 0;
       const isHighlight = await detectHighlight(
         message,
         viewerCount,
@@ -145,7 +149,10 @@ async function handleMessage(twitchClient, channel, user, message, self) {
         });
       }
 
-      const engagementResponse = await chatInteraction.handleChatMessage(user.username, message);
+      const engagementResponse = await chatInteraction.handleChatMessage(
+        user.username,
+        message
+      );
       if (engagementResponse) {
         await twitchClient.client.say(channel, engagementResponse);
       }
@@ -157,12 +164,12 @@ async function handleMessage(twitchClient, channel, user, message, self) {
     try {
       // Track viewer but don't send welcome messages
       const milestone = trackViewer(user.username);
-
+      
       // Only send milestone messages, skip automatic greetings
       if (milestone) {
         await twitchClient.client.say(channel, milestone);
       }
-
+      
       // Removed engagement prompts
     } catch (error) {
       logger.error('Error tracking viewer:', error);
@@ -208,7 +215,7 @@ async function initBot() {
         msg: JSON.stringify(msg),
       });
 
-      // Convert  user object to expected format
+      // Convert Twurple user object to expected format
       const userObj = {
         username: user,
         displayName: msg.userInfo.displayName,
@@ -268,7 +275,10 @@ async function initBot() {
       spotify.cleanup();
       logger.info('Cleanup completed');
     } catch (cleanupError) {
-      logger.error('Error during cleanup after initialization failure:', cleanupError);
+      logger.error(
+        'Error during cleanup after initialization failure:',
+        cleanupError
+      );
     }
     throw error;
   }
@@ -276,7 +286,8 @@ async function initBot() {
 
 async function handleCommand(twitchClient, channel, user, message) {
   const [command, ...args] = message.toLowerCase().split(' ');
-  const isBroadcaster = user.isBroadcaster || user.username === channel.replace('#', '');
+  const isBroadcaster =
+    user.isBroadcaster || user.username === channel.replace('#', '');
 
   logger.debug('Processing command:', {
     command,
@@ -298,7 +309,11 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!lurk': {
         logger.debug('Executing lurk command');
-        const lurkResponse = await handleLurk(twitchClient.client, channel, user);
+        const lurkResponse = await handleLurk(
+          twitchClient.client,
+          channel,
+          user
+        );
         logger.debug('Lurk response:', { response: lurkResponse });
         await twitchClient.client.say(channel, lurkResponse);
         break;
@@ -308,13 +323,23 @@ async function handleCommand(twitchClient, channel, user, message) {
           args: args.join(' '),
           username: user.username,
         });
-        const roastResponse = await handleRoast(twitchClient.client, channel, user, args.join(' '));
+        const roastResponse = await handleRoast(
+          twitchClient.client,
+          channel,
+          user,
+          args.join(' ')
+        );
         logger.debug('Roast response:', { response: roastResponse });
         await twitchClient.client.say(channel, roastResponse);
         break;
       }
       case '!clip': {
-        const clipResponse = await handleClip(twitchClient, channel, user, args.join(' '));
+        const clipResponse = await handleClip(
+          twitchClient,
+          channel,
+          user,
+          args.join(' ')
+        );
         if (clipResponse) {
           await twitchClient.client.say(channel, String(clipResponse));
         }
@@ -336,7 +361,12 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       case '!title': {
         if (isBroadcaster || user.isMod) {
-          const response = await handleTitle(twitchClient.client, channel, user, args.join(' '));
+          const response = await handleTitle(
+            twitchClient.client,
+            channel,
+            user,
+            args.join(' ')
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -345,7 +375,12 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!category': {
         if (isBroadcaster || user.isMod) {
-          const response = await handleCategory(twitchClient.client, channel, user, args.join(' '));
+          const response = await handleCategory(
+            twitchClient.client,
+            channel,
+            user,
+            args.join(' ')
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -413,14 +448,22 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       case '!recommendations': {
-        const response = await handleRecommendations(twitchClient.client, channel, user);
+        const response = await handleRecommendations(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
         break;
       }
       case '!chatinsights': {
-        const response = await handleChatInsights(twitchClient.client, channel, user);
+        const response = await handleChatInsights(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -428,21 +471,33 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!stats':
       case '!viewerstats': {
-        const response = await handleViewerStats(twitchClient.client, channel, user);
+        const response = await handleViewerStats(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
         break;
       }
       case '!loyalty': {
-        const response = await handleLoyalty(twitchClient.client, channel, user);
+        const response = await handleLoyalty(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
         break;
       }
       case '!topviewers': {
-        const response = await handleTopViewers(twitchClient.client, channel, user);
+        const response = await handleTopViewers(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -531,7 +586,11 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       }
       case '!followstats': {
-        const response = await handleFollowStats(twitchClient.client, channel, user);
+        const response = await handleFollowStats(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -539,7 +598,12 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!followcheck': {
         if (user.isMod || isBroadcaster) {
-          const response = await handleFollowCheck(twitchClient.client, channel, user, args);
+          const response = await handleFollowCheck(
+            twitchClient.client,
+            channel,
+            user,
+            args
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -548,7 +612,12 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!followmode': {
         if (user.isMod || isBroadcaster) {
-          const response = await handleFollowMode(twitchClient.client, channel, user, args);
+          const response = await handleFollowMode(
+            twitchClient.client,
+            channel,
+            user,
+            args
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -556,14 +625,22 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       }
       case '!streamstats': {
-        const response = await handleStreamStats(twitchClient.client, channel, user);
+        const response = await handleStreamStats(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
         break;
       }
       case '!streamhealth': {
-        const response = await handleStreamHealth(twitchClient.client, channel, user);
+        const response = await handleStreamHealth(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -587,14 +664,22 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       case '!besttimes': {
-        const response = await handleBestTimes(twitchClient.client, channel, user);
+        const response = await handleBestTimes(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
         break;
       }
       case '!topcategories': {
-        const response = await handleTopCategories(twitchClient.client, channel, user);
+        const response = await handleTopCategories(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -602,7 +687,12 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!trivia': {
         if (user.isMod || isBroadcaster) {
-          const response = await startTrivia(twitchClient.client, channel, user, args.join(' '));
+          const response = await startTrivia(
+            twitchClient.client,
+            channel,
+            user,
+            args.join(' ')
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response.message));
           }
@@ -634,10 +724,18 @@ async function handleCommand(twitchClient, channel, user, message) {
       case '!so': {
         if (user.isMod || isBroadcaster) {
           if (!args.length) {
-            await twitchClient.client.say(channel, 'Please specify a username to shoutout');
+            await twitchClient.client.say(
+              channel,
+              'Please specify a username to shoutout'
+            );
             break;
           }
-          const response = await handleShoutout(twitchClient, channel, user, args);
+          const response = await handleShoutout(
+            twitchClient,
+            channel,
+            user,
+            args
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -646,7 +744,12 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!track':
         if (isBroadcaster) {
-          const response = await competitorCommands.handleTrack(twitchClient, channel, user, args);
+          const response = await competitorCommands.handleTrack(
+            twitchClient,
+            channel,
+            user,
+            args
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -667,7 +770,11 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       case '!insights':
         if (isBroadcaster) {
-          const response = await competitorCommands.handleInsights(twitchClient, channel, user);
+          const response = await competitorCommands.handleInsights(
+            twitchClient,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -675,7 +782,11 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       case '!suggestions':
         if (isBroadcaster) {
-          const response = await competitorCommands.handleSuggestions(twitchClient, channel, user);
+          const response = await competitorCommands.handleSuggestions(
+            twitchClient,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -683,7 +794,11 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       case '!tracked':
         if (isBroadcaster) {
-          const response = await competitorCommands.handleTracked(twitchClient, channel, user);
+          const response = await competitorCommands.handleTracked(
+            twitchClient,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -699,7 +814,11 @@ async function handleCommand(twitchClient, channel, user, message) {
           channel,
           `🎵 Checking song "${args.join(' ')}" for ${username}... please wait!`
         );
-        const songResponse = await handleSongRequest(username, args.join(' '), twitchClient.client);
+        const songResponse = await handleSongRequest(
+          username,
+          args.join(' '),
+          twitchClient.client
+        );
         if (typeof songResponse === 'object' && songResponse.message) {
           await twitchClient.client.say(channel, songResponse.message);
         } else {
@@ -711,7 +830,7 @@ async function handleCommand(twitchClient, channel, user, message) {
         const queueResponse = await handlePlaylist(
           twitchClient.client,
           channel,
-          { username: user.username || user } // Ensure we pass the username correctly
+          { username: user.username || user }  // Ensure we pass the username correctly
         );
         if (typeof queueResponse === 'object' && queueResponse.message) {
           await twitchClient.client.say(channel, queueResponse.message);
@@ -727,7 +846,10 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       case '!queueremove': {
-        const removeResponse = await handleRemoveFromQueue(user.username, args[0]);
+        const removeResponse = await handleRemoveFromQueue(
+          user.username,
+          args[0]
+        );
         await twitchClient.client.say(channel, String(removeResponse.message));
         break;
       }
@@ -799,7 +921,11 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!modstats': {
         if (user.isMod || isBroadcaster) {
-          const response = await handleModStats(twitchClient.client, channel, user);
+          const response = await handleModStats(
+            twitchClient.client,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -809,10 +935,18 @@ async function handleCommand(twitchClient, channel, user, message) {
       case '!userhistory': {
         if (user.isMod || isBroadcaster) {
           if (!args.length) {
-            await twitchClient.client.say(channel, 'Please specify a username to check');
+            await twitchClient.client.say(
+              channel,
+              'Please specify a username to check'
+            );
             break;
           }
-          const response = await handleUserHistory(twitchClient.client, channel, user, args[0]);
+          const response = await handleUserHistory(
+            twitchClient.client,
+            channel,
+            user,
+            args[0]
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -822,10 +956,18 @@ async function handleCommand(twitchClient, channel, user, message) {
       case '!trust': {
         if (user.isMod || isBroadcaster) {
           if (!args.length) {
-            await twitchClient.client.say(channel, 'Please specify a username to trust');
+            await twitchClient.client.say(
+              channel,
+              'Please specify a username to trust'
+            );
             break;
           }
-          const response = await handleTrust(twitchClient.client, channel, user, args[0]);
+          const response = await handleTrust(
+            twitchClient.client,
+            channel,
+            user,
+            args[0]
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -835,10 +977,18 @@ async function handleCommand(twitchClient, channel, user, message) {
       case '!untrust': {
         if (user.isMod || isBroadcaster) {
           if (!args.length) {
-            await twitchClient.client.say(channel, 'Please specify a username to untrust');
+            await twitchClient.client.say(
+              channel,
+              'Please specify a username to untrust'
+            );
             break;
           }
-          const response = await handleUntrust(twitchClient.client, channel, user, args[0]);
+          const response = await handleUntrust(
+            twitchClient.client,
+            channel,
+            user,
+            args[0]
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -847,7 +997,11 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!raidhistory': {
         if (user.isMod || isBroadcaster) {
-          const response = await handleRaidHistory(twitchClient.client, channel, user);
+          const response = await handleRaidHistory(
+            twitchClient.client,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -856,7 +1010,11 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!analyzechat': {
         if (user.isMod || isBroadcaster) {
-          const response = await handleAnalyzeChat(twitchClient.client, channel, user);
+          const response = await handleAnalyzeChat(
+            twitchClient.client,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -865,7 +1023,11 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!performance':
         if (user.isMod || isBroadcaster) {
-          const response = await handleStreamPerformance(twitchClient.client, channel, user);
+          const response = await handleStreamPerformance(
+            twitchClient.client,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -925,7 +1087,11 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       }
       case '!topclips': {
-        const response = await handleTopClips(twitchClient.client, channel, user);
+        const response = await handleTopClips(
+          twitchClient.client,
+          channel,
+          user
+        );
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -933,7 +1099,11 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!clipstats': {
         if (user.isMod || isBroadcaster) {
-          const response = await handleClipStats(twitchClient.client, channel, user);
+          const response = await handleClipStats(
+            twitchClient.client,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -942,7 +1112,11 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!suggestcompilation': {
         if (user.isMod || isBroadcaster) {
-          const response = await handleSuggestCompilation(twitchClient.client, channel, user);
+          const response = await handleSuggestCompilation(
+            twitchClient.client,
+            channel,
+            user
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -1022,15 +1196,20 @@ async function handleCommand(twitchClient, channel, user, message) {
       case '!warn': {
         if (user.isMod || isBroadcaster) {
           if (args.length < 2) {
-            await twitchClient.client.say(channel, 'Usage: !warn [username] [reason]');
+            await twitchClient.client.say(
+              channel,
+              'Usage: !warn [username] [reason]'
+            );
             break;
           }
           const username = args[0];
           const reason = args.slice(1).join(' ');
-          const response = await handleWarn(twitchClient.client, channel, user, [
-            username,
-            ...reason.split(' '),
-          ]);
+          const response = await handleWarn(
+            twitchClient.client,
+            channel,
+            user,
+            [username, ...reason.split(' ')]
+          );
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -1058,7 +1237,7 @@ function setupCleanupIntervals() {
   setInterval(
     () => {
       try {
-        competitorManager.updateAllChannels(twitchClient);
+        competitorAnalysis.updateAllChannels();
       } catch (error) {
         logger.error('Error updating competitor analysis:', error);
       }
@@ -1091,7 +1270,10 @@ function setupTerminationHandler(twitchClient) {
         logger.info('Triggering stream end event...');
         streamEventHandlers.onStreamEnd();
       });
-      logger.info('Stream insights received:', streamInsights ? 'success' : 'no data');
+      logger.info(
+        'Stream insights received:',
+        streamInsights ? 'success' : 'no data'
+      );
 
       logger.info('Running analytics cleanup...');
       analytics.endStream();
@@ -1109,11 +1291,14 @@ function setupTerminationHandler(twitchClient) {
         finalAnalysis,
       });
 
-      const channelName = process.env.CHANNEL_NAME || process.env.TWITCH_CHANNEL;
+      const channelName =
+        process.env.CHANNEL_NAME || process.env.TWITCH_CHANNEL;
       if (finalAnalysis && twitchClient?.client?.isConnected && channelName) {
         logger.info('Posting final stream analysis...');
         const duration =
-          streamCommands.uptime() === 'Stream is offline' ? '0h 0m' : streamCommands.uptime();
+          streamCommands.uptime() === 'Stream is offline'
+            ? '0h 0m'
+            : streamCommands.uptime();
         const message = formatEndStreamMessage(finalAnalysis, duration);
         try {
           await twitchClient.client.say(`#${channelName}`, message);
