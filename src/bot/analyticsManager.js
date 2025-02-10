@@ -12,7 +12,7 @@ const analyticsData = {
   },
 };
 
-export async function trackChatActivity(user, message) {
+export function trackChatActivity(user, message) {
   try {
     const messageStats = {
       timestamp: new Date(),
@@ -71,7 +71,7 @@ export async function trackChatActivity(user, message) {
   }
 }
 
-export async function getViewerStats() {
+export function getViewerStats() {
   try {
     const stats = {
       totalMessages: analyticsData.viewerStats.totalMessages,
@@ -79,7 +79,7 @@ export async function getViewerStats() {
       firstTimeViewers: analyticsData.viewerStats.firstTimeViewers.size,
       returningViewers: analyticsData.viewerStats.returningViewers.size,
       activeViewers: Array.from(analyticsData.chatActivity.entries()).filter(
-        ([_, stats]) => Date.now() - stats.lastActive < 30 * 60 * 1000
+        ([, viewerStats]) => Date.now() - viewerStats.lastActive < 30 * 60 * 1000
       ).length, // Active in last 30 minutes
     };
 
@@ -90,7 +90,7 @@ export async function getViewerStats() {
   }
 }
 
-export async function getHighlights(hours = 24) {
+export function getHighlights(hours = 24) {
   try {
     const recentHighlights = analyticsData.highlights
       .filter((h) => Date.now() - h.timestamp < hours * 60 * 60 * 1000)
@@ -111,7 +111,7 @@ export async function getHighlights(hours = 24) {
   }
 }
 
-export async function trackViewer(username) {
+export function trackViewer(username) {
   try {
     const now = new Date();
     const userStats = analyticsData.chatActivity.get(username) || {

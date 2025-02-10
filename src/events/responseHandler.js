@@ -1,5 +1,5 @@
 import spotify from '../spotify/spotify.js';
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 import logger from '../utils/logger.js';
 import { LRUCache } from 'lru-cache';
 

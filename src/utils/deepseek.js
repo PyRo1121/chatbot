@@ -3,7 +3,7 @@ import logger from './logger.js';
 
 const openai = new OpenAI({
   baseURL: 'https://api.deepseek.com/v1',
-  apiKey: process.env.DEEPSEEK_API_KEY
+  apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
 export async function generateResponse(prompt, command = '') {
@@ -12,7 +12,7 @@ export async function generateResponse(prompt, command = '') {
       messages: [{ role: 'user', content: prompt }],
       model: 'deepseek-chat',
       temperature: 0.7,
-      max_tokens: 1000
+      max_tokens: 1000,
     });
 
     return completion.choices[0].message.content;
@@ -33,8 +33,8 @@ export async function analyzeSentiment(message, command = '') {
         sadness: 0,
         joy: 0,
         fear: 0,
-        neutral: 0
-      }
+        neutral: 0,
+      },
     };
   }
 
@@ -67,7 +67,7 @@ Message to analyze: "${message}"`;
       messages: [{ role: 'user', content: prompt }],
       model: 'deepseek-chat',
       temperature: 0.2,
-      max_tokens: 500
+      max_tokens: 500,
     });
 
     const text = completion.choices[0].message.content.trim();
@@ -97,7 +97,7 @@ function isValidSentimentResponse(data) {
     typeof data.flagged === 'boolean' &&
     data.categories &&
     ['anger', 'sadness', 'joy', 'fear', 'neutral'].every(
-      category =>
+      (category) =>
         typeof data.categories[category] === 'number' &&
         data.categories[category] >= 0 &&
         data.categories[category] <= 1
@@ -107,5 +107,5 @@ function isValidSentimentResponse(data) {
 
 export default {
   generateResponse,
-  analyzeSentiment
+  analyzeSentiment,
 };

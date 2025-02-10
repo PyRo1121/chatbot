@@ -1,56 +1,30 @@
 {
   "queue": [
     {
-      "query": "Redrum - 21 Savage",
+      "query": "noticed by lil mosey",
       "trackInfo": {
-        "id": "52eIcoLUM25zbQupAZYoFh",
-        "name": "redrum",
-        "artist": "21 Savage",
-        "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
+        "id": "7zLYKWcXnYeHHWidalz7rj",
+        "name": "Noticed",
+        "artist": "Lil Mosey",
+        "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
         "genres": [],
-        "popularity": 81
+        "popularity": 69
       },
       "requestedBy": "pyro1121",
-      "timestamp": 1738706182828
+      "timestamp": 1739165148856
     },
     {
-      "query": "redrum - 21 Savage",
+      "query": "fu shit by lil mosey",
       "trackInfo": {
-        "id": "52eIcoLUM25zbQupAZYoFh",
-        "name": "redrum",
-        "artist": "21 Savage",
-        "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
+        "id": "548QZtKCO7l8A6Lv3M1Huc",
+        "name": "Fu shit",
+        "artist": "Lil Mosey",
+        "uri": "spotify:track:548QZtKCO7l8A6Lv3M1Huc",
         "genres": [],
-        "popularity": 81
+        "popularity": 38
       },
       "requestedBy": "pyro1121",
-      "timestamp": 1738781338474
-    },
-    {
-      "query": "Redrum - 21 Savage",
-      "trackInfo": {
-        "id": "52eIcoLUM25zbQupAZYoFh",
-        "name": "redrum",
-        "artist": "21 Savage",
-        "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
-        "genres": [],
-        "popularity": 81
-      },
-      "requestedBy": "pyro1121",
-      "timestamp": 1738785521565
-    },
-    {
-      "query": "Redrum - 21 Savage",
-      "trackInfo": {
-        "id": "52eIcoLUM25zbQupAZYoFh",
-        "name": "redrum",
-        "artist": "21 Savage",
-        "uri": "spotify:track:52eIcoLUM25zbQupAZYoFh",
-        "genres": [],
-        "popularity": 81
-      },
-      "requestedBy": "pyro1121",
-      "timestamp": 1738791228467
+      "timestamp": 1739165161259
     }
   ],
   "history": [],

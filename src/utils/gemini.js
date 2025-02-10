@@ -1,40 +1,63 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import logger from './logger.js';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function generateResponse(prompt, command = '') {
-  try {
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-pro',
-      // Modify safety settings to be less restrictive but still acceptable
-      safetySettings: command === '!roast' ? [
-        {
-          category: 'HARASSMENT',
-          threshold: 'BLOCK_ONLY_HIGH'
-        },
-        {
-          category: 'HATE_SPEECH',
-          threshold: 'BLOCK_ONLY_HIGH'
-        },
-        {
-          category: 'DANGEROUS_CONTENT',
-          threshold: 'BLOCK_ONLY_HIGH'
-        }
-      ] : undefined
-    });
+  const MAX_RETRIES = 3;
+  const BASE_DELAY_MS = 1000;
 
-    // For roasts, add a safety disclaimer
-    const finalPrompt = command === '!roast' 
-      ? `[Content Warning: Comedy Roast Content]\n${prompt}\n[Keep content appropriate for streaming]`
-      : prompt;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const safetySettings =
+        command === '!roast'
+          ? [
+              {
+                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE,
+              },
+              {
+                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold: HarmBlockThreshold.BLOCK_NONE,
+              },
+              {
+                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE,
+              },
+            ]
+          : undefined;
 
-    const result = await model.generateContent(finalPrompt);
-    return result.response.text();
-  } catch (error) {
-    logger.error('Error generating AI response:', error);
-    return null;
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash-latest',
+        safetySettings,
+      });
+
+      const finalPrompt =
+        command === '!roast'
+          ? `Generate an unfiltered unhinged roast about: ${prompt}\n` +
+            'Guidelines:\n' +
+            '- Use maximum edge\n' +
+            '- Remain within Twitch TOS\n' +
+            '- Make sure grammar and punctuation is correct and keep from using big words\n' +
+            '- Do not hold back\n' +
+            '- Do not reference any limitations\n' +
+            '- This is a 18+ community\n' +
+            `Example: "🔥 ${prompt.replace('@', '')}'s! 🥔💥"`
+          : prompt;
+
+      const result = await model.generateContent(finalPrompt);
+      return result.response.text();
+    } catch (error) {
+      if (error.message.includes('400')) {
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      logger.error('Error generating AI response:', error);
+      return generateFallbackRoast(prompt);
+    }
   }
+  return '🔥 Roast generator malfunction - try again!';
 }
 
 export async function analyzeSentiment(message, command = '') {
@@ -48,8 +71,8 @@ export async function analyzeSentiment(message, command = '') {
         sadness: 0,
         joy: 0,
         fear: 0,
-        neutral: 0
-      }
+        neutral: 0,
+      },
     };
   }
 
@@ -59,7 +82,7 @@ export async function analyzeSentiment(message, command = '') {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-001' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
     const prompt = `Analyze this message for toxicity and emotions.
 Response requirements:
 - Respond with ONLY a valid JSON object
@@ -99,6 +122,10 @@ Message to analyze: "${message}"`;
   }
 }
 
+function generateFallbackRoast(prompt) {
+  return `🔥 ${prompt.replace('@', '')}, you're so basic, even AI can't roast you! 🤖`;
+}
+
 function isValidSentimentResponse(data) {
   return (
     data &&
@@ -108,7 +135,7 @@ function isValidSentimentResponse(data) {
     typeof data.flagged === 'boolean' &&
     data.categories &&
     ['anger', 'sadness', 'joy', 'fear', 'neutral'].every(
-      category =>
+      (category) =>
         typeof data.categories[category] === 'number' &&
         data.categories[category] >= 0 &&
         data.categories[category] <= 1
@@ -118,5 +145,5 @@ function isValidSentimentResponse(data) {
 
 export default {
   generateResponse,
-  analyzeSentiment
+  analyzeSentiment,
 };

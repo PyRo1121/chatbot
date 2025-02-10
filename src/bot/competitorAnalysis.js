@@ -1,8 +1,9 @@
 import { join } from 'path';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, promises as fsPromises } from 'fs';
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 import competitorManager from './competitorManager.js';
+import getClient from './twitchClient.js'; // Changed to default import
 
 class CompetitorAnalysis {
   constructor() {
@@ -10,29 +11,36 @@ class CompetitorAnalysis {
     this.initializeTracking();
   }
 
-  loadCompetitorData() {
+  async loadCompetitorData() {
+    const dataPath = join(process.cwd(), 'src/bot/competitor_data.json');
+
     try {
-      const data = readFileSync(join(process.cwd(), 'src/bot/competitor_data.json'), 'utf8');
+      // Read and parse JSON file
+      const data = await fsPromises.readFile(dataPath, 'utf8');
       return JSON.parse(data);
     } catch (error) {
+      if (error.code === 'ENOENT') {
+        logger.info('Creating new competitor data file');
+        const defaultData = this.getDefaultDataStructure();
+        await this.saveCompetitorData(defaultData);
+        return defaultData;
+      }
       logger.error('Error loading competitor data:', error);
-      const defaultData = {
-        trackedChannels: [],
-        marketAnalysis: {
-          categoryTrends: {},
-          peakTimes: {},
-          contentTypes: {},
-        },
-        growthMetrics: {},
-        lastUpdated: new Date().toISOString(),
-      };
-      // Create the file with default data
-      writeFileSync(
-        join(process.cwd(), 'src/bot/competitor_data.json'),
-        JSON.stringify(defaultData, null, 2)
-      );
-      return defaultData;
+      throw new Error('Failed to load competitor data');
     }
+  }
+
+  getDefaultDataStructure() {
+    return {
+      trackedChannels: new Map(),
+      marketAnalysis: {
+        categoryTrends: new Map(),
+        peakTimes: new Map(),
+        contentTypes: new Map(),
+      },
+      growthMetrics: new Map(),
+      lastUpdated: new Date().toISOString(),
+    };
   }
 
   saveCompetitorData() {
@@ -64,20 +72,24 @@ class CompetitorAnalysis {
         return `@${existingChannel.displayName} is already being tracked!`;
       }
 
-      // Add new channel to array
-      this.competitorData.trackedChannels.push({
-        username: channelName,
-        displayName: channel, // Keep original casing
-        category: '',
-        followers: 0,
-        streamFrequency: 0,
-        contentTypes: [],
-        addedAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-      });
+      // Add tracking to competitorManager
+      if (competitorManager.startTracking(channelName)) {
+        // Add new channel to array
+        this.competitorData.trackedChannels.push({
+          username: channelName,
+          displayName: channel, // Keep original casing
+          category: '',
+          followers: 0,
+          streamFrequency: 0,
+          contentTypes: [],
+          addedAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+        });
 
-      this.saveCompetitorData();
-      return `Now tracking ${channel}! Use !insights to see analytics.`;
+        this.saveCompetitorData();
+        return `Now tracking ${channel}! Use !insights to see analytics.`;
+      }
+      return `@${channel} is already being tracked!`;
     } catch (error) {
       logger.error('Error tracking channel:', error);
       return `Failed to track ${channel}. Please try again later.`;
@@ -94,10 +106,14 @@ class CompetitorAnalysis {
         return `@${channel} is not being tracked!`;
       }
 
-      const { displayName } = this.competitorData.trackedChannels[channelIndex];
-      this.competitorData.trackedChannels.splice(channelIndex, 1);
-      this.saveCompetitorData();
-      return `Stopped tracking @${displayName}!`;
+      // Remove from competitorManager
+      if (competitorManager.stopTracking(channelName)) {
+        const { displayName } = this.competitorData.trackedChannels[channelIndex];
+        this.competitorData.trackedChannels.splice(channelIndex, 1);
+        this.saveCompetitorData();
+        return `Stopped tracking @${displayName}!`;
+      }
+      return `@${channel} is not being tracked!`;
     } catch (error) {
       logger.error('Error untracking channel:', error);
       return `Failed to untrack ${channel}. Please try again later.`;
@@ -289,6 +305,79 @@ class CompetitorAnalysis {
     } catch (error) {
       logger.error('Error getting tracked channels:', error);
       return [];
+    }
+  }
+
+  async updateAllChannels() {
+    try {
+      logger.debug('Starting competitor channels update');
+      const twitchClient = getClient();
+      if (!twitchClient) {
+        throw new Error('Twitch client not initialized');
+      }
+
+      if (!Array.isArray(this.competitorData.trackedChannels)) {
+        logger.warn('No tracked channels array found');
+        return;
+      }
+
+      // Create batch updates to avoid rate limits
+      const batchSize = 5;
+      const batches = [];
+      for (let i = 0; i < this.competitorData.trackedChannels.length; i += batchSize) {
+        batches.push(this.competitorData.trackedChannels.slice(i, i + batchSize));
+      }
+
+      // Process all batches concurrently with rate limiting
+      await Promise.all(batches.map(async (batch, index) => {
+        // Add delay between batches
+        await new Promise(resolve => setTimeout(resolve, index * 1000));
+
+        return Promise.all(
+          batch.map(async (channel) => {
+            try {
+              const streamData = await this.fetchChannelData(channel.username);
+              if (streamData) {
+                await this.updateChannelData(channel.username, streamData);
+              }
+            } catch (error) {
+              logger.error(`Error updating channel ${channel.username}:`, error);
+            }
+          })
+        );
+      }));
+      logger.info(`Updated ${this.competitorData.trackedChannels.length} competitor channels`);
+      this.saveCompetitorData();
+    } catch (error) {
+      logger.error('Error in updateAllChannels:', error);
+    }
+  }
+
+  async fetchChannelData(channelName) {
+    try {
+      const twitchClient = await getClient(); // Use the default export directly
+      if (!twitchClient) {
+        throw new Error('Twitch client not initialized');
+      }
+
+      // Use the authenticated TwitchClient
+      const stream = await twitchClient.streams.getStreamByUserName(channelName);
+      if (!stream) {
+        return null;
+      }
+
+      return {
+        user_login: stream.userName,
+        user_name: stream.userName,
+        game_name: stream.gameName,
+        title: stream.title,
+        viewer_count: stream.viewers,
+        started_at: stream.startDate,
+        tags: stream.tags,
+      };
+    } catch (error) {
+      logger.error(`Error fetching channel data for ${channelName}:`, error);
+      return null;
     }
   }
 }

@@ -1,4 +1,4 @@
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 import logger from '../utils/logger.js';
 import songLearning from './songLearning.js';
 import spotifyAuth from '../auth/spotifyAuth.js';
@@ -101,7 +101,7 @@ class SpotifyManager {
   async searchTrack(query) {
     // Check cache first
     const cacheKey = query.toLowerCase();
-    const cached = this.searchCache.get(cacheKey);
+    const cached = await Promise.resolve(this.searchCache.get(cacheKey));
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       return cached.result;
     }
@@ -126,7 +126,7 @@ class SpotifyManager {
         const artistMatches = query.match(/(?:by|-)?\s*([^-]+)$/i);
         if (artistMatches) {
           const artist = artistMatches[1].trim();
-          const title = query.replace(new RegExp(`(?:by|-)?\s*${artist}$`, 'i'), '').trim();
+          const title = query.replace(new RegExp(`(?:by|-)?\\s*${artist}$`, 'i'), '').trim();
           response = await api.searchTracks(`track:${title} artist:${artist}`);
           searchResults = response.body.tracks?.items || [];
         }
@@ -300,7 +300,7 @@ class SpotifyManager {
           let activeDevice = devices.body.devices.find((d) => d.is_active);
           if (!activeDevice) {
             // Try to activate the first device
-            activeDevice = devices.body.devices[0];
+            [activeDevice] = devices.body.devices;
             try {
               await api.transferMyPlayback([activeDevice.id]);
               // Wait longer for the device to activate (3 seconds)
@@ -447,13 +447,13 @@ class SpotifyManager {
     }
   }
 
-  async clearQueue() {
+  clearQueue() {
     this.songQueue.queue = [];
     this.saveSongQueue();
     return 'Song queue cleared!';
   }
 
-  async removeSong(index, username) {
+  removeSong(index, username) {
     try {
       const songIndex = parseInt(index) - 1;
       if (isNaN(songIndex) || songIndex < 0 || songIndex >= this.songQueue.queue.length) {
@@ -474,7 +474,7 @@ class SpotifyManager {
     }
   }
 
-  async getQueueStatus() {
+  getQueueStatus() {
     if (this.songQueue.queue.length === 0) {
       return 'The song queue is empty!';
     }

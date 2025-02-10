@@ -1,4 +1,4 @@
-import aiService from '../utils/aiService.js';
+import AIService from '../utils/aiService.js'; // Change to proper import
 import logger from '../utils/logger.js';
 import streamSummary from './streamSummary.js';
 
@@ -42,7 +42,7 @@ class ChatInteraction {
     this.isStreamActive = false;
     this.currentCategory = null;
     this.initializeTwitchApi();
-    this.aiService = new aiService();
+    this.aiService = new AIService(); // Fixed instantiation
   }
 
   async initializeTwitchApi() {
@@ -91,7 +91,7 @@ class ChatInteraction {
     }
   }
 
-  async startStream() {
+  startStream() {
     this.isStreamActive = true;
     logger.info('Stream started');
     return 'Stream analytics and chat interaction started! 🎥';
@@ -174,8 +174,13 @@ class ChatInteraction {
         this.updateChatMood(messageAnalysis);
       }
 
-      // Update content preferences
-      this.aiService.updateContentPreferences(username, message);
+      // Update content preferences - wrap in try-catch
+      try {
+        await this.aiService.updateContentPreferences(username, message);
+      } catch (error) {
+        logger.warn('Failed to update content preferences:', error);
+        // Continue execution even if this fails
+      }
 
       // Learn from message patterns
       const pattern = this.findPattern(message);
@@ -224,7 +229,7 @@ class ChatInteraction {
     if (score > 0.7) {
       return 'very_positive';
     }
-    if (score > 0.3) {
+    if (score > 3) {
       return 'positive';
     }
     if (score < -0.7) {
@@ -370,7 +375,7 @@ class ChatInteraction {
       };
 
       // Generate contextual response
-      const response = await aiService.generatePersonalizedResponse(message, username, chatContext);
+      const response = await AIService.generatePersonalizedResponse(message, username, chatContext);
 
       // Track this interaction
       if (response) {
@@ -471,7 +476,7 @@ class ChatInteraction {
       if (!userStats) {
         return `@${username} has no chat stats yet!`;
       }
-      const preferences = aiService.getContentPreferences(username);
+      const preferences = AIService.getContentPreferences(username);
       const topTopics = preferences
         ? Object.entries(preferences.topics)
             .sort(([, a], [, b]) => b - a)
@@ -495,8 +500,8 @@ class ChatInteraction {
       if (!userStats) {
         return `@${username} has no engagement stats yet!`;
       }
-      const preferences = aiService.getContentPreferences(username);
-      const style = aiService.determineInteractionStyle(username);
+      const preferences = AIService.getContentPreferences(username);
+      const style = AIService.determineInteractionStyle(username);
       return `@${username}'s Engagement: Style: ${style} | Messages: ${userStats.messages} | Interaction Score: ${Math.round(userStats.sentiment.average * 100)}%`;
     },
   };

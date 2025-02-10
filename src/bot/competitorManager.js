@@ -42,7 +42,7 @@ export async function trackChannel(twitchClient, channelName) {
   }
 }
 
-export async function untrackChannel(channelName) {
+export function untrackChannel(channelName) {
   try {
     if (!competitorData.trackedChannels.has(channelName)) {
       return `Not tracking ${channelName}`;
@@ -60,11 +60,17 @@ export async function untrackChannel(channelName) {
 export async function getInsights(twitchClient) {
   try {
     const insights = [];
+    const streamPromises = Array.from(competitorData.trackedChannels.entries()).map(
+      async ([channelName, data]) => {
+        // Get current stream info
+        const stream = await twitchClient.twitchApi.streams.getStreamByUserId(data.id);
+        return { channelName, data, stream };
+      }
+    );
 
-    for (const [channelName, data] of competitorData.trackedChannels) {
-      // Get current stream info
-      const stream = await twitchClient.twitchApi.streams.getStreamByUserId(data.id);
+    const streamResults = await Promise.all(streamPromises);
 
+    for (const { channelName, data, stream } of streamResults) {
       if (stream) {
         // Update stats
         data.stats.peakViewers = Math.max(data.stats.peakViewers, stream.viewerCount);
@@ -111,13 +117,20 @@ export async function getSuggestions(twitchClient) {
     const allCategories = new Map(); // game -> total viewers
 
     // Analyze all tracked channels
-    for (const [channelName, data] of competitorData.trackedChannels) {
-      const stream = await twitchClient.twitchApi.streams.getStreamByUserId(data.id);
+    const streamPromises = Array.from(competitorData.trackedChannels.entries()).map(
+      ([channelName, data]) =>
+        twitchClient.twitchApi.streams
+          .getStreamByUserId(data.id)
+          .then((stream) => ({ channelName, stream }))
+    );
+    const streams = await Promise.all(streamPromises);
+
+    streams.forEach((stream) => {
       if (stream) {
         const currentViewers = allCategories.get(stream.gameName) || 0;
         allCategories.set(stream.gameName, currentViewers + stream.viewerCount);
       }
-    }
+    });
 
     // Find trending categories
     const trendingCategories = Array.from(allCategories.entries())
@@ -151,7 +164,7 @@ export async function getSuggestions(twitchClient) {
   }
 }
 
-export async function getTrackedChannels() {
+export function getTrackedChannels() {
   try {
     const channels = Array.from(competitorData.trackedChannels.entries())
       .map(([name, data]) => {
@@ -170,19 +183,29 @@ export async function getTrackedChannels() {
 // Update competitor stats periodically
 export async function updateAllChannels(twitchClient) {
   try {
-    for (const [channelName, data] of competitorData.trackedChannels) {
-      const stream = await twitchClient.twitchApi.streams.getStreamByUserId(data.id);
-      if (stream) {
-        // Update running average
-        const oldAvg = data.stats.averageViewers;
-        const totalStreams = Math.floor(data.stats.totalHours) + 1;
-        data.stats.averageViewers = Math.round(
-          (oldAvg * (totalStreams - 1) + stream.viewerCount) / totalStreams
-        );
-        data.stats.totalHours++;
-      }
-      data.lastUpdated = Date.now();
-    }
+    const streamPromises = Array.from(competitorData.trackedChannels.entries()).map(
+      ([channelName, data]) => ({
+        channelName,
+        data,
+        streamPromise: twitchClient.twitchApi.streams.getStreamByUserId(data.id),
+      })
+    );
+
+    await Promise.all(
+      streamPromises.map(async ({ data, streamPromise }) => {
+        const stream = await streamPromise;
+        if (stream) {
+          // Update running average
+          const oldAvg = data.stats.averageViewers;
+          const totalStreams = Math.floor(data.stats.totalHours) + 1;
+          data.stats.averageViewers = Math.round(
+            (oldAvg * (totalStreams - 1) + stream.viewerCount) / totalStreams
+          );
+          data.stats.totalHours++;
+        }
+        data.lastUpdated = Date.now();
+      })
+    );
     logger.info('Updated competitor stats');
   } catch (error) {
     logger.error('Error updating competitor stats:', error);

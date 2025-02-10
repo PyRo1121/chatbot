@@ -1,5 +1,5 @@
 import { LRUCache } from 'lru-cache';
-import { writeFile, readFile } from 'fs/promises';
+import { writeFile, readFile, rename, mkdir } from 'fs/promises';
 import { join } from 'path';
 import logger from '../utils/logger.js';
 
@@ -26,20 +26,54 @@ class Analytics {
     this.writing = false;
 
     // File paths
-    this.dataPath = join(process.cwd(), 'data', 'analytics.json');
-    this.backupPath = join(process.cwd(), 'data', 'analytics.backup.json');
+    this.dataPath = '/Users/olen/Documents/bot/chatbot/src/bot/analytics.json';
+    this.backupPath = '/Users/olen/Documents/bot/chatbot/src/bot/backups';
 
     // Initialize system
     this.initialize();
 
     // Setup auto-save and processing
     this.setupIntervals();
+
+    // Add auto-save interval (every 15 minutes)
+    this.AUTO_SAVE_INTERVAL = 1000 * 60 * 15; // Change to 15 minutes
+    this.MIN_SAVE_INTERVAL = 1000 * 60 * 5; // Minimum 5 minutes between saves
+    this.lastAutoSave = Date.now();
+    this.saveTimeout = null;
+
+    // Add backup rotation
+    this.MAX_BACKUPS = 3;
+
+    // Memory optimization
+    this.PRUNE_THRESHOLD = 1000;
   }
 
   setupIntervals() {
     setInterval(() => this.processWrites(), this.PROCESSING_INTERVAL);
     setInterval(() => this.processBatch(), this.PROCESSING_INTERVAL);
     setInterval(() => this.cleanup(), 1000 * 60 * 60); // Hourly cleanup
+    setInterval(() => this.pruneMemory(), 1000 * 60 * 15); // Every 15 minutes
+
+    // Set up dedicated auto-save interval
+    setInterval(() => this.debouncedAutoSave(), this.AUTO_SAVE_INTERVAL);
+  }
+
+  debouncedAutoSave() {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+
+    const timeSinceLastSave = Date.now() - this.lastAutoSave;
+    if (timeSinceLastSave < this.MIN_SAVE_INTERVAL) {
+      return;
+    }
+
+    this.saveTimeout = setTimeout(() => {
+      if (this.currentStream.startTime) {
+        this.processWrites();
+        this.lastAutoSave = Date.now();
+      }
+    }, 1000); // 1 second debounce
   }
 
   getEmptyStream() {
@@ -80,7 +114,7 @@ class Analytics {
       const data = await readFile(this.dataPath, 'utf8');
       this.analyticsData = JSON.parse(data);
     } catch (error) {
-      logger.warn('No existing analytics data found, creating new');
+      logger.warn('No existing analytics data found, creating new:', error);
       this.analyticsData = { streamHistory: [] };
     }
   }
@@ -217,38 +251,145 @@ class Analytics {
   }
 
   async processWrites() {
-    if (this.writing || !this.writeQueue.length) {
+    if (this.writing) {
+      return;
+    }
+
+    const timeSinceLastSave = Date.now() - this.lastWrite;
+    if (timeSinceLastSave < this.MIN_SAVE_INTERVAL) {
       return;
     }
 
     this.writing = true;
     try {
-      // Backup current data
-      await writeFile(this.backupPath, JSON.stringify(this.analyticsData));
+      // Validate data before saving
+      this.validateData();
 
-      // Write updated data
-      await writeFile(this.dataPath, JSON.stringify(this.analyticsData));
+      // Ensure backup directory exists
+      await mkdir(this.backupPath, { recursive: true });
+
+      // Rotate backups with correct path joining
+      const renamePromises = [];
+      for (let i = this.MAX_BACKUPS - 1; i > 0; i--) {
+        const oldPath = join(this.backupPath, `analytics.${i}.json`);
+        const newPath = join(this.backupPath, `analytics.${i + 1}.json`);
+        renamePromises.push(
+          rename(oldPath, newPath).catch(() => {
+            // Ignore if backup doesn't exist
+          })
+        );
+      }
+      await Promise.all(renamePromises);
+
+      // Create new backup with proper path
+      const latestBackup = join(this.backupPath, 'analytics.1.json');
+      await writeFile(latestBackup, JSON.stringify(this.analyticsData, null, 2));
+
+      // Save main file
+      await writeFile(this.dataPath, JSON.stringify(this.analyticsData, null, 2));
 
       this.writeQueue = [];
       this.lastWrite = Date.now();
+      // Only log on successful writes
+      logger.debug('Analytics data saved'); // Changed to debug level
     } catch (error) {
       logger.error('Failed to write analytics data:', error);
+      // Attempt recovery from backup
+      await this.recoverFromBackup();
     } finally {
       this.writing = false;
     }
   }
 
+  validateData() {
+    // Basic data structure validation
+    if (!this.analyticsData.streamHistory || typeof this.analyticsData.streamHistory !== 'object') {
+      this.analyticsData.streamHistory = {};
+    }
+    if (!this.analyticsData.totalStreams) {
+      this.analyticsData.totalStreams = 0;
+    }
+    if (!this.analyticsData.totalHours) {
+      this.analyticsData.totalHours = 0;
+    }
+    if (!this.analyticsData.popularCommands) {
+      this.analyticsData.popularCommands = {};
+    }
+
+    // Validate current stream data
+    if (this.currentStream.chatMessages < 0) {
+      this.currentStream.chatMessages = 0;
+    }
+    if (this.currentStream.metrics.peakViewers < 0) {
+      this.currentStream.metrics.peakViewers = 0;
+    }
+  }
+
+  async recoverFromBackup() {
+    const backupPromises = Array.from({ length: this.MAX_BACKUPS }, (_, i) => {
+      const backupPath = join(this.backupPath, `analytics.${i + 1}.json`);
+      return readFile(backupPath, 'utf8')
+        .then((data) => ({ success: true, data, index: i + 1 }))
+        .catch(() => ({ success: false, index: i + 1 }));
+    });
+
+    const results = await Promise.all(backupPromises);
+    const firstValidBackup = results.find((result) => result.success);
+
+    if (firstValidBackup) {
+      this.analyticsData = JSON.parse(firstValidBackup.data);
+      logger.info(`Recovered from backup ${firstValidBackup.index}`);
+    } else {
+      logger.error('All backup recovery attempts failed');
+    }
+  }
+
+  autoSave() {
+    if (this.currentStream.startTime) {
+      this.debouncedAutoSave();
+    }
+  }
+
+  pruneMemory() {
+    if (this.currentStream.chatMessages > this.PRUNE_THRESHOLD) {
+      // Keep only last 1000 messages worth of data
+      const oldestAllowed = Date.now() - 1000 * 60 * 60; // 1 hour
+      this.currentStream.highlights = this.currentStream.highlights
+        .filter((h) => h.timestamp > oldestAllowed)
+        .slice(-100);
+
+      // Clear old cached data
+      this.cache.clear();
+
+      logger.info('Memory pruned successfully');
+    }
+  }
+
   cleanup() {
-    // Keep only last 30 days of stream history
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    this.analyticsData.streamHistory = this.analyticsData.streamHistory.filter(
-      (stream) => stream.startTime > thirtyDaysAgo
-    );
+    try {
+      // Keep only last 30 days of stream history
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-    // Clear old cache entries
-    this.cache.clear();
+      // Handle streamHistory as an object with date keys
+      if (this.analyticsData.streamHistory) {
+        const filteredHistory = {};
+        Object.entries(this.analyticsData.streamHistory).forEach(([date, data]) => {
+          // Convert date string to timestamp for comparison
+          const streamDate = new Date(date).getTime();
+          if (streamDate > thirtyDaysAgo) {
+            filteredHistory[date] = data;
+          }
+        });
+        this.analyticsData.streamHistory = filteredHistory;
+      }
 
-    logger.debug('Analytics cleanup completed');
+      // Clear old cache entries
+      this.cache.clear();
+
+      logger.debug('Analytics cleanup completed');
+    } catch (error) {
+      logger.error('Error during analytics cleanup:', error);
+    }
   }
 
   getStreamStats() {
@@ -266,22 +407,55 @@ class Analytics {
     return stats;
   }
 
-  endStream() {
+  async endStream() {
     try {
       this.currentStream.endTime = Date.now();
       const stats = this.getStreamStats();
 
-      this.analyticsData.streamHistory.push({
-        ...this.currentStream,
-        metrics: {
-          ...this.currentStream.metrics,
-          uniqueChatters: Array.from(this.currentStream.metrics.uniqueChatters),
-          commandUsage: Object.fromEntries(this.currentStream.metrics.commandUsage),
-          categoryDuration: Object.fromEntries(this.currentStream.metrics.categoryDuration),
-        },
-      });
+      // Format today's date as YYYY-MM-DD
+      const [today] = new Date().toISOString().split('T');
 
-      this.queueWrite();
+      // Calculate stream duration in seconds
+      const duration = (this.currentStream.endTime - this.currentStream.startTime) / 1000;
+
+      // Format stream data for storage
+      const streamData = {
+        duration,
+        peakViewers: this.currentStream.metrics.peakViewers,
+        chatMessages: this.currentStream.chatMessages,
+        commands: Object.fromEntries(this.currentStream.commands),
+        highlights: this.currentStream.highlights,
+        raids: this.currentStream.raids,
+      };
+
+      // Update stream history in analytics data
+      if (!this.analyticsData.streamHistory) {
+        this.analyticsData.streamHistory = {};
+      }
+
+      this.analyticsData.streamHistory[today] = streamData;
+
+      // Update overall stats
+      if (!this.analyticsData.totalStreams) {
+        this.analyticsData.totalStreams = 0;
+      }
+      if (!this.analyticsData.totalHours) {
+        this.analyticsData.totalHours = 0;
+      }
+      if (!this.analyticsData.popularCommands) {
+        this.analyticsData.popularCommands = {};
+      }
+
+      this.analyticsData.totalStreams++;
+      this.analyticsData.totalHours += duration / 3600;
+
+      // Update popular commands
+      for (const [command, count] of this.currentStream.commands) {
+        this.analyticsData.popularCommands[command] =
+          (this.analyticsData.popularCommands[command] || 0) + count;
+      }
+
+      await this.processWrites();
       return stats;
     } catch (error) {
       logger.error('Failed to end stream analytics:', error);

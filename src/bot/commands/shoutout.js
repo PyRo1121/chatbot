@@ -1,4 +1,4 @@
-import { generateResponse } from '../../utils/deepseek.js';
+import { generateResponse } from '../../utils/gemini.js';
 import logger from '../../utils/logger.js';
 import { viewerManager } from '../viewerManager.js';
 
@@ -57,31 +57,31 @@ REQUIRED:
 
 Note: Count your characters carefully and hit exactly 350 total.`;
 
-const response = await generateResponse(prompt).catch(e => {
-  logger.error('Gemini API error during shoutout:', e, { prompt });
-  throw e;
-});
+    const response = await generateResponse(prompt).catch((e) => {
+      logger.error('Gemini API error during shoutout:', e, { prompt });
+      throw e;
+    });
 
-// Clean and validate response
-let cleanResponse = response
-  ?.replace(/\.{2,}|…/g, '.') // Remove ellipsis
-  ?.replace(/\s+/g, ' ') // Normalize spaces
-  ?.trim();
+    // Clean and validate response
+    let cleanResponse = response
+      ?.replace(/\.{2,}|…/g, '.') // Remove ellipsis
+      ?.replace(/\s+/g, ' ') // Normalize spaces
+      ?.trim();
 
-if (!cleanResponse?.includes(`twitch.tv/${targetUser}`)) {
-  throw new Error('Shoutout missing Twitch URL');
-}
+    if (!cleanResponse?.includes(`twitch.tv/${targetUser}`)) {
+      throw new Error('Shoutout missing Twitch URL');
+    }
 
-// Clean up any potential markdown or formatting
-cleanResponse = cleanResponse
-  ?.replace(/[*_`#"'-]/g, '') // Remove markdown characters and quotes
-  ?.replace(/\n/g, ' ') // Replace newlines with spaces
-  ?.replace(/\s+/g, ' ') // Normalize spaces
-  ?.trim();
+    // Clean up any potential markdown or formatting
+    cleanResponse = cleanResponse
+      ?.replace(/[*_`#"'-]/g, '') // Remove markdown characters and quotes
+      ?.replace(/\n/g, ' ') // Replace newlines with spaces
+      ?.replace(/\s+/g, ' ') // Normalize spaces
+      ?.trim();
 
     // Enforce character limit
     if (cleanResponse && cleanResponse.length > 400) {
-      cleanResponse = cleanResponse.substring(0, 400) + '...';
+      cleanResponse = `${cleanResponse.substring(0, 400)}...`;
     }
 
     return (

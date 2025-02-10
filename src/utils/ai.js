@@ -1,4 +1,4 @@
-import { generateResponse, analyzeSentiment } from './deepseek.js';
+import { generateResponse, analyzeSentiment } from './gemini.js';
 import logger from './logger.js';
 import NodeCache from 'node-cache';
 

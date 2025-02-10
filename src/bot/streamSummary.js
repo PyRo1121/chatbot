@@ -1,9 +1,13 @@
 import logger from '../utils/logger.js';
 import enhancedAnalytics from './enhancedAnalytics.js';
 import contentManager from './contentManager.js';
-import aiService from '../utils/aiService.js';
+import AIService from '../utils/aiService.js';
 
 class StreamSummary {
+  constructor() {
+    this.aiService = new AIService();
+  }
+
   async generateEndOfStreamSummary() {
     try {
       const analytics = enhancedAnalytics.getStreamPerformance();
@@ -155,17 +159,17 @@ class StreamSummary {
 
     // Analyze each segment for key moments
     const moments = [];
-    for (let i = 0; i < segments.length; i += 2) {
-      // Sample every other segment
-      const segment = segments[i];
-      if (segment) {
-        // Check if segment exists (to avoid errors if segments.length is odd)
-        const analysis = await aiService.analyzeMessage(segment.join(' '), 'summary');
-        if (analysis && analysis.sentiment > 0.5) {
-          moments.push(`• ${this.summarizeSegment(segment)}`);
-        }
+    const analysisPromises = segments
+      .filter((_, i) => i % 2 === 0) // Sample every other segment
+      .map((segment) => (segment ? AIService.analyzeMessage(segment.join(' '), 'summary') : null));
+
+    const analyses = await Promise.all(analysisPromises);
+    analyses.forEach((analysis, index) => {
+      const segment = segments[index * 2];
+      if (analysis && analysis.sentiment > 0.5) {
+        moments.push(`• ${this.summarizeSegment(segment)}`);
       }
-    }
+    });
 
     return {
       moments: moments.slice(0, 5),

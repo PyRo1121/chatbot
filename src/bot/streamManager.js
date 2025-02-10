@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { EventEmitter } from 'events';
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 
 class StreamManager extends EventEmitter {
   constructor() {
@@ -106,13 +106,14 @@ class StreamManager extends EventEmitter {
       );
 
       // Weight different factors
-      const viewerScore = Math.min((avgViewers / (peakViewers || 1)) * 40, 40); // Up to 40 points for viewer retention
+      const viewerScore = Math.min((avgViewers / (peakViewers || 1)) * 30, 30); // Up to 30 points for average viewers
+      const retentionScore = Math.min(retention / 2, 10); // Up to 10 points for viewer retention
       const chatScore = Math.min(chatEngagement * 5, 30); // Up to 30 points for chat engagement
       const commandScore = Math.min(commandUsage / 10, 20); // Up to 20 points for command usage
       const highlightScore = Math.min(streamData.highlights?.length * 2 || 0, 10); // Up to 10 points for highlights
 
       // Calculate total score (0-100)
-      return Math.round(viewerScore + chatScore + commandScore + highlightScore);
+      return Math.round(viewerScore + retentionScore + chatScore + commandScore + highlightScore);
     } catch (error) {
       logger.error('Error calculating health score:', error);
       return 0;
@@ -160,7 +161,7 @@ class StreamManager extends EventEmitter {
     this.streamData.totalHours += duration;
 
     // Update stream history
-    const streamDate = new Date().toISOString().split('T')[0];
+    const [streamDate] = new Date().toISOString().split('T');
     this.streamData.streamHistory[streamDate] = {
       duration,
       viewers: {
@@ -248,14 +249,16 @@ class StreamManager extends EventEmitter {
 
     // Only update insights if we have valid stream data
     if (this.currentStream.viewers.length > 0) {
+      const healthScore = this.calculateHealthScore(this.currentStream);
+      let healthStatus = 'critical';
+      if (healthScore > 70) {
+        healthStatus = 'healthy';
+      } else if (healthScore > 40) {
+        healthStatus = 'warning';
+      }
       insights.health = {
-        status:
-          this.calculateHealthScore(this.currentStream) > 70
-            ? 'healthy'
-            : this.calculateHealthScore(this.currentStream) > 40
-              ? 'warning'
-              : 'critical',
-        score: this.calculateHealthScore(this.currentStream),
+        status: healthStatus,
+        score: healthScore,
         bitrate: { average: 0, stability: 'stable' },
       };
       insights.stats = {
@@ -406,7 +409,7 @@ class StreamManager extends EventEmitter {
     // Keep only last 30 days of stream history
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const cutoffDate = thirtyDaysAgo.toISOString().split('T')[0];
+    const [cutoffDate] = thirtyDaysAgo.toISOString().split('T');
 
     this.streamData.streamHistory = Object.entries(this.streamData.streamHistory)
       .filter(([date]) => date >= cutoffDate)

@@ -1,5 +1,5 @@
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 import streamManager from './streamManager.js';
 
 class StreamAutomation {
@@ -15,7 +15,7 @@ class StreamAutomation {
     };
   }
 
-  async init(twitchClient) {
+  init(twitchClient) {
     try {
       if (!twitchClient) {
         throw new Error('TwitchClient is required for StreamAutomation initialization');

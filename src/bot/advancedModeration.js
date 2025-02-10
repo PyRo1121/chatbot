@@ -1,4 +1,4 @@
-import { analyzeSentiment } from '../utils/deepseek.js';
+import { analyzeSentiment } from '../utils/gemini.js';
 import logger from '../utils/logger.js';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -179,6 +179,7 @@ class AdvancedModeration {
       // This would normally call Twitch API to get account creation date using username
       // For now, return a default value
       const response = await Promise.resolve(30); // Simulate API call
+      logger.debug(`Getting account age for ${username}`);
       return response;
     } catch (error) {
       logger.error('Error getting account age:', error);
@@ -262,29 +263,29 @@ class AdvancedModeration {
     };
   }
 
-  async getUserHistory(username) {
+  getUserHistory(username) {
     return this.moderationData.userHistory[username] || null;
   }
 
-  async trustUser(username) {
+  trustUser(username) {
     if (!this.moderationData.trustedUsers.includes(username)) {
       this.moderationData.trustedUsers.push(username);
       this.saveModerationData();
     }
   }
 
-  async untrustUser(username) {
+  untrustUser(username) {
     this.moderationData.trustedUsers = this.moderationData.trustedUsers.filter(
       (u) => u !== username
     );
     this.saveModerationData();
   }
 
-  async getChatAnalysis() {
+  getChatAnalysis() {
     return this.moderationData.chatAnalysis;
   }
 
-  async warnUser(username, reason) {
+  warnUser(username, reason) {
     if (!this.moderationData.userHistory[username]) {
       this.moderationData.userHistory[username] = {
         timeouts: 0,

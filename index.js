@@ -16,7 +16,7 @@ process.on('uncaughtException', (error) => {
 (async () => {
   try {
     logger.info('Starting Twitch chat bot...');
-    
+
     const client = await initBot();
     if (!client) {
       throw new Error('Failed to initialize bot - no client returned');
@@ -39,7 +39,6 @@ process.on('uncaughtException', (error) => {
     // Process signal handlers
     process.on('SIGINT', () => shutdown('SIGINT'));
     process.on('SIGTERM', () => shutdown('SIGTERM'));
-
   } catch (error) {
     logger.error('Fatal error during bot startup:', error);
     process.exit(1);

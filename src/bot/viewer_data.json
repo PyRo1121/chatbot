@@ -2,8 +2,8 @@
   "viewers": {
     "pyro1121": {
       "firstSeen": "2025-01-24T03:28:14.035Z",
-      "visits": 124,
-      "lastSeen": "2025-02-05T21:31:04.050Z",
+      "visits": 129,
+      "lastSeen": "2025-02-10T07:10:37.786Z",
       "watchtime": 0,
       "milestones": [
         {
@@ -384,15 +384,38 @@
       "watchtime": 0,
       "milestones": [],
       "points": 100
+    },
+    "t_raww_262": {
+      "firstSeen": "2025-02-08T07:47:34.513Z",
+      "visits": 1,
+      "lastSeen": "2025-02-08T07:47:34.513Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "killianghost_tgk": {
+      "firstSeen": "2025-02-10T04:16:54.940Z",
+      "visits": 3,
+      "lastSeen": "2025-02-10T04:28:03.297Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "xwarhammer38x": {
+      "firstSeen": "2025-02-10T15:15:53.814Z",
+      "visits": 1,
+      "lastSeen": "2025-02-10T15:15:53.814Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
     }
   },
   "raids": [],
   "milestones": [],
   "viewerStats": {
-    "totalUnique": 51,
-    "returningRate": 0.803921568627451,
+    "totalUnique": 54,
+    "returningRate": 0.7777777777777778,
     "loyaltyDistribution": {
-      "New Friend": 51,
+      "New Friend": 54,
       "Regular": 0,
       "Loyal Viewer": 0,
       "Dedicated Fan": 0,

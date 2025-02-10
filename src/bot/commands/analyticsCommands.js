@@ -2,11 +2,13 @@ import logger from '../../utils/logger.js';
 import enhancedAnalytics from '../enhancedAnalytics.js';
 import contentManager from '../contentManager.js';
 import streamSummary from '../streamSummary.js';
-import aiService from '../../utils/aiService.js';
+import AIService from '../../utils/aiService.js';
+
+const aiService = new AIService(); // Create instance
 
 // Stream Analytics Commands
 export const analyticsCommands = {
-  '!peak': async () => {
+  '!peak': () => {
     try {
       const performance = enhancedAnalytics.getStreamPerformance();
       const peakViewers = Math.max(
@@ -21,7 +23,7 @@ export const analyticsCommands = {
     }
   },
 
-  '!growth': async () => {
+  '!growth': () => {
     try {
       const performance = enhancedAnalytics.getStreamPerformance();
       const { growth } = performance.predictions;
@@ -34,7 +36,7 @@ export const analyticsCommands = {
     }
   },
 
-  '!trending': async () => {
+  '!trending': () => {
     try {
       const trends = contentManager.getContentRecommendations();
       return `Trending Content: ${trends.trending.map((t) => `${t.type} (${Math.round(t.engagement * 100)}% engagement)`).join(' | ')}`;
@@ -44,7 +46,7 @@ export const analyticsCommands = {
     }
   },
 
-  '!insights': async () => {
+  '!insights': () => {
     try {
       const performance = enhancedAnalytics.getStreamPerformance();
       const timeline = enhancedAnalytics.getEngagementTimeline('1h');
@@ -95,8 +97,20 @@ export const analyticsCommands = {
 
       const avgSentiment =
         analysis.reduce((sum, a) => sum + (a?.sentiment || 0), 0) / analysis.length;
-      const mood = avgSentiment > 0.3 ? 'Positive' : avgSentiment < -0.3 ? 'Negative' : 'Neutral';
-      const energy = chatMessages.length > 10 ? 'High' : chatMessages.length > 5 ? 'Medium' : 'Low';
+      let mood;
+      if (avgSentiment > 0.3) {
+        mood = 'Positive';
+      } else if (avgSentiment < -0.3) {
+        mood = 'Negative';
+      } else {
+        mood = 'Neutral';
+      }
+      let energy = 'Low';
+      if (chatMessages.length > 10) {
+        energy = 'High';
+      } else if (chatMessages.length > 5) {
+        energy = 'Medium';
+      }
 
       return `Chat Vibe: ${mood} mood with ${energy} energy! Messages in last 5m: ${chatMessages.length}`;
     } catch (error) {
@@ -105,7 +119,7 @@ export const analyticsCommands = {
     }
   },
 
-  '!schedule': async () => {
+  '!schedule': () => {
     try {
       const performance = enhancedAnalytics.getStreamPerformance();
       const timeline = enhancedAnalytics.getEngagementTimeline('24h');
@@ -136,7 +150,7 @@ export function initializeAnalytics(client) {
 }
 
 // Helper function to get channel info using Twurple
-async function getChannelInfo(username = '') {
+export async function getChannelInfo(username = '') {
   try {
     if (!twitchClient?.twitchApi) {
       throw new Error('Twitch API not initialized');
@@ -166,7 +180,7 @@ async function getChannelInfo(username = '') {
 }
 
 // Helper function to get current viewer count using Twurple
-async function getCurrentViewerCount() {
+export async function getCurrentViewerCount() {
   try {
     if (!twitchClient?.twitchApi) {
       throw new Error('Twitch API not initialized');

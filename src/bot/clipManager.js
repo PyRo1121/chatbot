@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 
 class ClipManager {
   constructor() {
@@ -100,7 +100,7 @@ class ClipManager {
     }
   }
 
-  async getClipsByCategory(category) {
+  getClipsByCategory(category) {
     return this.clipsData.clips.filter(
       (clip) => clip.game && clip.game.toLowerCase() === category.toLowerCase()
     );
@@ -108,27 +108,26 @@ class ClipManager {
 
   async getClipsByTag(tag) {
     const normalizedTag = tag.toLowerCase();
-    const results = [];
-    for (const clip of this.clipsData.clips) {
+    const clipPromises = this.clipsData.clips.map(async (clip) => {
       const tags = await this.extractTags(clip.title);
-      if (tags.includes(normalizedTag)) {
-        results.push(clip);
-      }
-    }
-    return results;
+      return { clip, tags };
+    });
+
+    const results = await Promise.all(clipPromises);
+    return results.filter(({ tags }) => tags.includes(normalizedTag)).map(({ clip }) => clip);
   }
 
-  async getRecentClips(days = 7) {
+  getRecentClips(days = 7) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
     return this.clipsData.clips.filter((clip) => new Date(clip.timestamp) > cutoff);
   }
 
-  async getTopClips(limit = 10) {
+  getTopClips(limit = 10) {
     return this.clipsData.clips.sort((a, b) => b.views - a.views).slice(0, limit);
   }
 
-  async getHighlights(days = 7) {
+  getHighlights(days = 7) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
     return this.clipsData.highlights.filter((highlight) => new Date(highlight.timestamp) > cutoff);
@@ -138,7 +137,7 @@ class ClipManager {
     return this.clipsData.clips.find((clip) => clip.id === clipId);
   }
 
-  async updateClipViews(clipId, views) {
+  updateClipViews(clipId, views) {
     const clip = this.getClipById(clipId);
     if (clip) {
       const viewDiff = views - clip.views;
@@ -201,12 +200,11 @@ class ClipManager {
       }
 
       // Then process tags asynchronously
-      for (const clip of this.clipsData.clips) {
-        const tags = await this.extractTags(clip.title);
-        for (const tag of tags) {
-          this.clipsData.tags[tag] = (this.clipsData.tags[tag] || 0) + 1;
-        }
-      }
+      const tagPromises = this.clipsData.clips.map((clip) => this.extractTags(clip.title));
+      const allTags = await Promise.all(tagPromises);
+      allTags.flat().forEach((tag) => {
+        this.clipsData.tags[tag] = (this.clipsData.tags[tag] || 0) + 1;
+      });
 
       this.saveClipsData();
       logger.info('Clips data cleaned up');

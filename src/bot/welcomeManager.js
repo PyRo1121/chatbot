@@ -1,4 +1,4 @@
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 import logger from '../utils/logger.js';
 import viewerManager from './viewerManager.js';
 import { ApiClient } from '@twurple/api';

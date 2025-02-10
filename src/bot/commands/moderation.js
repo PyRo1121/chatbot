@@ -1,6 +1,6 @@
 import advancedModeration from '../advancedModeration.js';
 import logger from '../../utils/logger.js';
-import { generateResponse } from '../../utils/deepseek.js';
+import { generateResponse } from '../../utils/gemini.js';
 
 export async function handleModStats(client, channel, user) {
   try {
@@ -63,7 +63,6 @@ export async function handleUntrust(client, channel, user, args) {
 }
 
 export async function handleRaidHistory(client, channel, user) {
-  
   try {
     const history = await advancedModeration.getRaidHistory();
     if (!Array.isArray(history) || history.length === 0) {

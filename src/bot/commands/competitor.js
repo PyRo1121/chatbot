@@ -1,6 +1,6 @@
 import logger from '../../utils/logger.js';
 import competitorAnalysis from '../competitorAnalysis.js';
-import { generateResponse } from '../../utils/deepseek.js';
+import { generateResponse } from '../../utils/gemini.js';
 
 export const competitorCommands = {
   handleTrack: async (client, channel, user, args) => {

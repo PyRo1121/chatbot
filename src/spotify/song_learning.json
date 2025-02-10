@@ -1,6 +1,12 @@
 {
   "songPatterns": {
-    "redrum|21 savage": 3
+    "redrum|21 savage": 3,
+    "locked up|akon": 1,
+    "blueberry faygo (originally performed by lil mosey) - karaoke instrumental version|hit the button karaoke": 1,
+    "rarri|lil mosey": 2,
+    "noticed|lil mosey": 3,
+    "fu〜shit!!!|the telephones": 2,
+    "fu shit|lil mosey": 2
   },
   "userPreferences": {
     "pyro1121": {
@@ -40,19 +46,180 @@
             "popularity": 81
           },
           "timestamp": 1738791228467
+        },
+        {
+          "query": "locked up|akon",
+          "trackInfo": {
+            "id": "0YUrjFy4qFKOO5NhM9tYdV",
+            "name": "Locked Up",
+            "artist": "Akon",
+            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
+            "genres": [],
+            "popularity": 63
+          },
+          "timestamp": 1738960522211
+        },
+        {
+          "query": "blueberry faygo (originally performed by lil mosey) - karaoke instrumental version|hit the button karaoke",
+          "trackInfo": {
+            "id": "33iLvY50qlXfy0m8IWJ63f",
+            "name": "Blueberry Faygo (Originally Performed by Lil Mosey) - Karaoke Instrumental Version",
+            "artist": "Hit The Button Karaoke",
+            "uri": "spotify:track:33iLvY50qlXfy0m8IWJ63f",
+            "genres": [],
+            "popularity": 1
+          },
+          "timestamp": 1739162575192
+        },
+        {
+          "query": "rarri|lil mosey",
+          "trackInfo": {
+            "id": "6k4Yu26JgigTt7ghkP1FDb",
+            "name": "Rarri",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:6k4Yu26JgigTt7ghkP1FDb",
+            "genres": [],
+            "popularity": 40
+          },
+          "timestamp": 1739163052704
+        },
+        {
+          "query": "rarri|lil mosey",
+          "trackInfo": {
+            "id": "6k4Yu26JgigTt7ghkP1FDb",
+            "name": "Rarri",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:6k4Yu26JgigTt7ghkP1FDb",
+            "genres": [],
+            "popularity": 40
+          },
+          "timestamp": 1739163618796
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739163711262
+        },
+        {
+          "query": "fu〜shit!!!|the telephones",
+          "trackInfo": {
+            "id": "68ZZ5TUSxaApwe9Aj8hyFX",
+            "name": "fu〜shit!!!",
+            "artist": "the telephones",
+            "uri": "spotify:track:68ZZ5TUSxaApwe9Aj8hyFX",
+            "genres": [],
+            "popularity": 1
+          },
+          "timestamp": 1739163716871
+        },
+        {
+          "query": "fu〜shit!!!|the telephones",
+          "trackInfo": {
+            "id": "68ZZ5TUSxaApwe9Aj8hyFX",
+            "name": "fu〜shit!!!",
+            "artist": "the telephones",
+            "uri": "spotify:track:68ZZ5TUSxaApwe9Aj8hyFX",
+            "genres": [],
+            "popularity": 1
+          },
+          "timestamp": 1739163744399
+        },
+        {
+          "query": "fu shit|lil mosey",
+          "trackInfo": {
+            "id": "548QZtKCO7l8A6Lv3M1Huc",
+            "name": "Fu shit",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:548QZtKCO7l8A6Lv3M1Huc",
+            "genres": [],
+            "popularity": 38
+          },
+          "timestamp": 1739163852941
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739163859481
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739165148856
+        },
+        {
+          "query": "fu shit|lil mosey",
+          "trackInfo": {
+            "id": "548QZtKCO7l8A6Lv3M1Huc",
+            "name": "Fu shit",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:548QZtKCO7l8A6Lv3M1Huc",
+            "genres": [],
+            "popularity": 38
+          },
+          "timestamp": 1739165161260
         }
       ],
       "genres": {},
       "artists": {
-        "21 savage": 3
+        "21 savage": 3,
+        "akon": 1,
+        "hit the button karaoke": 1,
+        "lil mosey": 7,
+        "the telephones": 2
       },
-      "lastRequest": 1738791228467
+      "lastRequest": 1739165161260
     }
   },
   "approvedSongs": {
-    "redrum|21 savage": 3
+    "redrum|21 savage": 3,
+    "locked up|akon": 1,
+    "blueberry faygo (originally performed by lil mosey) - karaoke instrumental version|hit the button karaoke": 1,
+    "rarri|lil mosey": 2,
+    "noticed|lil mosey": 3,
+    "fu〜shit!!!|the telephones": 2,
+    "fu shit|lil mosey": 2
   },
-  "rejectedSongs": {},
+  "rejectedSongs": {
+    "noticed by lil mosey": {
+      "count": 7,
+      "reasons": {
+        "invalid_request": 7
+      }
+    },
+    "it's difficult to pinpoint one single song.  lil mosey has many popular songs.  more information is needed to be specific.": {
+      "count": 1,
+      "reasons": {
+        "not_found": 1
+      }
+    },
+    "fu shit lil mosey": {
+      "count": 2,
+      "reasons": {
+        "invalid_request": 2
+      }
+    }
+  },
   "karaokePatterns": [
     "karaoke version",
     "instrumental version",
@@ -105,5 +272,5 @@
     "mlg",
     "sound effect"
   ],
-  "lastUpdated": "2025-02-06T02:56:23.702Z"
+  "lastUpdated": "2025-02-10T15:34:39.530Z"
 }

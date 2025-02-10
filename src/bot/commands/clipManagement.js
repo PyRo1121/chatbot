@@ -1,6 +1,6 @@
 import clipManager from '../clipManager.js';
 import logger from '../../utils/logger.js';
-import { generateResponse } from '../../utils/deepseek.js';
+import { generateResponse } from '../../utils/gemini.js';
 
 export async function handleCreateClip(client, channel, user, args) {
   try {

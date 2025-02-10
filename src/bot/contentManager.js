@@ -1,9 +1,10 @@
 import logger from '../utils/logger.js';
-import aiService from '../utils/aiService.js';
 import enhancedAnalytics from './enhancedAnalytics.js';
+import AIService from '../utils/aiService.js';
 
 class ContentManager {
   constructor() {
+    this.aiService = new AIService();
     this.contentData = {
       highlights: [], // Array of detected highlight moments
       recommendations: new Map(), // content type -> recommendations
@@ -181,7 +182,7 @@ class ContentManager {
 
       // Analyze chat sentiment during highlight
       const sentiments = await Promise.all(
-        chatMessages.map((msg) => aiService.analyzeMessage(msg))
+        chatMessages.map((msg) => AIService.analyzeMessage(msg))
       );
 
       const averageSentiment =
@@ -266,7 +267,7 @@ class ContentManager {
     return Math.min(1, intensity);
   }
 
-  async generateRecommendations() {
+  generateRecommendations() {
     try {
       // Get recent performance data
       const performance = Array.from(this.contentData.performanceMetrics.values())

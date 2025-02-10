@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import logger from '../../utils/logger.js';
-import { generateResponse } from '../../utils/deepseek.js';
+import { generateResponse } from '../../utils/gemini.js';
 import enhancedAnalytics from '../enhancedAnalytics.js';
 import spotifyAuth from '../../auth/spotifyAuth.js';
 import chatInteraction from '../chatInteraction.js';

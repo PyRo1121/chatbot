@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 import { ApiClient } from '@twurple/api';
 import { RefreshingAuthProvider } from '@twurple/auth';
 import tokenManager from '../auth/tokenManager.js';

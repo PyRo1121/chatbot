@@ -433,10 +433,13 @@ class TwitchClient {
     await new Promise((resolve) => setTimeout(resolve, delay));
 
     try {
-      await this.client.connect(); logger.info('Successfully reconnected to Twitch chat');
+      await this.client.connect();
+      logger.info('Successfully reconnected to Twitch chat');
       logger.info('Successfully reconnected to Twitch chat');
     } catch (error) {
-      logger.error(`Reconnection attempt ${retryCount + 1} failed: ${error.message} ${error.stack}`);
+      logger.error(
+        `Reconnection attempt ${retryCount + 1} failed: ${error.message} ${error.stack}`
+      );
       await this.handleReconnect(retryCount + 1, maxRetries);
     }
   }

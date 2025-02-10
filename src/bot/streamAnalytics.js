@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { readFileSync, writeFileSync } from 'fs';
 import logger from '../utils/logger.js';
-import { generateResponse } from '../utils/deepseek.js';
+import { generateResponse } from '../utils/gemini.js';
 
 class StreamAnalytics {
   constructor() {
@@ -63,7 +63,7 @@ class StreamAnalytics {
     }
   }
 
-  async getStreamHealth() {
+  getStreamHealth() {
     try {
       const currentStream = this.getCurrentStream();
       if (!currentStream) {
@@ -78,11 +78,11 @@ class StreamAnalytics {
       }
 
       const score = this.calculateHealthScore(currentStream);
-      const getHealthStatus = (score) => {
-        if (score > 70) {
+      const getHealthStatus = (healthScore) => {
+        if (healthScore > 70) {
           return 'healthy';
         }
-        if (score > 40) {
+        if (healthScore > 40) {
           return 'warning';
         }
         return 'critical';
@@ -125,7 +125,7 @@ class StreamAnalytics {
     return Math.max(0, Math.min(100, Math.round(score)));
   }
 
-  async getStreamPerformance() {
+  getStreamPerformance() {
     try {
       const performance = {
         viewerRetention: this.calculateRetention(),
@@ -176,7 +176,7 @@ class StreamAnalytics {
     return Math.round((engagements.reduce((a, b) => a + b, 0) / engagements.length) * 100);
   }
 
-  async getBestStreamingTimes() {
+  getBestStreamingTimes() {
     try {
       const timeSlots = Object.entries(this.analyticsData.performance.times)
         .map(([time, data]) => ({
@@ -193,7 +193,7 @@ class StreamAnalytics {
     }
   }
 
-  async getTopCategories() {
+  getTopCategories() {
     try {
       return Object.entries(this.analyticsData.performance.categories)
         .map(([name, data]) => ({

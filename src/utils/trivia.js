@@ -1,4 +1,4 @@
-import { generateResponse } from './deepseek.js';
+import { generateResponse } from './gemini.js';
 import logger from './logger.js';
 
 // Cache for generated questions
@@ -22,7 +22,7 @@ const categories = {
 const RATE_LIMIT_DELAY = 1000; // 1 second between requests
 let lastRequestTime = 0;
 
-async function delay(ms) {
+function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -80,17 +80,12 @@ async function generateSingleQuestion(category) {
 
 async function generateQuestionsForCache(category) {
   try {
-    const questions = [];
     const numQuestions = 3; // Generate 3 questions at a time
+    const promises = Array(numQuestions)
+      .fill()
+      .map(() => generateSingleQuestion(category));
 
-    for (let i = 0; i < numQuestions; i++) {
-      const question = await generateSingleQuestion(category);
-      if (question) {
-        questions.push(question);
-      }
-      // Add extra delay between cache generation requests
-      await delay(RATE_LIMIT_DELAY * 2);
-    }
+    const questions = (await Promise.all(promises)).filter(Boolean);
 
     const existing = questionCache.get(category) || [];
     questionCache.set(category, [...existing, ...questions]);

@@ -104,7 +104,10 @@ class EnhancedAnalytics {
           performance.chatActivity++;
           // Analyze chat sentiment
           if (event.data?.message) {
-            const analysis = await this.aiService.analyzeMessage(event.data.message, event.username);
+            const analysis = await this.aiService.analyzeMessage(
+              event.data.message,
+              event.username
+            );
 
             if (analysis) {
               performance.sentiment = analysis.sentiment;
