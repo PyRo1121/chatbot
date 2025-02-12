@@ -204,9 +204,21 @@ export function handleModCommands(userLevel) {
     return lowerCmd.includes('(mods only)') || lowerCmd.includes('(broadcaster only)');
   });
 
+  // Split commands into chunks of 5 commands each
+  const CHUNK_SIZE = 5;
+  const commandChunks = [];
+  for (let i = 0; i < modCommands.length; i += CHUNK_SIZE) {
+    commandChunks.push(modCommands.slice(i, i + CHUNK_SIZE));
+  }
+
+  // Join chunks with double line breaks and commands within chunks with pipes
+  const formattedMessage = commandChunks
+    .map(chunk => chunk.join(' | '))
+    .join('\n\n');
+
   return {
     success: true,
-    message: `Moderator/Broadcaster commands: ${modCommands.join(' | ')}`,
+    message: `Moderator/Broadcaster commands:\n${formattedMessage}`,
   };
 }
 

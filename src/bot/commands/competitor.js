@@ -10,7 +10,7 @@ export const competitorCommands = {
       }
 
       const targetChannel = args[0].replace('@', '');
-      const result = await competitorAnalysis.trackChannel(targetChannel);
+      const result = await competitorAnalysis.trackChannel(targetChannel, client);
       return result;
     } catch (error) {
       logger.error('Error tracking channel:', error);
@@ -25,7 +25,7 @@ export const competitorCommands = {
       }
 
       const targetChannel = args[0].replace('@', '');
-      const result = await competitorAnalysis.untrackChannel(targetChannel);
+      const result = await competitorAnalysis.untrackChannel(targetChannel, client);
       return result;
     } catch (error) {
       logger.error('Error untracking channel:', error);
@@ -35,7 +35,7 @@ export const competitorCommands = {
 
   handleInsights: async (client, channel, user) => {
     try {
-      const insights = await competitorAnalysis.generateInsights();
+      const insights = await competitorAnalysis.generateInsights(client);
       return insights;
     } catch (error) {
       logger.error('Error generating insights:', error);
@@ -45,7 +45,7 @@ export const competitorCommands = {
 
   handleSuggestions: async (client, channel, user) => {
     try {
-      const suggestions = await competitorAnalysis.getSuggestions();
+      const suggestions = await competitorAnalysis.getSuggestions(client);
       logger.debug('Response from competitorAnalysis.getSuggestions:', { suggestions });
       if (!suggestions) {
         logger.warn('competitorAnalysis.getSuggestions returned null suggestions');

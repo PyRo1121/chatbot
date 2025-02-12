@@ -89,7 +89,7 @@
     "highlights": []
   },
   "viewerStats": {
-    "peak": 16,
+    "peak": 17,
     "average": null,
     "retention": 0
   },
@@ -98,6 +98,6 @@
     "titles": {},
     "times": {}
   },
-  "totalStreams": 334,
-  "totalHours": 74.12754833333335
+  "totalStreams": 432,
+  "totalHours": 101.40594916666662
 }

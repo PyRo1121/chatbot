@@ -4,7 +4,7 @@ import songLearning from './songLearning.js';
 import spotifyAuth from '../auth/spotifyAuth.js';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import stringSimilarity from 'string-similarity';
+import musicService from '../utils/musicService.js';
 
 class SpotifyManager {
   constructor() {
@@ -99,92 +99,66 @@ class SpotifyManager {
   }
 
   async searchTrack(query) {
-    // Check cache first
-    const cacheKey = query.toLowerCase();
-    const cached = await Promise.resolve(this.searchCache.get(cacheKey));
-    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      return cached.result;
-    }
+    try {
+      const spotifySearchFn = (searchQuery) =>
+        spotifyAuth.retryOperation(async (api) => {
+          // Try different search strategies
+          let searchResults = [];
 
-    return spotifyAuth.retryOperation(async (api) => {
-      // Try different search strategies
-      let searchResults = [];
-      const normalizedQuery = this.normalizeTitle(query);
-
-      // Strategy 1: Direct search with original query
-      let response = await api.searchTracks(query);
-      searchResults = response.body.tracks?.items || [];
-
-      // Strategy 2: Try normalized query if no results
-      if (!searchResults.length) {
-        response = await api.searchTracks(normalizedQuery);
-        searchResults = response.body.tracks?.items || [];
-      }
-
-      // Strategy 3: Try artist-based search
-      if (!searchResults.length) {
-        const artistMatches = query.match(/(?:by|-)?\s*([^-]+)$/i);
-        if (artistMatches) {
-          const artist = artistMatches[1].trim();
-          const title = query.replace(new RegExp(`(?:by|-)?\\s*${artist}$`, 'i'), '').trim();
-          response = await api.searchTracks(`track:${title} artist:${artist}`);
+          // Strategy 1: Direct search with original query
+          let response = await api.searchTracks(searchQuery);
           searchResults = response.body.tracks?.items || [];
-        }
+
+          // Strategy 2: Try artist-based search if no results
+          if (!searchResults.length) {
+            const artistMatches = searchQuery.match(/(?:by|-)?\s*([^-]+)$/i);
+            if (artistMatches) {
+              const artist = artistMatches[1].trim();
+              const title = searchQuery
+                .replace(new RegExp(`(?:by|-)?\\s*${artist}$`, 'i'), '')
+                .trim();
+              response = await api.searchTracks(`track:${title} artist:${artist}`);
+              searchResults = response.body.tracks?.items || [];
+            }
+          }
+
+          if (searchResults.length > 0) {
+            const track = searchResults[0]; // Take the most relevant result
+            return {
+              id: track.id,
+              name: track.name,
+              artist: track.artists[0].name,
+              uri: track.uri,
+              genres: track.artists[0].genres || [],
+              popularity: track.popularity,
+            };
+          }
+
+          return null;
+        });
+
+      // Use MusicService to find the best match across multiple sources
+      const result = await musicService.findSong(
+        query,
+        spotifySearchFn,
+        process.env.LASTFM_API_KEY
+      );
+
+      if (result.exists && result.spotifyTrack) {
+        return result.spotifyTrack;
       }
-
-      // Strategy 4: Try splitting on common delimiters
-      if (!searchResults.length) {
-        const parts = query.split(/[-–—:|]/); // Add more delimiters as needed
-        if (parts.length > 1) {
-          const [title, artist] = parts.map((p) => p.trim());
-          response = await api.searchTracks(`${title} ${artist}`);
-          searchResults = response.body.tracks?.items || [];
-        }
-      }
-
-      if (searchResults.length > 0) {
-        // Use fuzzy matching with normalized titles
-        const searchStrings = searchResults.map((track) =>
-          this.normalizeTitle(`${track.name} ${track.artists[0].name}`)
-        );
-
-        const matches = stringSimilarity.findBestMatch(normalizedQuery, searchStrings);
-
-        if (matches.bestMatch.rating > 0.3) {
-          const track = searchResults[matches.bestMatchIndex];
-          const result = {
-            id: track.id,
-            name: track.name,
-            artist: track.artists[0].name,
-            uri: track.uri,
-            genres: track.artists[0].genres || [],
-            popularity: track.popularity,
-          };
-
-          // Cache the result
-          this.searchCache.set(cacheKey, {
-            result,
-            timestamp: Date.now(),
-          });
-
-          return result;
-        }
-      }
-
-      // Cache null result to prevent repeated failed searches
-      this.searchCache.set(cacheKey, {
-        result: null,
-        timestamp: Date.now(),
-      });
 
       return null;
-    });
+    } catch (error) {
+      logger.error('Error searching for track:', error);
+      return null;
+    }
   }
 
   async handleSongRequest(query, username) {
     try {
       // Clean and validate song name
-      let cleanQuery = query
+      const cleanQuery = query
         .trim()
         .replace(/[\u200B-\u200D\uFEFF]/g, '')
         .replace(/\s+/g, ' ')
@@ -226,48 +200,8 @@ class SpotifyManager {
         return `@${username}, that song is not allowed (marked as potential troll song).`;
       }
 
-      // Use AI to validate and improve the song request
-      const prompt = `Analyze this song request: "${cleanQuery}"
-      1. Is this a valid song request? (yes/no)
-      2. If yes, what's the most likely song and artist being requested?
-      3. Are there any potential issues with this request?
-      
-      Respond in this format:
-      valid: yes/no
-      song: Song Name - Artist Name
-      issues: any issues or none`;
-
-      const analysis = await generateResponse(prompt);
-      if (!analysis) {
-        logger.error('Failed to get Perplexity API response');
-      } else {
-        const lines = analysis.split('\n');
-        const isValid = lines.find((l) => l.startsWith('valid:'))?.includes('yes');
-        const suggestedSong = lines
-          .find((l) => l.startsWith('song:'))
-          ?.replace('song:', '')
-          .trim();
-        const issues = lines
-          .find((l) => l.startsWith('issues:'))
-          ?.replace('issues:', '')
-          .trim();
-
-        if (!isValid) {
-          songLearning.addRejectedSong(cleanQuery, 'invalid_request');
-          return `@${username}, that doesn't seem to be a valid song request. ${issues || 'Please try again with a specific song.'}`;
-        }
-
-        if (suggestedSong) {
-          cleanQuery = suggestedSong;
-        }
-      }
-
-      // Search for the track on Spotify
-      const track = await this.searchTrack(cleanQuery).catch((error) => {
-        logger.error('Error searching for track:', error);
-        return null;
-      });
-
+      // Search for the track
+      const track = await this.searchTrack(cleanQuery);
       if (!track) {
         songLearning.addRejectedSong(cleanQuery, 'not_found');
         return `@${username}, couldn't find that song on Spotify. Please try a different search!`;
@@ -447,7 +381,8 @@ class SpotifyManager {
     }
   }
 
-  clearQueue() {
+  async clearQueue() {
+    // Clear bot's queue
     this.songQueue.queue = [];
     this.saveSongQueue();
     return 'Song queue cleared!';

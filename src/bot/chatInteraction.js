@@ -174,13 +174,8 @@ class ChatInteraction {
         this.updateChatMood(messageAnalysis);
       }
 
-      // Update content preferences - wrap in try-catch
-      try {
-        await this.aiService.updateContentPreferences(username, message);
-      } catch (error) {
-        logger.warn('Failed to update content preferences:', error);
-        // Continue execution even if this fails
-      }
+      // Update content preferences with proper instance method
+      await this.aiService.updateContentPreferences(username, message);
 
       // Learn from message patterns
       const pattern = this.findPattern(message);
@@ -262,6 +257,11 @@ class ChatInteraction {
   }
 
   shouldRespond(message, username) {
+    // Don't generate AI responses for command messages
+    if (message.startsWith('!')) {
+      return false;
+    }
+
     // Always respond to direct mentions
     if (message.toLowerCase().includes(process.env.TWITCH_BOT_USERNAME?.toLowerCase() || '')) {
       return true;
@@ -375,7 +375,11 @@ class ChatInteraction {
       };
 
       // Generate contextual response
-      const response = await AIService.generatePersonalizedResponse(message, username, chatContext);
+      const response = await this.aiService.generateResponse(
+        message,
+        username,
+        chatContext
+      );
 
       // Track this interaction
       if (response) {

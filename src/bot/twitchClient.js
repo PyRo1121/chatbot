@@ -1,11 +1,44 @@
 import { ApiClient } from '@twurple/api';
-import { handleShoutout } from './commands/shoutout.js';
 import { ChatClient } from '@twurple/chat';
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import logger from '../utils/logger.js';
-import updateEnvFile from './updateEnvFile.js';
 import welcomeManager from './welcomeManager.js';
+
+// Constants should be defined outside the class
+const FOLLOW_COOLDOWN_MS = 5000; // 5 seconds
+const COOLDOWN_CLEANUP_MS = 60000; // 1 minute
+const BOT_PATTERNS = [
+  /bot$/i,
+  /[._-]bot/i,
+  /nightbot/i,
+  /streamelements/i,
+  /streamlabs/i,
+  /commanderroot/i,
+  /lurxx/i,
+  /v_and_k/i,
+  /0_0[._-]?bot/i,
+  /stay_hydrated/i,
+  /sery_bot/i,
+  /wizebot/i,
+  /moobot/i,
+  /fossabot/i,
+  /^soundalerts/i,
+  /^anotherttvviewer/i,
+  /^streamholics/i,
+  /^electricalskateboard/i,
+  /^discord[._-]?bot/i,
+  /^own3d[._-]?bot/i,
+  /^pretzel[._-]?rocks/i,
+  /^restream[._-]?bot/i,
+  /^botrix/i,
+  /^streamcapbot/i,
+  /^pokeinfobot/i,
+  /^pokemoncommunitygame/i,
+  /^sery_bot/i,
+  /^pyro1121/i,
+  /^firepigbot/i,
+];
 
 class TwitchClient {
   constructor() {
@@ -19,64 +52,40 @@ class TwitchClient {
     this.channel = null;
     this.broadcasterUser = null;
     this.followCooldowns = new Map();
-    this.FOLLOW_COOLDOWN = 5000; // 5 seconds in milliseconds
-
-    // Common bot identifiers
-    this.botPatterns = [
-      /bot$/i,
-      /[._-]bot/i,
-      /nightbot/i,
-      /streamelements/i,
-      /streamlabs/i,
-      /commanderroot/i,
-      /lurxx/i,
-      /v_and_k/i,
-      /0_0[._-]?bot/i,
-      /stay_hydrated/i,
-      /sery_bot/i,
-      /wizebot/i,
-      /moobot/i,
-      /fossabot/i,
-      /^soundalerts/i,
-      /^anotherttvviewer/i,
-      /^streamholics/i,
-      /^electricalskateboard/i,
-      /^discord[._-]?bot/i,
-      /^own3d[._-]?bot/i,
-      /^pretzel[._-]?rocks/i,
-      /^restream[._-]?bot/i,
-      /^botrix/i,
-      /^streamcapbot/i,
-      /^pokeinfobot/i,
-      /^pokemoncommunitygame/i,
-      /^sery_bot/i,
-    ];
+    // Move patterns to static constant
+    this.botPatterns = BOT_PATTERNS;
   }
 
-  isBot(username) {
-    return this.botPatterns.some((pattern) => pattern.test(username.toLowerCase()));
+  // Private methods should be prefixed with #
+  #validateConfig(config) {
+    const missingValues = Object.entries(config)
+      .filter(([, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingValues.length > 0) {
+      throw new Error(`Missing required configuration: ${missingValues.join(', ')}`);
+    }
   }
 
+  // Simplified cooldown methods
   isOnFollowCooldown(username) {
     const lastGreeting = this.followCooldowns.get(username);
-    return lastGreeting && Date.now() - lastGreeting < this.FOLLOW_COOLDOWN;
+    return lastGreeting && Date.now() - lastGreeting < FOLLOW_COOLDOWN_MS;
   }
 
   setFollowCooldown(username) {
     this.followCooldowns.set(username, Date.now());
-    // Clean up old cooldowns after 1 minute
-    setTimeout(() => this.followCooldowns.delete(username), 60000);
+    setTimeout(() => this.followCooldowns.delete(username), COOLDOWN_CLEANUP_MS);
   }
 
+  // Simplified message handler setup
   setMessageHandler(handler) {
-    logger.debug('Setting message handler');
     this.messageHandler = handler;
-    if (this.client && this.isReady) {
-      this.setupMessageHandler();
-    }
+    this.#setupMessageHandler();
   }
 
-  setupMessageHandler() {
+  // Private method for message handling setup
+  #setupMessageHandler() {
     if (!this.messageHandler) {
       logger.warn('No message handler to setup');
       return;
@@ -84,8 +93,13 @@ class TwitchClient {
 
     logger.debug('Setting up message handler...');
 
-    // Register handler
     this.client.onMessage((channel, user, text, msg) => {
+      // Add null checks for user and username
+      if (!user || !user.username) {
+        logger.debug('Skipping message with invalid user data');
+        return;
+      }
+
       logger.debug('Message received:', {
         channel,
         username: user.username,
@@ -93,25 +107,95 @@ class TwitchClient {
         msgType: msg.userInfo.messageType,
       });
 
-      // Skip bot messages
       if (this.isBot(user.username)) {
         logger.debug(`Message from ${user.username} skipped (bot detected)`);
         return;
       }
 
-      // Skip self messages
       if (msg.userInfo.isSelf) {
         logger.debug('Ignoring self message');
         return;
       }
 
-      // Process all messages from broadcaster
-      logger.debug('Processing message from broadcaster');
+      // Convert Twurple user object to expected format
+      const userObj = {
+        username: user,
+        displayName: msg.userInfo.displayName,
+        isMod: msg.userInfo.isMod,
+        isBroadcaster: msg.userInfo.badges.has('broadcaster'),
+        badges: Object.fromEntries(msg.userInfo.badges),
+      };
 
-      this.messageHandler(channel, user, text, false);
+      this.messageHandler(this, channel, userObj, text, msg.userInfo.isSelf);
     });
-
     logger.debug('Message handler registered successfully');
+  }
+
+  // Simplified follow event handler
+  async #handleFollow(username) {
+    if (this.isBot(username) || username.toLowerCase() === this.channel.toLowerCase()) {
+      logger.debug(
+        `Follow greeting skipped for ${username} (${this.isBot(username) ? 'bot' : 'broadcaster'})`
+      );
+      return;
+    }
+
+    if (this.isOnFollowCooldown(username)) {
+      logger.debug(`Follow greeting skipped for ${username} (cooldown)`);
+      return;
+    }
+
+    try {
+      const message =
+        (await welcomeManager.handleFollow(username)) ||
+        `Welcome to the channel ${username}! Thanks for the follow! 🎉`;
+
+      await this.client.say(`#${this.channel}`, message);
+      this.setFollowCooldown(username);
+    } catch (error) {
+      logger.error('Error handling follow event:', error);
+      await this.client.say(
+        `#${this.channel}`,
+        `Welcome to the channel ${username}! Thanks for the follow! 🎉`
+      );
+      this.setFollowCooldown(username);
+    }
+  }
+
+  // Simplified raid handler
+  async #handleRaid(channel, username, viewerCount) {
+    const channelName = channel.replace('#', '');
+    logger.info(`${username} raided ${channelName} with ${viewerCount} viewers`);
+
+    try {
+      const { handleShoutout: handleRaidShoutout } = await import('./commands/shoutout.js');
+      const shoutoutResponse = await handleRaidShoutout(
+        this,
+        `#${channelName}`,
+        { username, isMod: true },
+        [username]
+      );
+
+      const message = shoutoutResponse
+        ? `Thanks for the raid with ${viewerCount} viewers! ${shoutoutResponse}`
+        : `Thanks for the raid with ${viewerCount} viewers, @${username}! 🎉`;
+
+      await this.client.say(`#${channelName}`, message);
+    } catch (error) {
+      logger.error('Error handling raid shoutout:', error);
+      await this.client.say(
+        `#${channelName}`,
+        `Thanks for the raid with ${viewerCount} viewers, @${username}! 🎉`
+      );
+    }
+  }
+
+  isBot(username) {
+    if (!username) {
+      logger.debug('Skipping bot check for undefined username');
+      return false;
+    }
+    return this.botPatterns.some((pattern) => pattern.test(username.toLowerCase()));
   }
 
   async init() {
@@ -134,13 +218,7 @@ class TwitchClient {
         refreshToken: '***',
       });
 
-      const missingValues = Object.entries(config)
-        .filter(([key, value]) => !value)
-        .map(([key]) => key);
-
-      if (missingValues.length > 0) {
-        throw new Error(`Missing required configuration: ${missingValues.join(', ')}`);
-      }
+      this.#validateConfig(config);
 
       logger.info('Configuration validated');
       logger.info(`Bot username: ${config.botUsername}`);
@@ -149,7 +227,7 @@ class TwitchClient {
       const authProvider = new RefreshingAuthProvider({
         clientId: config.clientId,
         clientSecret: config.clientSecret,
-        onRefresh: async (userId, newTokenData) => {
+        onRefresh: () => {
           logger.info('Tokens refreshed');
           // Implement token storage logic here if needed
         },
@@ -217,7 +295,7 @@ class TwitchClient {
         const broadcasterAuthProvider = new RefreshingAuthProvider({
           clientId: process.env.TWITCH_CLIENT_ID,
           clientSecret: process.env.TWITCH_CLIENT_SECRET,
-          onRefresh: async (userId, newTokenData) => {
+          onRefresh: () => {
             logger.info('Broadcaster tokens refreshed');
           },
         });
@@ -300,7 +378,7 @@ class TwitchClient {
   setupEventHandlers() {
     // Setup message handler if one exists
     if (this.messageHandler) {
-      this.setupMessageHandler();
+      this.#setupMessageHandler();
     }
 
     // Setup EventSub handlers if available
@@ -329,18 +407,7 @@ class TwitchClient {
 
           try {
             // Get personalized follow message from welcomeManager
-            const followMessage = await welcomeManager.handleFollow(username);
-            if (followMessage) {
-              await this.client.say(`#${this.channel}`, followMessage);
-            } else {
-              // Fallback message if welcomeManager fails
-              await this.client.say(
-                `#${this.channel}`,
-                `Welcome to the channel ${username}! Thanks for the follow! 🎉`
-              );
-            }
-            // Set cooldown after successful greeting
-            this.setFollowCooldown(username);
+            await this.#handleFollow(username);
           } catch (error) {
             logger.error('Error handling follow event:', error);
             // Send basic follow message as fallback
@@ -356,16 +423,16 @@ class TwitchClient {
     }
 
     // Sub events
-    this.client.on('sub', (channel, user, subInfo, msg) => {
-      // logger.info(`${user} subscribed to ${channel}`);
+    this.client.on('sub', (channel, user) => {
+      logger.info(`${user} subscribed to ${channel}`);
     });
 
-    this.client.on('resub', (channel, user, subInfo, msg) => {
-      // logger.info(`${user} resubscribed to ${channel} for ${subInfo.months} months`);
+    this.client.on('resub', (channel, user, subInfo) => {
+      logger.info(`${user} resubscribed to ${channel} for ${subInfo.months} months`);
     });
 
     // Bits events
-    this.client.on('bitsBadgeUpgrade', (channel, user, upgradeInfo, msg) => {
+    this.client.on('bitsBadgeUpgrade', (channel, user) => {
       logger.info(`${user} upgraded their bits badge in ${channel}`);
     });
 
@@ -375,22 +442,7 @@ class TwitchClient {
       logger.info(`${username} raided ${channelName} with ${viewerCount} viewers`);
 
       try {
-        // Import the shoutout handler dynamically to avoid circular dependencies
-        const { handleShoutout } = await import('./commands/shoutout.js');
-
-        const shoutoutResponse = await handleShoutout(
-          this, // Pass the TwitchClient instance
-          `#${channelName}`,
-          { username, isMod: true }, // Treat raid shoutouts as if from a mod
-          [username]
-        );
-
-        if (shoutoutResponse) {
-          await this.client.say(
-            `#${channelName}`,
-            `Thanks for the raid with ${viewerCount} viewers! ${shoutoutResponse}`
-          );
-        }
+        await this.#handleRaid(channel, username, viewerCount);
       } catch (error) {
         logger.error('Error handling raid shoutout:', error);
         // Fallback message if shoutout fails
@@ -402,11 +454,11 @@ class TwitchClient {
     });
 
     // Timeout/Ban events
-    this.client.on('timeout', (channel, user, duration, msg) => {
+    this.client.on('timeout', (channel, user, duration) => {
       logger.info(`${user} was timed out in ${channel} for ${duration} seconds`);
     });
 
-    this.client.on('ban', (channel, user, msg) => {
+    this.client.on('ban', (channel, user) => {
       logger.info(`${user} was banned in ${channel}`);
     });
 
@@ -445,10 +497,19 @@ class TwitchClient {
   }
 }
 
-async function getClient() {
+// Singleton instance
+let twitchClientInstance = null;
+
+export const getTwitchClient = () => twitchClientInstance;
+export const setTwitchClient = (client) => {
+  twitchClientInstance = client;
+};
+
+// Factory function
+export default async function getClient() {
   logger.info('Creating new Twitch client instance...');
   const client = new TwitchClient();
-  return client.init();
+  twitchClientInstance = client;
+  await client.init();
+  return client;
 }
-
-export default getClient;

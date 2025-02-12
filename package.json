@@ -38,10 +38,15 @@
     "@twurple/chat": "^7.2.1",
     "@twurple/eventsub-http": "^7.2.1",
     "@twurple/eventsub-ws": "^7.2.1",
+    "abort-controller": "^3.0.0",
     "axios": "^1.7.9",
+    "bottleneck": "^2.19.5",
+    "cheerio": "^1.0.0",
+    "csv-parse": "^5.6.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "flexsearch": "^0.7.43",
+    "genai": "^0.0.18",
     "lru-cache": "^11.0.2",
     "node-cache": "^5.1.2",
     "node-fetch": "^3.3.2",
@@ -61,7 +66,7 @@
     "@eslint/js": "^9.20.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.13.1",
-    "eslint": "^9.20.0",
+    "eslint": "^9.20.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-jest": "^28.11.0",
     "husky": "^9.1.7",
@@ -86,5 +91,15 @@
   "jest": {
     "testEnvironment": "node",
     "transform": {}
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PyRo1121/chatbot.git"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PyRo1121/chatbot/issues"
+  },
+  "homepage": "https://github.com/PyRo1121/chatbot#readme"
 }

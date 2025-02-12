@@ -1,12 +1,17 @@
 {
   "songPatterns": {
     "redrum|21 savage": 3,
-    "locked up|akon": 1,
+    "locked up|akon": 2,
     "blueberry faygo (originally performed by lil mosey) - karaoke instrumental version|hit the button karaoke": 1,
     "rarri|lil mosey": 2,
-    "noticed|lil mosey": 3,
+    "noticed|lil mosey": 9,
     "fu〜shit!!!|the telephones": 2,
-    "fu shit|lil mosey": 2
+    "fu shit|lil mosey": 2,
+    "outlaw (feat. luke combs)|upchurch": 1,
+    "watch the world burn|falling in reverse": 1,
+    "all my life|falling in reverse": 1,
+    "the rumbling|sim": 1,
+    "barbie world (with aqua) [from barbie the album]|nicki minaj": 1
   },
   "userPreferences": {
     "pyro1121": {
@@ -178,33 +183,194 @@
             "popularity": 38
           },
           "timestamp": 1739165161260
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739298321931
+        },
+        {
+          "query": "locked up|akon",
+          "trackInfo": {
+            "id": "0YUrjFy4qFKOO5NhM9tYdV",
+            "name": "Locked Up",
+            "artist": "Akon",
+            "uri": "spotify:track:0YUrjFy4qFKOO5NhM9tYdV",
+            "genres": [],
+            "popularity": 63
+          },
+          "timestamp": 1739301238705
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739302740862
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739302841025
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739302911090
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739303041535
+        },
+        {
+          "query": "noticed|lil mosey",
+          "trackInfo": {
+            "id": "7zLYKWcXnYeHHWidalz7rj",
+            "name": "Noticed",
+            "artist": "Lil Mosey",
+            "uri": "spotify:track:7zLYKWcXnYeHHWidalz7rj",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739308166522
         }
       ],
       "genres": {},
       "artists": {
         "21 savage": 3,
-        "akon": 1,
+        "akon": 2,
         "hit the button karaoke": 1,
-        "lil mosey": 7,
+        "lil mosey": 13,
         "the telephones": 2
       },
-      "lastRequest": 1739165161260
+      "lastRequest": 1739308166522
+    },
+    "gh0streaper13": {
+      "requestedSongs": [
+        {
+          "query": "outlaw (feat. luke combs)|upchurch",
+          "trackInfo": {
+            "id": "0jqIg4wzcKfRNJOJxxgPyn",
+            "name": "Outlaw (feat. Luke Combs)",
+            "artist": "Upchurch",
+            "uri": "spotify:track:0jqIg4wzcKfRNJOJxxgPyn",
+            "genres": [],
+            "popularity": 50
+          },
+          "timestamp": 1739319355896
+        },
+        {
+          "query": "watch the world burn|falling in reverse",
+          "trackInfo": {
+            "id": "4CiVz4bw7X1zjCaJ5ZwxUS",
+            "name": "Watch The World Burn",
+            "artist": "Falling In Reverse",
+            "uri": "spotify:track:4CiVz4bw7X1zjCaJ5ZwxUS",
+            "genres": [],
+            "popularity": 65
+          },
+          "timestamp": 1739320279938
+        },
+        {
+          "query": "all my life|falling in reverse",
+          "trackInfo": {
+            "id": "2p5LjvjZlMSxxwNUtDyG5x",
+            "name": "All My Life",
+            "artist": "Falling In Reverse",
+            "uri": "spotify:track:2p5LjvjZlMSxxwNUtDyG5x",
+            "genres": [],
+            "popularity": 60
+          },
+          "timestamp": 1739320565183
+        },
+        {
+          "query": "the rumbling|sim",
+          "trackInfo": {
+            "id": "6k0X05danQOXSBTVek5DU1",
+            "name": "The Rumbling",
+            "artist": "SiM",
+            "uri": "spotify:track:6k0X05danQOXSBTVek5DU1",
+            "genres": [],
+            "popularity": 67
+          },
+          "timestamp": 1739321723784
+        },
+        {
+          "query": "barbie world (with aqua) [from barbie the album]|nicki minaj",
+          "trackInfo": {
+            "id": "741UUVE2kuITl0c6zuqqbO",
+            "name": "Barbie World (with Aqua) [From Barbie The Album]",
+            "artist": "Nicki Minaj",
+            "uri": "spotify:track:741UUVE2kuITl0c6zuqqbO",
+            "genres": [],
+            "popularity": 69
+          },
+          "timestamp": 1739322942378
+        }
+      ],
+      "genres": {},
+      "artists": {
+        "upchurch": 1,
+        "falling in reverse": 2,
+        "sim": 1,
+        "nicki minaj": 1
+      },
+      "lastRequest": 1739322942378
     }
   },
   "approvedSongs": {
     "redrum|21 savage": 3,
-    "locked up|akon": 1,
+    "locked up|akon": 2,
     "blueberry faygo (originally performed by lil mosey) - karaoke instrumental version|hit the button karaoke": 1,
     "rarri|lil mosey": 2,
-    "noticed|lil mosey": 3,
+    "noticed|lil mosey": 9,
     "fu〜shit!!!|the telephones": 2,
-    "fu shit|lil mosey": 2
+    "fu shit|lil mosey": 2,
+    "outlaw (feat. luke combs)|upchurch": 1,
+    "watch the world burn|falling in reverse": 1,
+    "all my life|falling in reverse": 1,
+    "the rumbling|sim": 1,
+    "barbie world (with aqua) [from barbie the album]|nicki minaj": 1
   },
   "rejectedSongs": {
     "noticed by lil mosey": {
-      "count": 7,
+      "count": 9,
       "reasons": {
-        "invalid_request": 7
+        "invalid_request": 9
       }
     },
     "it's difficult to pinpoint one single song.  lil mosey has many popular songs.  more information is needed to be specific.": {
@@ -217,6 +383,12 @@
       "count": 2,
       "reasons": {
         "invalid_request": 2
+      }
+    },
+    "noticed - lil mosey": {
+      "count": 1,
+      "reasons": {
+        "not_found": 1
       }
     }
   },
@@ -272,5 +444,5 @@
     "mlg",
     "sound effect"
   ],
-  "lastUpdated": "2025-02-10T15:34:39.530Z"
+  "lastUpdated": "2025-02-12T03:08:58.791Z"
 }

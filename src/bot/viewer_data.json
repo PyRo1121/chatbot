@@ -2,8 +2,8 @@
   "viewers": {
     "pyro1121": {
       "firstSeen": "2025-01-24T03:28:14.035Z",
-      "visits": 129,
-      "lastSeen": "2025-02-10T07:10:37.786Z",
+      "visits": 136,
+      "lastSeen": "2025-02-12T02:05:29.280Z",
       "watchtime": 0,
       "milestones": [
         {
@@ -33,15 +33,15 @@
     },
     "firepigbot": {
       "firstSeen": "2025-02-03T20:27:44.072Z",
-      "visits": 22,
-      "lastSeen": "2025-02-04T19:35:05.422Z",
+      "visits": 308,
+      "lastSeen": "2025-02-12T02:19:54.132Z",
       "watchtime": 0,
       "milestones": []
     },
     "pokeinfobot": {
       "firstSeen": "2025-02-03T22:00:47.964Z",
-      "visits": 82,
-      "lastSeen": "2025-02-05T01:39:24.176Z",
+      "visits": 99,
+      "lastSeen": "2025-02-12T02:30:00.150Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -61,15 +61,15 @@
     },
     "gh0streaper13": {
       "firstSeen": "2025-02-03T23:23:01.088Z",
-      "visits": 307,
-      "lastSeen": "2025-02-05T01:28:22.956Z",
+      "visits": 457,
+      "lastSeen": "2025-02-12T02:16:23.105Z",
       "watchtime": 0,
       "milestones": []
     },
     "pokemoncommunitygame": {
       "firstSeen": "2025-02-03T23:25:21.097Z",
-      "visits": 30,
-      "lastSeen": "2025-02-05T01:26:07.379Z",
+      "visits": 40,
+      "lastSeen": "2025-02-12T02:16:44.521Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -89,15 +89,15 @@
     },
     "phillycheeze16": {
       "firstSeen": "2025-02-03T23:37:55.974Z",
-      "visits": 5,
-      "lastSeen": "2025-02-03T23:41:26.580Z",
+      "visits": 13,
+      "lastSeen": "2025-02-12T01:16:24.153Z",
       "watchtime": 0,
       "milestones": []
     },
     "char1ynn": {
       "firstSeen": "2025-02-03T23:53:40.552Z",
-      "visits": 153,
-      "lastSeen": "2025-02-05T21:20:37.280Z",
+      "visits": 287,
+      "lastSeen": "2025-02-12T01:54:33.403Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -184,8 +184,8 @@
     },
     "haurun": {
       "firstSeen": "2025-02-04T01:56:45.712Z",
-      "visits": 11,
-      "lastSeen": "2025-02-04T03:20:23.266Z",
+      "visits": 16,
+      "lastSeen": "2025-02-12T01:11:56.158Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -212,8 +212,8 @@
     },
     "arrowhyphy": {
       "firstSeen": "2025-02-04T02:50:08.281Z",
-      "visits": 8,
-      "lastSeen": "2025-02-04T03:49:45.950Z",
+      "visits": 21,
+      "lastSeen": "2025-02-12T01:43:25.141Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -320,8 +320,8 @@
     },
     "sery_bot": {
       "firstSeen": "2025-02-04T04:00:15.204Z",
-      "visits": 4,
-      "lastSeen": "2025-02-05T01:31:49.067Z",
+      "visits": 7,
+      "lastSeen": "2025-02-12T02:16:27.063Z",
       "watchtime": 0,
       "milestones": []
     },
@@ -407,15 +407,126 @@
       "watchtime": 0,
       "milestones": [],
       "points": 100
+    },
+    "Solo_SkYii": {
+      "firstSeen": "2025-02-11T14:16:00.503Z",
+      "visits": 1,
+      "lastSeen": "2025-02-11T14:16:00.503Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "bloodfest_xl": {
+      "firstSeen": "2025-02-12T00:15:24.992Z",
+      "visits": 7,
+      "lastSeen": "2025-02-12T00:16:40.805Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "thebourbonmountainman": {
+      "firstSeen": "2025-02-12T00:17:50.197Z",
+      "visits": 5,
+      "lastSeen": "2025-02-12T00:30:24.722Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "animemmo122": {
+      "firstSeen": "2025-02-12T00:32:55.174Z",
+      "visits": 31,
+      "lastSeen": "2025-02-12T01:07:53.209Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "RisenNephalem": {
+      "firstSeen": "2025-02-12T01:07:46.701Z",
+      "visits": 1,
+      "lastSeen": "2025-02-12T01:07:46.702Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "risennephalem": {
+      "firstSeen": "2025-02-12T01:07:54.028Z",
+      "visits": 11,
+      "lastSeen": "2025-02-12T01:37:03.430Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "deplorableartistwoman": {
+      "firstSeen": "2025-02-12T01:07:58.164Z",
+      "visits": 76,
+      "lastSeen": "2025-02-12T01:21:13.879Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "BamzBrutal": {
+      "firstSeen": "2025-02-12T01:08:01.955Z",
+      "visits": 1,
+      "lastSeen": "2025-02-12T01:08:01.955Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "sneakysnake1o8": {
+      "firstSeen": "2025-02-12T01:08:21.067Z",
+      "visits": 2,
+      "lastSeen": "2025-02-12T01:08:31.379Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "missbugaboo": {
+      "firstSeen": "2025-02-12T01:08:26.072Z",
+      "visits": 7,
+      "lastSeen": "2025-02-12T01:13:06.035Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "bamzbrutal": {
+      "firstSeen": "2025-02-12T01:08:29.330Z",
+      "visits": 1,
+      "lastSeen": "2025-02-12T01:08:29.330Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "ladynovakttv": {
+      "firstSeen": "2025-02-12T01:13:57.758Z",
+      "visits": 1,
+      "lastSeen": "2025-02-12T01:13:57.758Z",
+      "watchtime": 0,
+      "milestones": []
+    },
+    "LadyNovakTTV": {
+      "firstSeen": "2025-02-12T01:13:59.625Z",
+      "visits": 1,
+      "lastSeen": "2025-02-12T01:13:59.625Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "XtruhKrunchy": {
+      "firstSeen": "2025-02-12T01:27:52.789Z",
+      "visits": 1,
+      "lastSeen": "2025-02-12T01:27:52.789Z",
+      "watchtime": 0,
+      "milestones": [],
+      "points": 100
+    },
+    "xtruhkrunchy": {
+      "firstSeen": "2025-02-12T01:28:01.632Z",
+      "visits": 6,
+      "lastSeen": "2025-02-12T01:46:02.938Z",
+      "watchtime": 0,
+      "milestones": []
     }
   },
   "raids": [],
   "milestones": [],
   "viewerStats": {
-    "totalUnique": 54,
-    "returningRate": 0.7777777777777778,
+    "totalUnique": 69,
+    "returningRate": 0.7246376811594203,
     "loyaltyDistribution": {
-      "New Friend": 54,
+      "New Friend": 69,
       "Regular": 0,
       "Loyal Viewer": 0,
       "Dedicated Fan": 0,

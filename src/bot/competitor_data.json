@@ -1,3 +1,41 @@
 {
-  "trackedChannels": []
+  "trackedChannels": [
+    {
+      "username": "gh0streaper13",
+      "displayName": "gh0streaper13",
+      "category": "",
+      "followers": 0,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-02-11T18:15:20.270Z",
+      "lastUpdated": "2025-02-11T18:15:20.270Z"
+    },
+    {
+      "username": "char1ynn",
+      "displayName": "Char1ynn",
+      "category": "",
+      "followers": 0,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-02-11T18:15:27.390Z",
+      "lastUpdated": "2025-02-11T18:15:27.390Z"
+    },
+    {
+      "username": "arrowhyphy",
+      "displayName": "ArrowHyphy",
+      "category": "",
+      "followers": 0,
+      "streamFrequency": 0,
+      "contentTypes": [],
+      "addedAt": "2025-02-11T23:55:07.589Z",
+      "lastUpdated": "2025-02-11T23:55:07.589Z"
+    }
+  ],
+  "marketAnalysis": {
+    "categoryTrends": {},
+    "peakTimes": {},
+    "contentTypes": {}
+  },
+  "growthMetrics": {},
+  "lastUpdated": "2025-02-11T18:12:48.013Z"
 }

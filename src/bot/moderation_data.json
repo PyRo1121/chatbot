@@ -9,11 +9,32 @@
   "userWarnings": {},
   "raidHistory": [],
   "moderationActions": [],
-  "trustedUsers": [],
+  "trustedUsers": [
+    "",
+    "gh0streaper13"
+  ],
   "spamStats": {
     "detectedSpam": 2,
     "falsePositives": 0,
     "successfulRaids": 0,
     "blockedRaids": 0
+  },
+  "settings": {
+    "enabled": true,
+    "minAccountAge": 7,
+    "followRateLimit": 10
+  },
+  "suspiciousFollowers": [],
+  "followMode": {
+    "enabled": false,
+    "type": "followers",
+    "duration": 300
+  },
+  "stats": {
+    "suspicious": 0,
+    "blocked": 0,
+    "falsePositives": 0,
+    "totalFollows": 0,
+    "lastUpdated": "2025-02-10T22:37:18.575Z"
   }
 }

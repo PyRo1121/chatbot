@@ -11,20 +11,72 @@
         "popularity": 69
       },
       "requestedBy": "pyro1121",
-      "timestamp": 1739165148856
+      "timestamp": 1739308166522
     },
     {
-      "query": "fu shit by lil mosey",
+      "query": "outlaw by upchurch",
       "trackInfo": {
-        "id": "548QZtKCO7l8A6Lv3M1Huc",
-        "name": "Fu shit",
-        "artist": "Lil Mosey",
-        "uri": "spotify:track:548QZtKCO7l8A6Lv3M1Huc",
+        "id": "0jqIg4wzcKfRNJOJxxgPyn",
+        "name": "Outlaw (feat. Luke Combs)",
+        "artist": "Upchurch",
+        "uri": "spotify:track:0jqIg4wzcKfRNJOJxxgPyn",
         "genres": [],
-        "popularity": 38
+        "popularity": 50
       },
-      "requestedBy": "pyro1121",
-      "timestamp": 1739165161259
+      "requestedBy": "gh0streaper13",
+      "timestamp": 1739319355895
+    },
+    {
+      "query": "watch the world burn by falling in reverse",
+      "trackInfo": {
+        "id": "4CiVz4bw7X1zjCaJ5ZwxUS",
+        "name": "Watch The World Burn",
+        "artist": "Falling In Reverse",
+        "uri": "spotify:track:4CiVz4bw7X1zjCaJ5ZwxUS",
+        "genres": [],
+        "popularity": 65
+      },
+      "requestedBy": "gh0streaper13",
+      "timestamp": 1739320279937
+    },
+    {
+      "query": "all my life by falling in reverse",
+      "trackInfo": {
+        "id": "2p5LjvjZlMSxxwNUtDyG5x",
+        "name": "All My Life",
+        "artist": "Falling In Reverse",
+        "uri": "spotify:track:2p5LjvjZlMSxxwNUtDyG5x",
+        "genres": [],
+        "popularity": 60
+      },
+      "requestedBy": "gh0streaper13",
+      "timestamp": 1739320565183
+    },
+    {
+      "query": "the rumbling by sim",
+      "trackInfo": {
+        "id": "6k0X05danQOXSBTVek5DU1",
+        "name": "The Rumbling",
+        "artist": "SiM",
+        "uri": "spotify:track:6k0X05danQOXSBTVek5DU1",
+        "genres": [],
+        "popularity": 67
+      },
+      "requestedBy": "gh0streaper13",
+      "timestamp": 1739321723784
+    },
+    {
+      "query": "barbie world",
+      "trackInfo": {
+        "id": "741UUVE2kuITl0c6zuqqbO",
+        "name": "Barbie World (with Aqua) [From Barbie The Album]",
+        "artist": "Nicki Minaj",
+        "uri": "spotify:track:741UUVE2kuITl0c6zuqqbO",
+        "genres": [],
+        "popularity": 69
+      },
+      "requestedBy": "gh0streaper13",
+      "timestamp": 1739322942377
     }
   ],
   "history": [],

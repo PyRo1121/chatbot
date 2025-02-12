@@ -28,7 +28,7 @@ export async function generateResponse(prompt, command = '') {
           : undefined;
 
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash-latest',
+        model: 'gemini-2.0-flash-exp',
         safetySettings,
       });
 
@@ -36,7 +36,7 @@ export async function generateResponse(prompt, command = '') {
         command === '!roast'
           ? `Generate an unfiltered unhinged roast about: ${prompt}\n` +
             'Guidelines:\n' +
-            '- Use maximum edge\n' +
+            '- Use maximum savage\n' +
             '- Remain within Twitch TOS\n' +
             '- Make sure grammar and punctuation is correct and keep from using big words\n' +
             '- Do not hold back\n' +
@@ -82,29 +82,20 @@ export async function analyzeSentiment(message, command = '') {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
-    const prompt = `Analyze this message for toxicity and emotions.
-Response requirements:
-- Respond with ONLY a valid JSON object
-- Do not include markdown formatting or backticks
-- Use exact structure shown below:
-{
-  "toxicityScore": <number between 0-1>,
-  "flagged": <boolean>,
-  "categories": {
-    "anger": <number between 0-1>,
-    "sadness": <number between 0-1>,
-    "joy": <number between 0-1>,
-    "fear": <number between 0-1>,
-    "neutral": <number between 0-1>
-  }
-}
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const prompt = `Analyze this message for toxicity and emotions and respond with ONLY raw JSON (no markdown, no backticks).
+Example response:
+{"toxicityScore":0.5,"flagged":false,"categories":{"anger":0,"sadness":0,"joy":0,"fear":0,"neutral":0}}
 
 Message to analyze: "${message}"`;
 
     const result = await model.generateContent(prompt);
     const { response } = result;
-    const text = response.text().trim();
+    const text = response
+      .text()
+      .trim()
+      .replace(/```json\n?|\n?```/g, '') // Remove any markdown formatting
+      .replace(/\n/g, ''); // Remove newlines
 
     try {
       const sentimentData = JSON.parse(text);

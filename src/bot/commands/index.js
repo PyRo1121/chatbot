@@ -66,6 +66,7 @@ import {
 import { handleStartWordChain, handleStartMiniGame, handleAnswer } from './games.js';
 import { viewerCommands } from './viewer.js';
 import { analyticsCommands } from './analyticsCommands.js';
+import { handleHug } from './hug.js';
 import {
   handleChatActivity,
   handleStreamHealth,
@@ -150,6 +151,7 @@ export {
   handleAnswer,
   viewerCommands,
   analyticsCommands,
+  handleHug,
   handleStreamHealth,
   handleStreamStats,
   handleStreamPerformance,
@@ -243,6 +245,7 @@ export const commandList = [
   '!followmode [on/off] - Configure follow mode (mods only)',
   '!streamstats - Show stream statistics',
   '!streamhealth - Show stream health',
+  '!hug [@user] - Send a warm AI-generated hug to someone',
   // Add new enhanced commands
   ...enhancedCommandList,
 ];

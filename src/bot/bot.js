@@ -6,6 +6,8 @@ import { trackViewer } from './viewerManager.js';
 import streamAutomation from './streamAutomation.js';
 import spotify from '../spotify/spotify.js';
 import logger from '../utils/logger.js';
+import unifiedModerationManager from './unifiedModerationManager.js';
+import analyticsCommands from './commands/analyticsCommands.js';
 import {
   handlePing,
   handleLurk,
@@ -45,6 +47,7 @@ import {
   handleRaidHistory,
   handleAnalyzeChat,
   handleWarn,
+  moderateMessage,
   competitorCommands,
   handleShoutout,
   startTrivia,
@@ -63,16 +66,19 @@ import {
   handleStartMiniGame,
   handleAnswer,
   viewerCommands,
-  analyticsCommands,
   handleStreamHealth,
   handleStreamStats,
   handleStreamPerformance,
+  handleHug,
 } from './commands/index.js';
 import streamManager, {
   detectHighlight,
   streamCommands,
   streamEventHandlers,
 } from './streamManager.js';
+
+const recentMessages = new Map();
+const MESSAGE_CACHE_TIME = 5000; // 5 seconds
 
 async function handleMessage(twitchClient, channel, user, message, self) {
   if (!twitchClient?.client) {
@@ -84,6 +90,23 @@ async function handleMessage(twitchClient, channel, user, message, self) {
     logger.error('No valid user object provided to handleMessage:', { user });
     return;
   }
+
+  // Create a unique key for this message
+  const messageKey = `${user.username}:${message}:${Date.now()}`;
+  
+  // Check if we've seen this message recently
+  if (recentMessages.has(messageKey)) {
+    logger.debug('Duplicate message detected, skipping');
+    return;
+  }
+
+  // Add message to recent messages
+  recentMessages.set(messageKey, true);
+  
+  // Clean up old messages after delay
+  setTimeout(() => {
+    recentMessages.delete(messageKey);
+  }, MESSAGE_CACHE_TIME);
 
   logger.debug('Processing message:', {
     channel,
@@ -105,6 +128,30 @@ async function handleMessage(twitchClient, channel, user, message, self) {
   }
 
   try {
+    // Check message with unified moderation system first
+    const moderationResult = await unifiedModerationManager.moderateMessage(message, user.username, user);
+    if (moderationResult) {
+      logger.info('Message moderated:', {
+        username: user.username,
+        action: moderationResult.action,
+        reason: moderationResult.reason,
+      });
+
+      // Apply moderation action
+      switch (moderationResult.action) {
+        case 'warning':
+          await twitchClient.client.say(channel, `@${user.username}, warning: ${moderationResult.reason}`);
+          break;
+        case 'timeout':
+          await twitchClient.client.timeout(channel, user.username, moderationResult.duration, moderationResult.reason);
+          break;
+        case 'ban':
+          await twitchClient.client.ban(channel, user.username, moderationResult.reason);
+          break;
+      }
+      return;
+    }
+
     // Handle commands first
     if (message.startsWith('!')) {
       logger.debug('Command detected:', { message });
@@ -195,36 +242,24 @@ async function initBot() {
       throw new Error('Failed to initialize Twitch client');
     }
 
+    // Initial connection attempt
+    await attemptConnection(twitchClient);
+
     logger.debug('Twitch client initialized:', {
       clientExists: !!twitchClient,
       clientConnected: twitchClient?.client?.isConnected,
       channels: twitchClient?.client?.getChannels?.() || [],
     });
 
-    // Register message and event handlers
-    logger.debug('Setting up message and event handlers');
-
-    // Message handler
-    twitchClient.client.onMessage((channel, user, text, msg) => {
-      logger.debug('Raw message received:', {
-        channel,
-        user: JSON.stringify(user),
-        text,
-        msg: JSON.stringify(msg),
-      });
-
-      // Convert Twurple user object to expected format
-      const userObj = {
-        username: user,
-        displayName: msg.userInfo.displayName,
-        isMod: msg.userInfo.isMod,
-        isBroadcaster: msg.userInfo.badges.has('broadcaster'),
-        badges: Object.fromEntries(msg.userInfo.badges),
-      };
-
-      handleMessage(twitchClient, channel, userObj, text, msg.userInfo.isSelf);
-    });
-    logger.debug('Message handler registered');
+    // Initialize analytics commands with the Twitch client
+    logger.sectionHeader('Initializing Analytics Commands');
+    try {
+      analyticsCommands.initializeAnalytics(twitchClient);
+      logger.info('Analytics commands initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize analytics commands:', error);
+      throw error;
+    }
 
     // Initialize Spotify integration
     logger.sectionHeader('Initializing Spotify Integration');
@@ -236,19 +271,31 @@ async function initBot() {
       throw error;
     }
 
+    // Initialize analytics
+    logger.sectionHeader('Initializing Analytics');
+    try {
+      await initializeAnalytics();
+      await analytics.initialize();
+      await analytics.startStream();
+      logger.info('Analytics initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize analytics:', error);
+      throw error;
+    }
+
     // Initialize stream automation with the Twitch client
     logger.sectionHeader('Initializing Stream Automation');
     try {
       await streamAutomation.init(twitchClient);
+      logger.info('Stream automation initialized');
     } catch (error) {
       logger.error('Failed to initialize stream automation:', error);
       throw error;
     }
 
-    // Start analytics tracking
-    logger.sectionHeader('Starting Analytics');
-    analytics.startStream();
-    initializeAnalytics();
+    // Set the message handler for twitchClient
+    twitchClient.setMessageHandler(handleMessage);
+    logger.info('Message handler set for twitchClient');
 
     // Register stream event handlers
     logger.sectionHeader('Setting Up Event Handlers');
@@ -279,6 +326,87 @@ async function initBot() {
   }
 }
 
+async function handleModerationCommand(twitchClient, channel, user, command, args) {
+  if (!user.isMod && !user.isBroadcaster) {
+    return;
+  }
+
+  try {
+    switch (command) {
+      case '!warn': {
+        if (args.length < 2) {
+          await twitchClient.client.say(channel, 'Usage: !warn [username] [reason]');
+          return;
+        }
+        const [username, ...reasonParts] = args;
+        const reason = reasonParts.join(' ');
+        const response = await handleWarn(twitchClient.client, channel, user, [
+          username,
+          ...reason.split(' '),
+        ]);
+        if (response) {
+          await twitchClient.client.say(channel, String(response));
+        }
+        break;
+      }
+
+      case '!trust': {
+        const trustResponse = await handleTrust(twitchClient.client, channel, user, args);
+        if (trustResponse) {
+          await twitchClient.client.say(channel, String(trustResponse));
+        }
+        break;
+      }
+
+      case '!untrust': {
+        const untrustResponse = await handleUntrust(twitchClient.client, channel, user, args);
+        if (untrustResponse) {
+          await twitchClient.client.say(channel, String(untrustResponse));
+        }
+        break;
+      }
+
+      case '!modstats': {
+        const statsResponse = await handleModStats(twitchClient.client, channel, user);
+        if (statsResponse) {
+          await twitchClient.client.say(channel, String(statsResponse));
+        }
+        break;
+      }
+
+      case '!userhistory': {
+        if (!args.length) {
+          await twitchClient.client.say(channel, 'Please specify a username to check');
+          return;
+        }
+        const historyResponse = await handleUserHistory(twitchClient.client, channel, user, args[0]);
+        if (historyResponse) {
+          await twitchClient.client.say(channel, String(historyResponse));
+        }
+        break;
+      }
+
+      case '!raidhistory': {
+        const raidResponse = await handleRaidHistory(twitchClient.client, channel, user);
+        if (raidResponse) {
+          await twitchClient.client.say(channel, String(raidResponse));
+        }
+        break;
+      }
+
+      case '!analyzechat': {
+        const analysisResponse = await handleAnalyzeChat(twitchClient.client, channel, user);
+        if (analysisResponse) {
+          await twitchClient.client.say(channel, String(analysisResponse));
+        }
+        break;
+      }
+    }
+  } catch (error) {
+    logger.error('Error handling moderation command:', error);
+  }
+}
+
 async function handleCommand(twitchClient, channel, user, message) {
   const [command, ...args] = message.toLowerCase().split(' ');
   const isBroadcaster = user.isBroadcaster || user.username === channel.replace('#', '');
@@ -293,21 +421,31 @@ async function handleCommand(twitchClient, channel, user, message) {
   });
 
   try {
+    // Handle moderation commands first
+    const moderationCommands = ['!warn', '!trust', '!untrust', '!modstats', '!userhistory', '!raidhistory', '!analyzechat'];
+    if (moderationCommands.includes(command)) {
+      await handleModerationCommand(twitchClient, channel, user, command, args);
+      return;
+    }
+
+    // Handle other commands
     switch (command) {
       case '!ping': {
-        logger.debug('Executing ping command');
-        const pingResponse = handlePing();
-        logger.debug('Ping response:', { response: pingResponse });
-        await twitchClient.client.say(channel, pingResponse);
+        const response = handlePing();
+        if (response) {
+          await twitchClient.client.say(channel, String(response));
+        }
         break;
       }
+
       case '!lurk': {
-        logger.debug('Executing lurk command');
-        const lurkResponse = await handleLurk(twitchClient.client, channel, user);
-        logger.debug('Lurk response:', { response: lurkResponse });
-        await twitchClient.client.say(channel, lurkResponse);
+        const lurkResponse = handleLurk(user.username);
+        if (lurkResponse) {
+          await twitchClient.client.say(channel, String(lurkResponse));
+        }
         break;
       }
+
       case '!roast': {
         logger.debug('Executing roast command:', {
           args: args.join(' '),
@@ -341,7 +479,7 @@ async function handleCommand(twitchClient, channel, user, message) {
         if (isBroadcaster || user.isMod) {
           const response = await handleTitle(twitchClient.client, channel, user, args.join(' '));
           if (response) {
-            await twitchClient.client.say(channel, String(response));
+          await twitchClient.client.say(channel, String(response));
           }
         }
         break;
@@ -458,75 +596,27 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       }
-      case '!peak': {
-        const response = await analyticsCommands['!peak']();
-        if (response) {
-          await twitchClient.client.say(channel, String(response));
-        }
-        break;
-      }
-      case '!growth': {
-        if (isBroadcaster) {
-          const response = await analyticsCommands['!growth']();
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
-        }
-        break;
-      }
-      case '!trending': {
-        if (isBroadcaster) {
-          const response = await analyticsCommands['!trending']();
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
-        }
-        break;
-      }
-      case '!recap': {
-        const response = await analyticsCommands['!recap']();
-        if (response) {
-          await twitchClient.client.say(channel, String(response));
-        }
-        break;
-      }
-      case '!vibe': {
-        const response = await analyticsCommands['!vibe']();
-        if (response) {
-          await twitchClient.client.say(channel, String(response));
-        }
-        break;
-      }
-      case '!schedule': {
-        if (isBroadcaster) {
-          const response = await analyticsCommands['!schedule']();
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
-        }
-        break;
-      }
-      case '!tags': {
-        if (isBroadcaster || user.isMod) {
-          const response = await analyticsCommands['!tags']();
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
-        }
-        break;
-      }
-      case '!collab': {
-        if (isBroadcaster) {
-          const response = await analyticsCommands['!collab']();
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
-        }
-        break;
-      }
+      case '!peak':
+      case '!growth':
+      case '!trending':
+      case '!recap':
+      case '!vibe':
+      case '!schedule':
+      case '!tags':
+      case '!collab':
       case '!network': {
-        if (isBroadcaster) {
-          const response = await analyticsCommands['!network']();
+        const analyticsCommand = command.substring(1);
+        const broadcasterOnlyCommands = ['growth', 'trending', 'schedule', 'tags', 'collab', 'network'];
+
+        // Check if it's a broadcaster-only command
+        if (broadcasterOnlyCommands.includes(analyticsCommand) && !isBroadcaster) {
+          logger.debug(`User ${user.username} attempted to use broadcaster-only command: ${command}`);
+          break;
+        }
+
+        // Check if the command exists in analyticsCommands
+        if (analyticsCommands[command]) {
+          const response = await analyticsCommands[command]();
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
@@ -574,6 +664,13 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
       case '!health': {
         const response = await handleHealth(twitchClient.client, channel, user);
+        if (response) {
+          await twitchClient.client.say(channel, String(response));
+        }
+        break;
+      }
+      case '!hug': {
+        const response = await handleHug(twitchClient.client, channel, user, args.join(' '));
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -690,7 +787,7 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       case '!songrequest': {
-        const username = user.username || user;
+        const username = user.username || '';
         logger.debug('Executing song request command:', {
           args: args.join(' '),
           username,
@@ -1025,27 +1122,12 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       }
-      case '!warn': {
-        if (user.isMod || isBroadcaster) {
-          if (args.length < 2) {
-            await twitchClient.client.say(channel, 'Usage: !warn [username] [reason]');
-            break;
-          }
-          const [username, ...reasonParts] = args;
-          const reason = reasonParts.join(' ');
-          const response = await handleWarn(twitchClient.client, channel, user, [
-            username,
-            ...reason.split(' '),
-          ]);
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
-        }
+      default:
+        // Handle unknown command
         break;
-      }
     }
   } catch (error) {
-    logger.error(`Error handling command ${command}:`, error);
+    logger.error('Error handling command:', error);
   }
 }
 
@@ -1071,6 +1153,20 @@ function setupCleanupIntervals() {
     },
     60 * 60 * 1000
   );
+
+  // Update competitor analysis less frequently to avoid rate limits
+  setInterval(
+    () => {
+      try {
+        competitorAnalysis.updateAllChannels().catch((error) => {
+          logger.error('Error in competitor analysis update:', error);
+        });
+      } catch (error) {
+        logger.error('Error in competitor analysis interval:', error);
+      }
+    },
+    15 * 60 * 1000
+  ); // Run every 15 minutes instead of every hour
 }
 
 function setupTerminationHandler(twitchClient) {
@@ -1172,6 +1268,56 @@ function formatEndStreamMessage(analysis, duration) {
     '',
     'Check !insights for more detailed analytics!',
   ].join('\n');
+}
+
+async function attemptConnection(twitchClient) {
+  try {
+    // Check if already connected
+    if (twitchClient.client.isConnected) {
+      logger.info('Already connected to Twitch chat');
+      return;
+    }
+
+    logger.info('Connecting to Twitch chat...');
+    // Connect with timeout
+    await Promise.race([
+      twitchClient.client.connect(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timeout')), 10000)
+      ),
+    ]);
+
+    // Wait for channel join
+    logger.info('Waiting for channel join...');
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Channel join timeout'));
+      }, 10000);
+
+      const joinHandler = (channel, user) => {
+        if (user === twitchClient.client.currentNick) {
+          clearTimeout(timeout);
+          twitchClient.client.removeListener('join', joinHandler);
+          logger.info(`Successfully joined channel ${channel}`);
+          resolve();
+        }
+      };
+
+      twitchClient.client.onJoin(joinHandler);
+    });
+  } catch (error) {
+    logger.error('Connection attempt failed:', error);
+    // If connection fails, ensure we're disconnected before retrying
+    if (twitchClient.client.isConnected) {
+      try {
+        await twitchClient.client.quit();
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } catch (disconnectError) {
+        logger.error('Error during disconnect:', disconnectError);
+      }
+    }
+    throw error; // Re-throw to be handled by retry logic
+  }
 }
 
 export { initBot };
