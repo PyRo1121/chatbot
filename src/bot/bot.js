@@ -198,6 +198,7 @@ async function handleMessage(twitchClient, channel, user, message, self) {
       }
 
       const engagementResponse = await chatInteraction.handleChatMessage(user.username, message);
+      const engagementResponse = await chatInteraction.handleChatMessage(user.username, message);
       if (engagementResponse) {
         await twitchClient.client.say(channel, engagementResponse);
       }
@@ -210,10 +211,12 @@ async function handleMessage(twitchClient, channel, user, message, self) {
       // Track viewer but don't send welcome messages
       const milestone = trackViewer(user.username);
 
+
       // Only send milestone messages, skip automatic greetings
       if (milestone) {
         await twitchClient.client.say(channel, milestone);
       }
+
 
       // Removed engagement prompts
     } catch (error) {
@@ -251,7 +254,6 @@ async function initBot() {
       channels: twitchClient?.client?.getChannels?.() || [],
     });
 
-<<<<<<< HEAD
     // Initialize analytics commands with the Twitch client
     logger.sectionHeader('Initializing Analytics Commands');
     try {
@@ -261,7 +263,6 @@ async function initBot() {
       logger.error('Failed to initialize analytics commands:', error);
       throw error;
     }
-=======
     // Register message and event handlers
     logger.debug('Setting up message and event handlers');
 
@@ -286,7 +287,6 @@ async function initBot() {
       handleMessage(twitchClient, channel, userObj, text, msg.userInfo.isSelf);
     });
     logger.debug('Message handler registered');
->>>>>>> parent of a19cdac (changes)
 
     // Initialize Spotify integration
     logger.sectionHeader('Initializing Spotify Integration');
@@ -466,17 +466,14 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
 
       case '!lurk': {
-<<<<<<< HEAD
         const lurkResponse = handleLurk(user.username);
         if (lurkResponse) {
           await twitchClient.client.say(channel, String(lurkResponse));
         }
-=======
         logger.debug('Executing lurk command');
         const lurkResponse = await handleLurk(twitchClient.client, channel, user);
         logger.debug('Lurk response:', { response: lurkResponse });
         await twitchClient.client.say(channel, lurkResponse);
->>>>>>> parent of a19cdac (changes)
         break;
       }
 
@@ -527,24 +524,19 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       }
-      case '!uptime': {
-        const response = await handleUptime(twitchClient.client, channel, user);
-        if (response) {
-          await twitchClient.client.say(channel, String(response));
+
+      case '!trust': {
+        const trustResponse = await handleTrust(twitchClient.client, channel, user, args);
+        if (trustResponse) {
+          await twitchClient.client.say(channel, String(trustResponse));
         }
         break;
       }
-      case '!milestone': {
-        if (isBroadcaster || user.isMod) {
-          const response = await handleMilestone(
-            twitchClient.client,
-            channel,
-            user,
-            args.join(' ')
-          );
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
+
+      case '!untrust': {
+        const untrustResponse = await handleUntrust(twitchClient.client, channel, user, args);
+        if (untrustResponse) {
+          await twitchClient.client.say(channel, String(untrustResponse));
         }
         break;
       }
@@ -941,6 +933,7 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       }
+
       case '!userhistory': {
         if (user.isMod || isBroadcaster) {
           if (!args.length) {
@@ -989,6 +982,7 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       }
+
       case '!analyzechat': {
         if (user.isMod || isBroadcaster) {
           const response = await handleAnalyzeChat(twitchClient.client, channel, user);
@@ -1060,11 +1054,8 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       }
       case '!topclips': {
-<<<<<<< HEAD
         const response = await handleRecentClips(twitchClient.client, channel, user, 'top');
-=======
         const response = await handleTopClips(twitchClient.client, channel, user);
->>>>>>> parent of a19cdac (changes)
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -1159,8 +1150,10 @@ async function handleCommand(twitchClient, channel, user, message) {
           await twitchClient.client.say(channel, String(categoriesResponse));
         }
         break;
-<<<<<<< HEAD
-=======
+      }
+      default:
+        // Handle unknown command
+        break;
       case '!warn': {
         if (user.isMod || isBroadcaster) {
           if (args.length < 2) {
@@ -1177,11 +1170,6 @@ async function handleCommand(twitchClient, channel, user, message) {
             await twitchClient.client.say(channel, String(response));
           }
         }
-        break;
->>>>>>> parent of a19cdac (changes)
-      }
-      default:
-        // Handle unknown command
         break;
     }
   } catch (error) {
@@ -1252,6 +1240,7 @@ function setupTerminationHandler(twitchClient) {
         streamEventHandlers.onStreamEnd();
       });
       logger.info('Stream insights received:', streamInsights ? 'success' : 'no data');
+      logger.info('Stream insights received:', streamInsights ? 'success' : 'no data');
 
       logger.info('Running analytics cleanup...');
       analytics.endStream();
@@ -1270,9 +1259,11 @@ function setupTerminationHandler(twitchClient) {
       });
 
       const channelName = process.env.CHANNEL_NAME || process.env.TWITCH_CHANNEL;
+      const channelName = process.env.CHANNEL_NAME || process.env.TWITCH_CHANNEL;
       if (finalAnalysis && twitchClient?.client?.isConnected && channelName) {
         logger.info('Posting final stream analysis...');
         const duration =
+          streamCommands.uptime() === 'Stream is offline' ? '0h 0m' : streamCommands.uptime();
           streamCommands.uptime() === 'Stream is offline' ? '0h 0m' : streamCommands.uptime();
         const message = formatEndStreamMessage(finalAnalysis, duration);
         try {
