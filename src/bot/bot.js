@@ -251,6 +251,7 @@ async function initBot() {
       channels: twitchClient?.client?.getChannels?.() || [],
     });
 
+<<<<<<< HEAD
     // Initialize analytics commands with the Twitch client
     logger.sectionHeader('Initializing Analytics Commands');
     try {
@@ -260,6 +261,32 @@ async function initBot() {
       logger.error('Failed to initialize analytics commands:', error);
       throw error;
     }
+=======
+    // Register message and event handlers
+    logger.debug('Setting up message and event handlers');
+
+    // Message handler
+    twitchClient.client.onMessage((channel, user, text, msg) => {
+      logger.debug('Raw message received:', {
+        channel,
+        user: JSON.stringify(user),
+        text,
+        msg: JSON.stringify(msg),
+      });
+
+      // Convert  user object to expected format
+      const userObj = {
+        username: user,
+        displayName: msg.userInfo.displayName,
+        isMod: msg.userInfo.isMod,
+        isBroadcaster: msg.userInfo.badges.has('broadcaster'),
+        badges: Object.fromEntries(msg.userInfo.badges),
+      };
+
+      handleMessage(twitchClient, channel, userObj, text, msg.userInfo.isSelf);
+    });
+    logger.debug('Message handler registered');
+>>>>>>> parent of a19cdac (changes)
 
     // Initialize Spotify integration
     logger.sectionHeader('Initializing Spotify Integration');
@@ -439,10 +466,17 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
 
       case '!lurk': {
+<<<<<<< HEAD
         const lurkResponse = handleLurk(user.username);
         if (lurkResponse) {
           await twitchClient.client.say(channel, String(lurkResponse));
         }
+=======
+        logger.debug('Executing lurk command');
+        const lurkResponse = await handleLurk(twitchClient.client, channel, user);
+        logger.debug('Lurk response:', { response: lurkResponse });
+        await twitchClient.client.say(channel, lurkResponse);
+>>>>>>> parent of a19cdac (changes)
         break;
       }
 
@@ -1026,7 +1060,11 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       }
       case '!topclips': {
+<<<<<<< HEAD
         const response = await handleRecentClips(twitchClient.client, channel, user, 'top');
+=======
+        const response = await handleTopClips(twitchClient.client, channel, user);
+>>>>>>> parent of a19cdac (changes)
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -1121,6 +1159,26 @@ async function handleCommand(twitchClient, channel, user, message) {
           await twitchClient.client.say(channel, String(categoriesResponse));
         }
         break;
+<<<<<<< HEAD
+=======
+      case '!warn': {
+        if (user.isMod || isBroadcaster) {
+          if (args.length < 2) {
+            await twitchClient.client.say(channel, 'Usage: !warn [username] [reason]');
+            break;
+          }
+          const username = args[0];
+          const reason = args.slice(1).join(' ');
+          const response = await handleWarn(twitchClient.client, channel, user, [
+            username,
+            ...reason.split(' '),
+          ]);
+          if (response) {
+            await twitchClient.client.say(channel, String(response));
+          }
+        }
+        break;
+>>>>>>> parent of a19cdac (changes)
       }
       default:
         // Handle unknown command
@@ -1146,7 +1204,7 @@ function setupCleanupIntervals() {
   setInterval(
     () => {
       try {
-        competitorAnalysis.updateAllChannels();
+        competitorManager.updateAllChannels(twitchClient);
       } catch (error) {
         logger.error('Error updating competitor analysis:', error);
       }

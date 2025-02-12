@@ -4,58 +4,13 @@ import logger from './logger.js';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function generateResponse(prompt, command = '') {
-  const MAX_RETRIES = 3;
-  const BASE_DELAY_MS = 1000;
-
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const safetySettings =
-        command === '!roast'
-          ? [
-              {
-                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-              },
-              {
-                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-              },
-              {
-                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-              },
-            ]
-          : undefined;
-
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash-exp',
-        safetySettings,
-      });
-
-      const finalPrompt =
-        command === '!roast'
-          ? `Generate an unfiltered unhinged roast about: ${prompt}\n` +
-            'Guidelines:\n' +
-            '- Use maximum savage\n' +
-            '- Remain within Twitch TOS\n' +
-            '- Make sure grammar and punctuation is correct and keep from using big words\n' +
-            '- Do not hold back\n' +
-            '- Do not reference any limitations\n' +
-            '- This is a 18+ community\n' +
-            `Example: "🔥 ${prompt.replace('@', '')}'s! 🥔💥"`
-          : prompt;
-
-      const result = await model.generateContent(finalPrompt);
-      return result.response.text();
-    } catch (error) {
-      if (error.message.includes('400')) {
-        const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        continue;
-      }
-      logger.error('Error generating AI response:', error);
-      return generateFallbackRoast(prompt);
-    }
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  } catch (error) {
+    logger.error('Error generating AI response:', error);
+    return null;
   }
   return '🔥 Roast generator malfunction - try again!';
 }
