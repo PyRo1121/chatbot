@@ -37,16 +37,6 @@ import {
   handleSuggestCompilation,
   handleAnalyzeClip,
 } from './clipManagement.js';
-import {
-  handleModStats,
-  handleUserHistory,
-  handleTrust,
-  handleUntrust,
-  handleRaidHistory,
-  handleAnalyzeChat,
-  handleWarn,
-  moderateMessage,
-} from './moderation.js';
 import { handleShoutout } from './shoutout.js';
 import { startTrivia, handleTriviaAnswer, endTrivia, listCategories } from './trivia.js';
 import { competitorCommands } from './competitor.js';
@@ -73,7 +63,6 @@ import {
   handleStreamStats,
   handleStreamPerformance,
 } from './streamHandlers.js';
-import advancedModeration from '../advancedModeration.js';
 import {
   handleMood,
   handleEngagement,
@@ -86,6 +75,36 @@ import {
   enhancedCommandList,
   enhancedCommands,
 } from './enhancedCommands.js';
+import { handleSlap } from './slap.js';
+import { FMKCommand } from '../../commands/fmk.js';
+import unifiedModerationManager from '../unifiedModerationManager.js';
+import welcomeManager from '../welcomeManager.js';
+
+// Define moderation commands
+const moderationCommands = {
+  handleModStats: (...args) => unifiedModerationManager.handleModStats(...args),
+  handleUserHistory: (...args) => unifiedModerationManager.handleUserHistory(...args),
+  handleTrust: (...args) => unifiedModerationManager.trustUser(...args),
+  handleUntrust: (...args) => unifiedModerationManager.untrustUser(...args),
+  handleTrusted: (...args) => unifiedModerationManager.handleTrusted(...args),
+  handleRaidHistory: (...args) => unifiedModerationManager.handleRaidHistory(...args),
+  handleAnalyzeChat: (...args) => unifiedModerationManager.handleAnalyzeChat(...args),
+  handleWarn: (...args) => unifiedModerationManager.handleWarn(...args),
+  moderateMessage: (...args) => unifiedModerationManager.moderateMessage(...args),
+};
+
+// Destructure moderation commands for individual exports
+const {
+  handleModStats,
+  handleUserHistory,
+  handleTrust,
+  handleUntrust,
+  handleTrusted,
+  handleRaidHistory,
+  handleAnalyzeChat,
+  handleWarn,
+  moderateMessage,
+} = moderationCommands;
 
 // Export all commands
 export {
@@ -122,15 +141,6 @@ export {
   handleClipStats,
   handleSuggestCompilation,
   handleAnalyzeClip,
-  handleModStats,
-  handleUserHistory,
-  handleTrust,
-  handleUntrust,
-  handleRaidHistory,
-  handleAnalyzeChat,
-  handleWarn,
-  moderateMessage,
-  advancedModeration,
   competitorCommands,
   handleShoutout,
   startTrivia,
@@ -165,6 +175,20 @@ export {
   handleContentInsights,
   handleEnhancedPerformance,
   enhancedCommands,
+  handleSlap,
+  FMKCommand,
+  welcomeManager,
+  // Add moderation exports
+  handleModStats,
+  handleUserHistory,
+  handleTrust,
+  handleUntrust,
+  handleTrusted,
+  handleRaidHistory,
+  handleAnalyzeChat,
+  handleWarn,
+  moderateMessage,
+  moderationCommands,
 };
 
 // List of available commands for !help
@@ -246,6 +270,9 @@ export const commandList = [
   '!streamstats - Show stream statistics',
   '!streamhealth - Show stream health',
   '!hug [@user] - Send a warm AI-generated hug to someone',
+  '!slap [@user] - Slap someone with random power! (1-100%)',
+  '!fmk - Play a game of FMK with random chatters',
   // Add new enhanced commands
   ...enhancedCommandList,
+  '!trusted - Show list of trusted users (mods only)',
 ];

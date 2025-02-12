@@ -48,7 +48,7 @@ function validateUsername(username) {
  * @returns {string} Fallback shoutout message
  */
 function getFallbackMessage(username) {
-  return `Hey everyone! Check out @${username} over at twitch.tv/${username}! They're awesome! 🎮`;
+  return `Hey everyone! Give a warm welcome to @${username}! They're an amazing streamer who brings great energy and entertainment to their community. Make sure to follow them at twitch.tv/${username} for some awesome gaming content and good vibes! 🎮 ✨`;
 }
 
 /**
@@ -57,7 +57,7 @@ function getFallbackMessage(username) {
  * @returns {string} Formatted prompt for Gemini
  */
 function createShoutoutPrompt(channelData) {
-  return `Generate a single Twitch shoutout message. Be natural and friendly.
+  return `Generate a single Twitch shoutout message. Be natural, friendly, and enthusiastic.
 
 Streamer Info:
 - Name: ${channelData.displayName}
@@ -66,16 +66,16 @@ Streamer Info:
 ${channelData.title ? `- Stream: ${channelData.title}` : ''}
 
 Rules:
-1. Write ONE natural message (200-300 chars)
-2. Use 1-2 gaming emojis (🎮 🎲 🏆 etc)
+1. Write ONE natural message (400-500 chars)
+2. Use 2-3 gaming emojis (🎮 🎲 🏆 etc)
 3. Must include: twitch.tv/${channelData.name}
-4. Be enthusiastic but not overly promotional
-5. Focus on their current/recent activity
+4. Be enthusiastic and highlight their personality/content
+5. Focus on their gaming style and community vibe
+6. Mention their current/recent activity
 
 DO NOT:
 - Include these instructions
 - Use placeholder text
-- Exceed 300 characters
 - Format as a list`;
 }
 
@@ -145,7 +145,7 @@ export async function handleShoutout(twitchClient, channel, user, args) {
         response.includes('Rules:') ||
         response.includes('[') ||
         response.includes(']') ||
-        response.length < 50) {
+        response.length < 200) {  // Changed from 50
       logger.warn('Invalid AI response format:', { response });
       return getFallbackMessage(targetUser);
     }
@@ -189,15 +189,15 @@ export async function handleShoutout(twitchClient, channel, user, args) {
       .trim();
 
     // Smart truncation with preserved username
-    if (cleanResponse.length > 300) {
-      const truncateIndex = cleanResponse.lastIndexOf(' ', 280);
+    if (cleanResponse.length > 500) {  // Changed from 300
+      const truncateIndex = cleanResponse.lastIndexOf(' ', 480);
       cleanResponse = truncateIndex > 0 ?
         `${cleanResponse.substring(0, truncateIndex).trim()}... ${twitchUrl} 🎮` :
-        cleanResponse.substring(0, 280).trim();
+        cleanResponse.substring(0, 480).trim();
     }
 
     // Final validation
-    return cleanResponse.length >= 50 && cleanResponse.includes(twitchUrl)
+    return cleanResponse.length >= 200 && cleanResponse.includes(twitchUrl)  // Changed from 50
       ? cleanResponse
       : getFallbackMessage(targetUser);
   } catch (error) {

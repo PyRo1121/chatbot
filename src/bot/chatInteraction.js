@@ -4,6 +4,7 @@ import streamSummary from './streamSummary.js';
 
 import { ApiClient } from '@twurple/api';
 import { RefreshingAuthProvider } from '@twurple/auth';
+import { contentAnalysisService } from '../services/contentAnalysisService.js';
 
 class ChatInteraction {
   constructor() {
@@ -43,6 +44,17 @@ class ChatInteraction {
     this.currentCategory = null;
     this.initializeTwitchApi();
     this.aiService = new AIService(); // Fixed instantiation
+
+    this.responseTemplates = {
+      welcome: [
+        "Hey {username}! I see you're interested in {interest}!",
+        "Welcome back {username}! Ready for more {interest}?"
+      ],
+      suggestion: [
+        "Since you enjoy {interest}, you might like {suggestion}!",
+        "Based on your interests in {interest}, check out {suggestion}!"
+      ]
+    };
   }
 
   async initializeTwitchApi() {
@@ -189,6 +201,21 @@ class ChatInteraction {
         if (response) {
           return response;
         }
+      }
+
+      // Analyze message and update viewer preferences
+      const analysis = await contentAnalysisService.analyzeMessage(username, message);
+
+      // Check for highlights
+      const highlight = contentAnalysisService.checkForHighlight();
+      if (highlight) {
+          this.handleHighlight(highlight);
+      }
+
+      // Generate personalized response if appropriate
+      const shouldRespond = this.shouldGenerateResponse(username);
+      if (shouldRespond) {
+          return this.generatePersonalizedResponse(username, analysis);
       }
 
       return null;
@@ -394,6 +421,45 @@ class ChatInteraction {
       logger.error('Error generating personalized response:', error);
       return null;
     }
+  }
+
+  generateTemplatedResponse(username, analysis) {
+    try {
+        const recommendations = contentAnalysisService.getRecommendations(username);
+        if (!recommendations) {
+            return null;
+        }
+
+        const template = this.selectResponseTemplate(analysis, recommendations);
+        return this.fillTemplate(template, {
+            username,
+            interest: recommendations.interests[0]?.[0] || 'streaming',
+            suggestion: this.getSuggestion(recommendations)
+        });
+    } catch (error) {
+        logger.error('Error generating response:', error);
+        return null;
+    }
+  }
+
+  selectResponseTemplate(analysis, recommendations) {
+    const templates = this.responseTemplates[analysis.sentiment > 0.5 ? 'welcome' : 'suggestion'];
+    return templates[Math.floor(Math.random() * templates.length)];
+  }
+
+  fillTemplate(template, data) {
+    return template.replace(/{(\w+)}/g, (match, key) => data[key] || match);
+  }
+
+  getSuggestion(recommendations) {
+    // Implementation would be based on your content recommendation logic
+    return recommendations.interests[1]?.[0] || 'our community';
+  }
+
+  handleHighlight(highlight) {
+    // Implement your highlight handling logic here
+    logger.info('Chat highlight detected:', highlight);
+    // You might want to create a clip, notify mods, etc.
   }
 
   getRecentMessages(count = 5) {

@@ -1,7 +1,9 @@
 import { LRUCache } from 'lru-cache';
 import { generateResponse, analyzeSentiment, DEFAULT_SYSTEM_PROMPT } from './ai.js';
+import { generateResponse as generateAIResponse } from './gemini.js';  // Updated import
 import logger from './logger.js';
 import { CircuitBreaker } from './circuitBreaker.js';
+import { sentimentHandler } from './sentimentHandler.js';
 
 class AIService {
   constructor(options = {}) {
@@ -30,52 +32,39 @@ class AIService {
       successThreshold: options.circuitBreakerOptions?.successThreshold || 0.5,
       timeout: options.circuitBreakerOptions?.timeout || 10000,
     });
+
+    this.emotionCache = new Map();
+    this.moodHistory = [];
+    this.chatMood = {
+      overall: 'neutral',
+      score: 0,
+      updated: Date.now(),
+    };
   }
 
-  async analyzeMessage(message, username) {
+  async analyzeMessage(message, context = {}) {
     try {
-      const cacheKey = `${username}:${message}`;
-      const cachedAnalysis = this.analysisCache.get(cacheKey);
-      if (cachedAnalysis) {
-        logger.debug('Cache hit:', { username, message });
-        return cachedAnalysis;
-      }
-
-      if (this.isRateLimited()) {
-        logger.warn('Rate limit reached for analysis');
-        return null;
-      }
-
-      if (!this.processingBatch) {
-        this.analysisQueue.push({ message, username, cacheKey });
-        if (this.analysisQueue.length >= this.BATCH_SIZE) {
-          await this.processBatch();
-        }
-        return null;
-      }
-
-      // Use circuit breaker for API calls
-      const analysis = await this.circuitBreaker.execute(() => analyzeSentiment(message));
-      if (!analysis) {
-        throw new Error('Sentiment analysis failed');
-      }
-
-      this.incrementRequestCount();
-
-      const result = {
-        sentiment: analysis.toxicityScore,
-        emotions: analysis.categories,
-        timestamp: Date.now(),
+      const sentiment = await sentimentHandler.analyzeMessage(message, context.username);
+      return {
+        ...sentiment,
+        contextual: this.getMessageContext(context),
       };
-
-      this.analysisCache.set(cacheKey, result);
-      this.updateUserContext(username, result);
-
-      return result;
     } catch (error) {
-      logger.error('Analysis failed:', error);
+      logger.error('Error in message analysis:', error);
       return null;
     }
+  }
+
+  getMessageContext(context) {
+    const channelMood = sentimentHandler.getChannelMoodSummary();
+    const userMood = context.username ?
+        sentimentHandler.getUserMoodSummary(context.username) : null;
+
+    return {
+        channelMood,
+        userMood,
+        timestamp: Date.now(),
+    };
   }
 
   async processBatch() {
@@ -272,6 +261,70 @@ Current context:
   isStopWord(word) {
     const stopWords = new Set(['the', 'and', 'but', 'for', 'with', 'this', 'that']);
     return stopWords.has(word);
+  }
+
+  async analyzeMessageContent(message, context = {}) {
+    try {
+      const prompt = `Analyze this chat message for sentiment and emotion. Message: "${message}"
+          Consider context: ${JSON.stringify(context)}
+          Return as JSON with format:
+          {
+              "sentiment": number (-1 to 1),
+              "emotion": string (primary emotion),
+              "intensity": number (0 to 1),
+              "mood": string (overall mood),
+              "flags": array (any concerning patterns)
+          }`;
+
+      const response = await generateAIResponse(prompt);
+      const analysis = JSON.parse(response);
+
+      // Update mood history
+      this.updateMoodHistory(analysis);
+
+      return analysis;
+    } catch (error) {
+      logger.error('Error in message analysis:', error);
+      return null;
+    }
+  }
+
+  updateMoodHistory(analysis) {
+    this.moodHistory.push({
+      timestamp: Date.now(),
+      sentiment: analysis.sentiment,
+      emotion: analysis.emotion,
+    });
+
+    // Keep last hour of mood data
+    const oneHourAgo = Date.now() - (60 * 60 * 1000);
+    this.moodHistory = this.moodHistory.filter(m => m.timestamp > oneHourAgo);
+
+    // Update overall chat mood
+    this.updateChatMood();
+  }
+
+  updateChatMood() {
+    if (this.moodHistory.length === 0) {
+      return;
+    }
+
+    const recentMoods = this.moodHistory.slice(-10);
+    const avgSentiment = recentMoods.reduce((sum, m) => sum + m.sentiment, 0) / recentMoods.length;
+
+    this.chatMood = {
+      overall: this.getSentimentLabel(avgSentiment),
+      score: avgSentiment,
+      updated: Date.now(),
+    };
+  }
+
+  getSentimentLabel(score) {
+    if (score > 0.5) { return 'very_positive'; }
+    if (score > 0.1) { return 'positive'; }
+    if (score < -0.5) { return 'very_negative'; }
+    if (score < -0.1) { return 'negative'; }
+    return 'neutral';
   }
 }
 

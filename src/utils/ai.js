@@ -67,16 +67,34 @@ async function enhancedGenerateResponse(prompt, systemPrompt = DEFAULT_SYSTEM_PR
 }
 
 // Enhanced sentiment analysis with validation
-async function enhancedAnalyzeSentiment(message) {
+async function enhancedAnalyzeSentiment(text) {
   try {
-    const sentiment = await analyzeSentiment(message);
-    if (!sentiment || !isValidSentiment(sentiment)) {
-      throw new Error('Invalid sentiment response');
+    const result = await analyzeSentiment(text);
+    
+    // Validate the sentiment analysis result
+    if (!result || typeof result !== 'object') {
+      throw new Error('Invalid sentiment result format');
     }
-    return sentiment;
+
+    // Add additional validation if needed
+    if (result.sentiment < -1 || result.sentiment > 1) {
+      result.sentiment = Math.max(-1, Math.min(1, result.sentiment));
+    }
+
+    if (result.toxicity < 0 || result.toxicity > 1) {
+      result.toxicity = Math.max(0, Math.min(1, result.toxicity));
+    }
+
+    return result;
   } catch (error) {
     logger.error('Sentiment analysis failed:', error);
-    return null;
+    // Return a neutral default response instead of throwing
+    return {
+      sentiment: 0,
+      toxicity: 0,
+      tone: 'neutral',
+      flags: []
+    };
   }
 }
 

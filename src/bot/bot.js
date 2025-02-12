@@ -24,8 +24,6 @@ import {
   handleSuggestCompilation,
   handleTitle,
   handleCategory,
-  handleUptime,
-  handleMilestone,
   handleSuspiciousFollowers,
   handleClearSuspicious,
   handleFollowSettings,
@@ -47,7 +45,6 @@ import {
   handleRaidHistory,
   handleAnalyzeChat,
   handleWarn,
-  moderateMessage,
   competitorCommands,
   handleShoutout,
   startTrivia,
@@ -70,6 +67,9 @@ import {
   handleStreamStats,
   handleStreamPerformance,
   handleHug,
+  handleSlap,
+  FMKCommand,
+  welcomeManager,
 } from './commands/index.js';
 import streamManager, {
   detectHighlight,
@@ -93,7 +93,7 @@ async function handleMessage(twitchClient, channel, user, message, self) {
 
   // Create a unique key for this message
   const messageKey = `${user.username}:${message}:${Date.now()}`;
-  
+
   // Check if we've seen this message recently
   if (recentMessages.has(messageKey)) {
     logger.debug('Duplicate message detected, skipping');
@@ -102,7 +102,7 @@ async function handleMessage(twitchClient, channel, user, message, self) {
 
   // Add message to recent messages
   recentMessages.set(messageKey, true);
-  
+
   // Clean up old messages after delay
   setTimeout(() => {
     recentMessages.delete(messageKey);
@@ -197,7 +197,7 @@ async function handleMessage(twitchClient, channel, user, message, self) {
         });
       }
 
-      const engagementResponse = await chatInteraction.handleChatMessage(user.username, message);
+      // Handle chat engagement - removed duplicate declaration
       const engagementResponse = await chatInteraction.handleChatMessage(user.username, message);
       if (engagementResponse) {
         await twitchClient.client.say(channel, engagementResponse);
@@ -211,12 +211,10 @@ async function handleMessage(twitchClient, channel, user, message, self) {
       // Track viewer but don't send welcome messages
       const milestone = trackViewer(user.username);
 
-
       // Only send milestone messages, skip automatic greetings
       if (milestone) {
         await twitchClient.client.say(channel, milestone);
       }
-
 
       // Removed engagement prompts
     } catch (error) {
@@ -320,6 +318,11 @@ async function initBot() {
       throw error;
     }
 
+    // Initialize welcome manager
+    logger.sectionHeader('Initializing Welcome Manager');
+    welcomeManager.clearStreamMemory();
+    logger.info('Welcome manager initialized');
+
     // Set the message handler for twitchClient
     twitchClient.setMessageHandler(handleMessage);
     logger.info('Message handler set for twitchClient');
@@ -377,7 +380,7 @@ async function handleModerationCommand(twitchClient, channel, user, command, arg
         break;
       }
 
-      case '!trust': {
+      case '!trustuser': {
         const trustResponse = await handleTrust(twitchClient.client, channel, user, args);
         if (trustResponse) {
           await twitchClient.client.say(channel, String(trustResponse));
@@ -466,10 +469,6 @@ async function handleCommand(twitchClient, channel, user, message) {
       }
 
       case '!lurk': {
-        const lurkResponse = handleLurk(user.username);
-        if (lurkResponse) {
-          await twitchClient.client.say(channel, String(lurkResponse));
-        }
         logger.debug('Executing lurk command');
         const lurkResponse = await handleLurk(twitchClient.client, channel, user);
         logger.debug('Lurk response:', { response: lurkResponse });
@@ -525,14 +524,24 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       }
 
+      case '!trustuser':
       case '!trust': {
-        const trustResponse = await handleTrust(twitchClient.client, channel, user, args);
-        if (trustResponse) {
-          await twitchClient.client.say(channel, String(trustResponse));
+        if (user.isMod || isBroadcaster) {
+          if (!args.length) {
+            await twitchClient.client.say(channel, 'Please specify a username to trust!');
+            break;
+          }
+          // Call unifiedModerationManager directly
+          const response = await unifiedModerationManager.trustUser(args[0]);
+          if (response) {
+            await twitchClient.client.say(channel, response.message);
+            logger.info(`Trust command response: ${response.message}`);
+          }
         }
         break;
       }
 
+      case '!untrustuser':
       case '!untrust': {
         const untrustResponse = await handleUntrust(twitchClient.client, channel, user, args);
         if (untrustResponse) {
@@ -696,7 +705,7 @@ async function handleCommand(twitchClient, channel, user, message) {
         break;
       }
       case '!hug': {
-        const response = await handleHug(twitchClient.client, channel, user, args.join(' '));
+        const response = await handleHug(channel, user, args);
         if (response) {
           await twitchClient.client.say(channel, String(response));
         }
@@ -945,32 +954,7 @@ async function handleCommand(twitchClient, channel, user, message) {
             await twitchClient.client.say(channel, String(response));
           }
         }
-        break;
-      }
-      case '!trust': {
-        if (user.isMod || isBroadcaster) {
-          if (!args.length) {
-            await twitchClient.client.say(channel, 'Please specify a username to trust');
-            break;
-          }
-          const response = await handleTrust(twitchClient.client, channel, user, args[0]);
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
-        }
-        break;
-      }
-      case '!untrust': {
-        if (user.isMod || isBroadcaster) {
-          if (!args.length) {
-            await twitchClient.client.say(channel, 'Please specify a username to untrust');
-            break;
-          }
-          const response = await handleUntrust(twitchClient.client, channel, user, args[0]);
-          if (response) {
-            await twitchClient.client.say(channel, String(response));
-          }
-        }
+      // Trust and untrust commands are handled above
         break;
       }
       case '!raidhistory': {
@@ -1053,8 +1037,8 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       }
+      case '!tclips':
       case '!topclips': {
-        const response = await handleRecentClips(twitchClient.client, channel, user, 'top');
         const response = await handleTopClips(twitchClient.client, channel, user);
         if (response) {
           await twitchClient.client.say(channel, String(response));
@@ -1151,26 +1135,54 @@ async function handleCommand(twitchClient, channel, user, message) {
         }
         break;
       }
-      default:
-        // Handle unknown command
+      case '!slap': {
+        const response = await handleSlap(channel, user, args);
+        if (response) {
+          await twitchClient.client.say(channel, String(response));
+        }
         break;
-      case '!warn': {
+      }
+      case '!trusted': {
         if (user.isMod || isBroadcaster) {
-          if (args.length < 2) {
-            await twitchClient.client.say(channel, 'Usage: !warn [username] [reason]');
-            break;
-          }
-          const username = args[0];
-          const reason = args.slice(1).join(' ');
-          const response = await handleWarn(twitchClient.client, channel, user, [
-            username,
-            ...reason.split(' '),
-          ]);
+          const response = await handleTrust(twitchClient.client, channel, user);
           if (response) {
             await twitchClient.client.say(channel, String(response));
           }
         }
         break;
+      }
+      case '!fmk': {
+        const response = await FMKCommand.execute(channel, user, args, twitchClient);
+        if (response) {
+          await twitchClient.client.say(channel, String(response));
+        }
+        break;
+      }
+      default:
+        // Handle unknown command
+        break;
+      case '!warn': {
+        try {
+          if (user.isMod || isBroadcaster) {
+            if (args.length < 2) {
+              await twitchClient.client.say(channel, 'Usage: !warn [username] [reason]');
+              break;
+            }
+            const username = args[0];
+            const reason = args.slice(1).join(' ');
+            const response = await handleWarn(twitchClient.client, channel, user, [
+              username,
+              ...reason.split(' '),
+            ]);
+            if (response) {
+              await twitchClient.client.say(channel, String(response));
+            }
+          }
+        } catch (error) {
+          logger.error('Error handling warn command:', error);
+        }
+        break;
+      }
     }
   } catch (error) {
     logger.error('Error handling command:', error);
@@ -1192,7 +1204,7 @@ function setupCleanupIntervals() {
   setInterval(
     () => {
       try {
-        competitorManager.updateAllChannels(twitchClient);
+        competitorAnalysis.updateAllChannels();
       } catch (error) {
         logger.error('Error updating competitor analysis:', error);
       }
@@ -1258,7 +1270,6 @@ function setupTerminationHandler(twitchClient) {
         finalAnalysis,
       });
 
-      const channelName = process.env.CHANNEL_NAME || process.env.TWITCH_CHANNEL;
       const channelName = process.env.CHANNEL_NAME || process.env.TWITCH_CHANNEL;
       if (finalAnalysis && twitchClient?.client?.isConnected && channelName) {
         logger.info('Posting final stream analysis...');

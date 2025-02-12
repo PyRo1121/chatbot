@@ -3,6 +3,8 @@ import logger from '../utils/logger.js';
 import viewerManager from './viewerManager.js';
 import { ApiClient } from '@twurple/api';
 import { RefreshingAuthProvider } from '@twurple/auth';
+import { sentimentHandler } from '../utils/sentimentHandler.js';
+import aiService from '../utils/aiService.js';
 
 class WelcomeManager {
   constructor() {
@@ -11,6 +13,41 @@ class WelcomeManager {
     this.COOLDOWN_DURATION = 30 * 60 * 1000; // 30 minutes
     this.apiClient = null;
     this.streamGreetings = new Set(); // Track greetings for current stream
+    this.contextMemory = new Map();
+    this.moodBasedGreetings = {
+      very_positive: [
+        "The chat's buzzing with energy! Welcome, {username}! 🎉",
+        'Perfect timing {username}! We\'re having a blast! 🌟',
+      ],
+      positive: [
+        'Great to see you {username}! Chat\'s in a good mood today! 😊',
+        'Welcome {username}! You\'re joining us at a fun time! 🎈',
+      ],
+      neutral: [
+        'Welcome to the stream {username}! 👋',
+        'Hey there {username}! Make yourself at home! 💫',
+      ],
+      negative: [
+        'Welcome {username}! Help us brighten up the mood! ✨',
+        'Hey {username}! Perfect timing - we could use some positive vibes! 🌈',
+      ],
+      very_negative: [
+        'Welcome {username}! Let\'s turn this mood around together! 🌟',
+        'Hey {username}! Your presence might be just what we need! 💫',
+      ],
+      contextual: {
+        returningUser: {
+          positive: "Welcome back {username}! Chat's been missing your positive energy! 🌟",
+          neutral: "Good to see you again {username}! Hope you're ready for another great stream! 👋",
+          negative: "Welcome back {username}! Let's make this stream amazing together! 💫",
+        },
+        firstTimer: {
+          positive: "First time here {username}? You picked a great time to join! Chat's buzzing! 🎉",
+          neutral: 'Welcome to your first stream {username}! Make yourself at home! 🏡',
+          negative: 'Welcome {username}! New faces always brighten up the stream! ✨',
+        },
+      },
+    };
     this.initializeApiClient();
   }
 
@@ -68,48 +105,34 @@ class WelcomeManager {
 
   async handleFirstTimeViewer(username) {
     try {
-      // Check both cooldown and stream greetings
       if (this.isOnCooldown(username) || this.streamGreetings.has(username)) {
         return null;
       }
 
-      // Add to stream greetings before generating message
-      this.streamGreetings.add(username);
-
       const userInfo = await this.getUserInfo(username);
       const viewerData = viewerManager.data.viewers[username];
+      const chatMood = aiService.chatMood.overall;
+      const userContext = this.getViewerContext(username);
 
-      const prompt = `Create a personalized welcome message for a first-time viewer. Details:
-      - Username: ${username}
-      ${
-        userInfo
-          ? `
-      - Display Name: ${userInfo.displayName}
-      - Bio: ${userInfo.description || 'No bio'}
-      - Account Age: ${this.getAccountAge(userInfo.createdAt)}
-      - Total Views: ${userInfo.views}`
-          : ''
-      }
-      - Previous Visits: ${viewerData?.visits || 0}
+      // Get user's sentiment history if available
+      const userMood = sentimentHandler.getUserMoodSummary(username);
+      const channelMood = sentimentHandler.getChannelMoodSummary();
 
-      Guidelines:
-      - Keep it natural and conversational
-      - Reference their bio or interests if available
-      - Encourage chat participation
-      - Mention !commands availability
-      - Keep it to one short paragraph
-      - Make it feel personal and unique`;
+      const prompt = `Create a personalized welcome message.
+        User Context:
+        ${userMood ? `- User Mood: ${userMood.currentMood}
+        - Dominant Emotion: ${Object.keys(userMood.dominantEmotion)[0]}` : ''}
+        - Chat Mood: ${channelMood.current}
+        ${this.getExistingPromptDetails(username, userInfo, viewerData)}`;
 
-      const welcomeMessage = await generateResponse(prompt);
-      this.setCooldown(username);
+      const response = await generateResponse(prompt);
+      this.updateViewerContext(username);
+      this.streamGreetings.add(username);
 
-      return (
-        welcomeMessage ||
-        `Welcome to the stream @${username}! 🎉 We're so happy to have you here! Feel free to join the chat and check out !commands to see what you can do!`
-      );
+      return response || this.getMoodBasedGreeting(chatMood, username);
     } catch (error) {
-      logger.error('Error generating first-time viewer welcome:', error);
-      return `Welcome to the stream @${username}! 🎉 We're so happy to have you here!`;
+      logger.error('Error in welcome generation:', error);
+      return this.getMoodBasedGreeting('neutral', username);
     }
   }
 
@@ -182,8 +205,6 @@ class WelcomeManager {
     return `${diffDays} day${diffDays > 1 ? 's' : ''} old account`;
   }
 
-  // Removed engagement prompts functionality
-
   isOnCooldown(username) {
     const lastMessage = this.welcomeMessageCooldown.get(username);
     return lastMessage && Date.now() - lastMessage < this.COOLDOWN_DURATION;
@@ -191,6 +212,71 @@ class WelcomeManager {
 
   setCooldown(username) {
     this.welcomeMessageCooldown.set(username, Date.now());
+  }
+
+  getMoodBasedGreeting(mood, username) {
+    const greetings = this.moodBasedGreetings[mood] || this.moodBasedGreetings.neutral;
+    const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    return greeting.replace('{username}', username);
+  }
+
+  getViewerContext(username) {
+    return this.contextMemory.get(username) || {
+      firstSeen: Date.now(),
+      lastSeen: null,
+      interactions: 0,
+      preferences: {},
+      messageHistory: [],
+    };
+  }
+
+  updateViewerContext(username, message = null) {
+    const context = this.getViewerContext(username);
+    context.lastSeen = Date.now();
+    context.interactions++;
+
+    if (message) {
+      context.messageHistory.push({
+        timestamp: Date.now(),
+        content: message,
+      });
+
+      // Keep only last 10 messages
+      if (context.messageHistory.length > 10) {
+        context.messageHistory.shift();
+      }
+    }
+
+    this.contextMemory.set(username, context);
+  }
+
+  getActivityLevel() {
+    const recentMessages = Array.from(this.contextMemory.values()).filter(
+      (ctx) => Date.now() - ctx.lastSeen < 5 * 60 * 1000
+    ).length;
+
+    if (recentMessages > 20) {
+      return 'very_active';
+    }
+    if (recentMessages > 10) {
+      return 'active';
+    }
+    if (recentMessages > 5) {
+      return 'moderate';
+    }
+    return 'quiet';
+  }
+
+  getTimeSince(timestamp) {
+    const minutes = Math.floor((Date.now() - timestamp) / 60000);
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    }
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+      return `${hours}h ago`;
+    }
+    return `${Math.floor(hours / 24)}d ago`;
   }
 }
 
